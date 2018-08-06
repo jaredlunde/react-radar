@@ -1,0 +1,1 @@
+export getSharedFields from './getSharedFields'
