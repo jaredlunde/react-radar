@@ -55,7 +55,8 @@ export default class StoreProvider extends React.Component {
       setStore: this.setStore,
       setRecords: this.setRecords,
       registerEndpoint: this.registerEndpoint,
-      unregisterEndpoint: this.unregisterEndpoint
+      unregisterEndpoint: this.unregisterEndpoint,
+      getEndpoint: this.getEndpoint
     }
     // StoreConsumer context
     this.storeContext = {
@@ -99,6 +100,21 @@ export default class StoreProvider extends React.Component {
       }
 
       this.providerContext.initialState = null
+    }
+  }
+
+  getEndpoint = endpointName => {
+    const intName = parseInt(endpointName)
+
+    for (let x = 0; x < this.endpoints.length; x++) {
+      const endpoint = this.endpoints[x]
+
+      if (intName === x) {
+        return endpoint
+      }
+      else if (endpoint.props.name === endpointName) {
+        return endpoint
+      }
     }
   }
 

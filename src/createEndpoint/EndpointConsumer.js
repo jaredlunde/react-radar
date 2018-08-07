@@ -1,3 +1,4 @@
+import React from 'react'
 import EndpointContext from './EndpointContext'
 import {observe} from './EndpointContext'
 
