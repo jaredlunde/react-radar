@@ -125,11 +125,13 @@ const RecordB = createRecord({
 --------
 
 
-### createConnection
+### Connect
 ```js
-createConnection({
-  stateKey: Record`id foo bar`
-})
+<Connect to={['viewer', 'post']}>
+  {({viewer, post}) => (
+    <div>{post.title} by {viewer.username}</div>
+  )}
+</Connect>
 ```
 
 
