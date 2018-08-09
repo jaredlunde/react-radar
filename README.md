@@ -47,7 +47,7 @@ applications.
 - createRecordMutation
 
 ### State -> Component connections
-- createConnection
+- Connect
 - createTemplate
 
 --------
@@ -133,7 +133,3 @@ const RecordB = createRecord({
   )}
 </Connect>
 ```
-
-
-#### methods
-- `get`
