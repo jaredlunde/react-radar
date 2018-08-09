@@ -22,7 +22,7 @@ applications.
 - Typed (optionally), predictable records-only state model
 - Top-down data flow
 - Managed by reducers
-- Function as Child Component pattern (similar to Render Props)
+- Utilizes render props pattern
 - Under 100kb (under 30kb gzipped) after polyfills for Fetch, Map, WeakMap and Set
 
 --------
