@@ -239,6 +239,7 @@ export default class StoreProvider extends React.Component {
       // necessary ones
       this.storeContext = Object.assign({}, this.storeContext)
       this.storeContext.data = nextState
+      this.providerContext = Object.assign({}, this.providerContext)
     }
 
     return (
