@@ -22,7 +22,7 @@ applications.
 - Typed (optionally), predictable records-only state model
 - Top-down data flow
 - Managed by reducers
-- Function as Child Component pattern (similar to Render Props)
+- Utilizes render props pattern
 - Under 100kb (under 30kb gzipped) after polyfills for Fetch, Map, WeakMap and Set
 
 --------
@@ -47,7 +47,7 @@ applications.
 - createRecordMutation
 
 ### State -> Component connections
-- createConnection
+- Connect
 - createTemplate
 
 --------
@@ -125,13 +125,11 @@ const RecordB = createRecord({
 --------
 
 
-### createConnection
+### Connect
 ```js
-createConnection({
-  stateKey: Record`id foo bar`
-})
+<Connect to={['viewer', 'post']}>
+  {({viewer, post}) => (
+    <div>{post.title} by {viewer.username}</div>
+  )}
+</Connect>
 ```
-
-
-#### methods
-- `get`
