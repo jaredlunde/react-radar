@@ -65,6 +65,11 @@ export default class StoreProvider extends React.Component {
     }
   }
 
+  componentDidMount () {
+    // hacky way to fix some goings on with InternalContext I don't understand
+    this.providerContext = Object.assign({}, this.providerContext)
+  }
+
   componentDidUpdate (prevProps, prevState) {
     if (prevState.data !== this.state.data) {
       // prevents the store from listening to changes on records for which it
@@ -239,7 +244,6 @@ export default class StoreProvider extends React.Component {
       // necessary ones
       this.storeContext = Object.assign({}, this.storeContext)
       this.storeContext.data = nextState
-      this.providerContext = Object.assign({}, this.providerContext)
     }
 
     return (
