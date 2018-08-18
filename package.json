@@ -1,6 +1,6 @@
 {
   "name": "react-radar",
-  "version": "1.0.0-beta.9",
+  "version": "1.0.0-beta.10",
   "main": "commonjs/index.js",
   "esnext": "es/index.js",
   "jsnext:main": "es/index.js",
