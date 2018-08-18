@@ -1,7 +1,7 @@
 {
   "name": "react-radar",
-  "version": "1.0.0-beta.5",
-  "main": "es/index.js",
+  "version": "1.0.0-beta.6",
+  "main": "commonjs/index.js",
   "esnext": "es/index.js",
   "jsnext:main": "es/index.js",
   "module": "es/index.js",
@@ -41,7 +41,6 @@
     "@babel/polyfill": "7.0.0-rc.1",
     "@babel/preset-env": "7.0.0-rc.1",
     "@babel/preset-react": "7.0.0-rc.1",
-    "babel-loader": "^8.0.0-beta.4",
     "babel-plugin-closure-elimination": "^1.3.0",
     "babel-plugin-dev-expression": "^0.2.1",
     "babel-plugin-tailcall-optimization": "^1.0.12",
