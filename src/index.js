@@ -10,7 +10,7 @@ export Connect from './Connect'
 export Key from './Key'
 export RadarConsumer from './createEndpoint/EndpointConsumer'
 export {StoreProvider, StoreConsumer} from './Store'
-
+export {InternalConsumer} from './Store/InternalContext' 
 /** Mostly reducer utils */
 export {
   isSubset,

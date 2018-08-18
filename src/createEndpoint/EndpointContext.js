@@ -1,5 +1,5 @@
 import React from 'react'
-import strictShallowEqual from '@render-props/utils/es/strictShallowEqual'
+import {strictShallowEqual} from '@render-props/utils'
 
 
 export const observe = {
@@ -21,7 +21,7 @@ function calculateChangedBits (prevValue, nextValue) {
     bits |= observe.responseChange
   }
 
-  if (!strictShallowEqual(prevValue.queryProps, nextValue.queryProps)) {
+  if (strictShallowEqual(prevValue.queryProps, nextValue.queryProps) === false) {
     bits |= observe.propChange
   }
 

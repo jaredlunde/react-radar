@@ -1,5 +1,7 @@
 import React from 'react'
 import emptyObj from 'empty/object'
 
-
-export default React.createContext(emptyObj)
+const InternalContext = React.createContext(emptyObj)
+export default InternalContext
+export const InternalProvider = InternalContext.Provider
+export const InternalConsumer = InternalContext.Consumer

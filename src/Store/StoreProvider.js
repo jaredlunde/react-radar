@@ -1,7 +1,7 @@
 import React from 'react'
 import Immutable from 'seamless-immutable'
 import Promise from 'cancelable-promise'
-import debounce from '@render-props/debounce/es/utils/debounce'
+import {debounce} from '@render-props/debounce'
 import emptyObj from 'empty/object'
 import {
   withRecords,
