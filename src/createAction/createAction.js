@@ -1,8 +1,8 @@
+import emptyObj from 'empty/object'
 import {invariant} from '../utils'
 import defaultReducer from '../createEndpoint/defaultReducer'
 
 
-const emptyObj = {}
 export default function createAction ({
   queries,
   defaultProps = emptyObj,
