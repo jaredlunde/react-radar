@@ -1,15 +1,6 @@
-.imdone
 .git
-.DS_STORE
-.remote-sync.json
-.vscode
-commonjs
+.DS_Store
+cjs
 es
 node_modules
-
-# Logs
-logs
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*

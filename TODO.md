@@ -5,3 +5,4 @@
   - `Store/utils/getChildRecords()`
   - `Store/utils/getRecordKeys()`
   - `Store/utils/toRecords()`
+- Possibly using `serialize-javascript` instead of JSON for createFetcher
