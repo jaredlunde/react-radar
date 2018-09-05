@@ -1,7 +1,7 @@
 import {invariant} from '../utils'
+import emptyObj from 'empty/object'
 
 
-const emptyObj = {}
 export default function createRecordMutation ({
   queries,
   defaultProps = emptyObj,
