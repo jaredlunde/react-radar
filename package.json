@@ -1,6 +1,6 @@
 {
   "name": "react-radar",
-  "version": "1.0.0-beta.15",
+  "version": "1.0.0-beta.16",
   "main": "commonjs/index.js",
   "esnext": "es/index.js",
   "jsnext:main": "es/index.js",
@@ -14,36 +14,36 @@
   },
   "scripts": {
     "build": "npm run build:es && npm run build:cjs",
-    "build:es": "rm -rf es && cross-env NODE_ENV=production cross-env BABEL_ENV=es babel src --out-dir es && npm run prettier:es",
-    "build:cjs": "rm -rf cjs && cross-env NODE_ENV=production cross-env BABEL_ENV=cjs babel src --out-dir cjs && npm run prettier:cjs",
-    "watch": "cross-env NODE_ENV=development cross-env BABEL_ENV=es babel ./src -w --out-dir es",
+    "build:es": "rm -rf es && cross-env NODE_ENV=production BABEL_ENV=es babel src --out-dir es && npm run prettier:es",
+    "build:cjs": "rm -rf cjs && cross-env NODE_ENV=production BABEL_ENV=cjs babel src --out-dir cjs && npm run prettier:cjs",
+    "watch": "cross-env NODE_ENV=development BABEL_ENV=es babel ./src -w --out-dir es",
     "prettier:es": "prettier --single-quote --no-semi --no-bracket-spacing --trailing-comma es5 --write --tab-width 2 \"es/**/*.js\"",
     "prettier:cjs": "prettier --single-quote --no-semi --no-bracket-spacing --trailing-comma es5 --write --tab-width 2 \"cjs/**/*.js\""
   },
   "devDependencies": {
-    "@inst-app/babel-preset-esx": "^1.0.0",
+    "@inst-app/babel-preset-esx": "^1.0.2",
     "@inst-app/babel-preset-react": "^1.0.0",
-    "babel-plugin-tailcall-optimization": "^1.0.12",
     "prettier": "^1.14.2"
   },
   "dependencies": {
     "@babel/runtime": "7.0.0",
-    "@jaredlunde/get-unique-id": "^0.1.0",
-    "@render-props/debounce": "^0.1.4",
-    "@render-props/utils": "^0.2.3",
+    "@jaredlunde/get-unique-id": "^0.1.1",
+    "@render-props/debounce": "^0.1.9",
+    "@render-props/utils": "^0.2.8",
     "cancelable-promise": "^2.4.0",
     "empty": "^0.10.1",
     "fast-deep-equal": "^1.0.0",
     "fast-memoize": "^2.2.8",
     "is-mergeable-object": "^1.1.0",
-    "lru-memoize-map": "^0.2.1",
-    "memoize-two-args": "^1.0.6",
+    "lru-memoize-map": "^0.2.2",
+    "memoize-two-args": "^1.0.7",
     "prop-types": "^15.6.0",
     "seamless-immutable": "^7.1.2",
     "weakmap-memoize": "^0.0.3"
   },
   "peerDependencies": {
-    "react": "^16.x",
-    "react-dom": "^16.x"
+    "prop-types": ">= 15.6.0",
+    "react": ">= 16.3.0",
+    "react-dom": ">= 16.3.0"
   }
 }
