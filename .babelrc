@@ -1,9 +1,6 @@
 {
   "presets": [
-    "@inst-app/react"
-  ],
-  "plugins": [
-    "tailcall-optimization"
+    ["@inst-app/react", {"removePropTypes": false}]
   ],
   "env": {
     "cjs": {
