@@ -1,9 +1,9 @@
 {
   "name": "react-radar",
-  "version": "2.0.0-beta.4",
+  "version": "2.0.0-beta.5",
   "main": "cjs/index.js",
   "browser": "es/index.browser.js",
-  "module": "es/index.esm.js",
+  "module": "node-es/index.esm.js",
   "sideEffects": [
     "**/index.esm.js"
   ],
@@ -14,11 +14,13 @@
     "url": "https://github.com/jaredLunde/react-radar"
   },
   "scripts": {
-    "build": "npm run build:es && npm run build:cjs",
+    "build": "npm run build:es && npm run build:cjs && npm run build:node-es",
     "build:es": "rimraf es && cross-env NODE_ENV=production BABEL_ENV=es babel src --out-dir es && npm run prettier:es",
+    "build:node-es": "rimraf node-es && cross-env NODE_ENV=production BABEL_ENV=node-es babel src --out-dir node-es && npm run prettier:node-es",
     "build:cjs": "rimraf cjs && cross-env NODE_ENV=production BABEL_ENV=cjs babel src --out-dir cjs && npm run prettier:cjs",
-    "watch": "rimraf es && cross-env NODE_ENV=production BABEL_ENV=es babel ./src -w --out-dir es",
+    "watch": "rimraf es && rimraf node-es && cross-env NODE_ENV=production BABEL_ENV=node-es babel ./src -w --out-dir node-es & cross-env NODE_ENV=production BABEL_ENV=es babel ./src -w --out-dir es",
     "prettier:es": "prettier --single-quote --no-semi --no-bracket-spacing --trailing-comma es5 --write --tab-width 2 \"es/**/*.js\"",
+    "prettier:node-es": "prettier --single-quote --no-semi --no-bracket-spacing --trailing-comma es5 --write --tab-width 2 \"node-es/**/*.js\"",
     "prettier:cjs": "prettier --single-quote --no-semi --no-bracket-spacing --trailing-comma es5 --write --tab-width 2 \"cjs/**/*.js\""
   },
   "devDependencies": {
