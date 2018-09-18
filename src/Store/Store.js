@@ -17,12 +17,13 @@ export default class Store extends React.Component {
   constructor (props) {
     super(props)
     // parses any initial state in props or the DOM
-    const {initialState} = props.cache
+    let initialState
 
-    if (initialState) {
+    if (props.cache !== void 0) {
+      initialState = props.cache.initialState
       // if the initial state was from the DOM, defer its rendering until
       // the endpoint is ready
-      this.state = {data: initialState}
+      this.state = {data: initialState || emptyObj}
     }
     else {
       // didn't have an initial state

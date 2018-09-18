@@ -21,8 +21,10 @@ export default function load (app, visitor, context = emptyObj) {
     }
   }
 
+  let visitors = loadVisitor
+
   if (visitor) {
-    visitor = function composedVisitor (element, instance) {
+    visitors = function composedVisitor (element, instance) {
       const promise = loadVisitor(element, instance)
 
       if (promise !== void 0) {
@@ -32,9 +34,6 @@ export default function load (app, visitor, context = emptyObj) {
       return visitor(element, instance)
     }
   }
-  else {
-    visitor = loadVisitor
-  }
 
-  return reactTreeWalker(app, visitor, context)
+  return reactTreeWalker(app, visitors, context)
 }
