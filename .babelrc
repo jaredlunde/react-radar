@@ -10,6 +10,19 @@
       "presets": [
         ["@inst-app/esx", {"env": {"modules": false}}]
       ]
+    },
+    "node-es": {
+      "presets": [
+        [
+          "@inst-app/esx",
+          {
+            "env": {
+              "modules": false,
+              "targets": {"node": "10"}
+            }
+          }
+        ]
+      ]
     }
   }
 }

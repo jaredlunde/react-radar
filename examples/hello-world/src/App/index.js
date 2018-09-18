@@ -13,14 +13,14 @@ import {Viewer, ItemType, Cursor} from './state/records'
 
 const ViewerQuery = createQuery({
   name: 'AdminViewerQuery',
-  defaultContains: () => ({viewer: Viewer``})
+  contains: () => ({viewer: Viewer``})
 })
 
 const ViewerQuery2 = createQuery({
   name: 'ViewerQuery',
   getOptimistic: () => ({viewer: {uid: 129343, name: {full: 'Jared'}}}),
   getRollback: () => ({viewer: null}),
-  defaultContains: () => ({viewer: Viewer``})
+  contains: () => ({viewer: Viewer``})
 })
 
 
@@ -32,7 +32,7 @@ const ItemTypeQuery = createQuery({
     next: 24,
     sortBy: 'new'
   },
-  defaultContains: () => ({itemTypes: ItemType`uid name price`})
+  contains: () => ({itemTypes: ItemType`uid name price`})
 })
 
 

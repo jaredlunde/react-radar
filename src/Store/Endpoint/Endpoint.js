@@ -40,7 +40,7 @@ class Endpoint extends React.Component {
   hydrate () {
     return Promise.all(
       this.props.cache.map(
-        async (id, query) => query.response && await this.props.updateState({
+        async (id, query) => query.response && this.props.updateState({
           nextState: [query.response.json],
           response: query.response,
           queries: [query.query],
@@ -68,11 +68,10 @@ class Endpoint extends React.Component {
     // makes the commit 'cancelable'
     return new Promise(
       async resolve => {
-        let {response, nextState} = await this.commitPayload(payload)
         let state
-
-        // waits for optimistic updates to be applied before committing the query ones
-        await optimistic
+        let [{response, nextState}] = await Promise.all(
+          [this.commitPayload(payload), optimistic]
+        )
 
         switch (response.status) {
           case   0:

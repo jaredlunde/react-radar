@@ -75,7 +75,7 @@ export default function createNetwork (props) {
 
   function abort () {
     while (pendingUpdates.length) {
-      const [promise, resolve, reject, timeout] = pendingUpdates.shift()
+      const [promise, re, rj, timeout] = pendingUpdates.shift()
       promise.cancel()
       clearTimeout(timeout)
     }

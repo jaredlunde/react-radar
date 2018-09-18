@@ -1,21 +1,50 @@
 <h1 align=center>
-  Radar
+  `react-radar`
 </h1>
 <pre align=center>
   yarn add react-radar
 </pre>
 
+
+```js
+// hello-world.js
+import Radar from 'react-radar'
+
+
+const Viewer = Radar.createRecord({
+  name: 'Viewer',
+  field: {
+    uid: Radar.Key(),
+    username: null,
+    lastSeen: v => new Date(val),
+    joinedOn: v => new Date(val)
+  }
+})
+
+const GetViewer = Radar.createQuery({
+  name: 'GetViewer',
+  contains: (props) => ({viewer: Viewer`username`})
+})
+
+
+export default function App (props) {
+  return (
+    <Radar.Store
+      cache={Radar.createCache()}
+      network={Radar.createNetwork({url: 'https://radar-app.com/radar'})}
+    >
+      <Radar.Query connect='viewer' run={GetViewer()}>
+        {({viewer}, radar) =>
+          radar.statusText === 'loading'
+            ? 'Loading...'
+            : radar.statusText === 'error'
+              ? <button onClick={radar.reload}>Try again?</button>
+              : `Hello ${viewer.username}`}
+      </Radar.Query>
+    </Radar.Store>
+  )
+}
+```
+
 --------
-
-An easy, declarative way to manage network-backed global state in React
-applications.
-
-- Update once, update everywhere
-- Only fetch the fields you need
-- Stringently immutable (using seamless-immutable)
-- Typed (optionally), predictable records-only state model
-- Top-down data flow
-- Managed by reducers
-- Utilizes render props pattern
-
 --------
