@@ -1,10 +1,12 @@
 {
   "name": "react-radar",
-  "version": "2.0.0-beta",
+  "version": "2.0.0-beta.0",
   "main": "cjs/index.js",
   "browser": "es/index.browser.js",
   "module": "es/index.esm.js",
-  "sideEffects": ["**/index.esm.js"],
+  "sideEffects": [
+    "**/index.esm.js"
+  ],
   "author": "Jared Lunde",
   "license": "MIT",
   "repository": {
