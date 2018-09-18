@@ -19,7 +19,7 @@ export function childrenDidChange (children) {
 }
 
 
-export default function (record) {
+export default function shouldInvalidate (record) {
   if (record[RADAR_PREV_ID_KEY] !== record[RADAR_ID_KEY]) {
     // next children are lazy loaded here
     return false

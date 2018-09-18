@@ -1,4 +1,4 @@
-import {isPlainObject} from '../../utils'
+import isPlainObject from '../../utils/isPlainObject'
 import {RADAR_ID_KEY} from './invalidateID'
 import isStoreRecord from './isStoreRecord'
 
@@ -12,8 +12,18 @@ function recordDidChange (prevRecord, nextRecord) {
 }
 
 
-export default function (prevState, nextState) {
+export default function stateDidChange (prevState, nextState) {
+  if (nextState === null || nextState === void 0) {
+    return false
+  }
+
+  const prevStateKeys = Object.keys(prevState)
   const nextStateKeys = Object.keys(nextState)
+
+  if (prevStateKeys.length !== nextStateKeys.length) {
+    return true
+  }
+
   for (let x = 0; x < nextStateKeys.length; x++) {
     const key = nextStateKeys[x]
     const nextVal = nextState[key]

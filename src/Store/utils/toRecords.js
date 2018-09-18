@@ -1,7 +1,8 @@
-import createStoreRecord from '../createStoreRecord'
+import createStoreRecord from './createStoreRecord'
+import deepInvalidate from './deepInvalidate'
 
 
-export function toRecord (props/*{store, state, query, recordType}*/) {
+export function toRecord (props/*{state, query, recordType}*/) {
   props.recordType = (
     props.recordType.reducer === void 0
     ? props.recordType`${props.recordType.keyField}`
@@ -12,7 +13,7 @@ export function toRecord (props/*{store, state, query, recordType}*/) {
 }
 
 
-function fromPlainObject (props/*{store, state, query, recordType, ...context}*/) {
+function fromPlainObject (props/*{state, query, recordType, ...context}*/) {
   const output = {}
   const recordType = props.recordType
   const state = props.state
@@ -30,12 +31,12 @@ function fromPlainObject (props/*{store, state, query, recordType, ...context}*/
         : recordType[key]
     )
 
-    output[key] = toRecords(mutableBaseRecord)
+    output[key] = routeToRecords(mutableBaseRecord)
   }
 
   if (
     recordType && (
-      recordType.isRadarRecord  // sub record
+      recordType.isRadarRecord           // sub record
       || recordType.keyField !== void 0  // top-level
     )
   ) {
@@ -50,20 +51,21 @@ function fromPlainObject (props/*{store, state, query, recordType, ...context}*/
 }
 
 
-function fromArray({...mutableProps}/*{store, state, query, recordType}*/) {
+function fromArray(props/*{state, query, recordType}*/) {
+  const mutableProps = Object.assign({}, props)
   const records = []
   const state = mutableProps.state
 
   for (let x = 0; x < state.length; x++) {
     mutableProps.state = state[x]
-    records.push(toRecords(mutableProps))
+    records.push(routeToRecords(mutableProps))
   }
 
   return records
 }
 
 
-function toRecords (props/*{store, state, query, recordType}*/) {
+function routeToRecords (props/*{state, query, recordType}*/) {
   const state = props.state
 
   if (Array.isArray(state)) {
@@ -80,4 +82,45 @@ function toRecords (props/*{store, state, query, recordType}*/) {
 }
 
 
-export default toRecords
+export default function parse ({state, nextState, queries, ...context}) {
+  let hasRecordUpdates = false
+
+  for (let i = 0; i < queries.length; i++) {
+    const queryState = nextState[i]
+    const query = queries[i]
+    context.query = query
+    let records = {}
+
+    if (query.isRecordUpdate === true) {
+      hasRecordUpdates = true
+    }
+
+    if (queryState === null || queryState === void 0) {
+      continue
+    }
+    else if (queryState.isRadarError === true) {
+      context.hasErrors = true
+      state = query.reducer(state, queryState, context)
+      continue
+    }
+
+    const stateKeys = Object.keys(queryState)
+    context.hasErrors = false
+
+    for (let j = 0; j < stateKeys.length; j++) {
+      const key = stateKeys[j]
+      context.recordType = query.contains[key]
+      context.state = queryState[key]
+      records[key] = routeToRecords(context)
+    }
+    delete context.recordType
+    delete context.state
+    state = query.reducer(state, records, context)
+  }
+
+  if (hasRecordUpdates === true) {
+    state = deepInvalidate(state)
+  }
+
+  return state
+}

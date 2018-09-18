@@ -1,10 +1,10 @@
-import {isPlainObject} from '../../utils'
+import isPlainObject from '../../utils/isPlainObject'
 import isStoreRecord from './isStoreRecord'
 import {RADAR_CHILDREN_KEY} from './getChildRecords'
 import emptyArr from 'empty/array'
 
 
-function getRecordKeys (obj) {
+export default function getRecordKeys (obj) {
   if (isStoreRecord(obj)) {
     const output = []
     const children = obj[RADAR_CHILDREN_KEY]
@@ -32,5 +32,3 @@ function getRecordKeys (obj) {
 
   return emptyArr
 }
-
-export default getRecordKeys

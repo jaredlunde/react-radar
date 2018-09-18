@@ -1,31 +1,26 @@
+import React from 'react'
 import PropTypes from 'prop-types'
-import {StoreConsumer} from '../Store'
-import RadarConsumer from '../createEndpoint/EndpointConsumer'
+import {StoreConsumer, EndpointConsumer} from '../Store'
 import {pick} from '../utils'
 import {toShape, toBaseKeys} from './utils'
 
 
+const whitespace = /\s+/
+
 export default function Connect ({to, children}) {
-  to = typeof to === 'string' ? [to] : to
-  const shape = toShape(to)
+  const shape = toShape(to.replace(whitespace, ''))
   const observedKeys = toBaseKeys(shape)
-  
-  return RadarConsumer({
-    children: radar => StoreConsumer({
+
+  return <EndpointConsumer children={
+    radar => StoreConsumer({
       observedKeys,
-      children: state => children({
-        ...pick(state, shape),
-        radar
-      })
+      children: state => children(pick(state, shape), radar)
     })
-  })
+  }/>
 }
 
 
 Connect.propTypes = {
-  to: PropTypes.oneOfType([
-    PropTypes.arrayOf(PropTypes.string),
-    PropTypes.string
-  ]).isRequired,
+  to: PropTypes.string.isRequired,
   children: PropTypes.func.isRequired
 }

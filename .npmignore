@@ -1,5 +1,4 @@
 .gitignore
 .gitattributes
 .babelrc
-rollup.config.js
-yarn-error.log
+*.log

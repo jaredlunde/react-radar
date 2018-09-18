@@ -1,7 +1,7 @@
-import {isPlainObject} from '../../utils'
+import isPlainObject from '../../utils/isPlainObject'
 
 
-function deepInvalidate (obj) {
+export default function deepInvalidate (obj) {
   const isArray = Array.isArray(obj)
 
   if (isArray || isPlainObject(obj)) {
@@ -19,5 +19,3 @@ function deepInvalidate (obj) {
 
   return obj
 }
-
-export default deepInvalidate

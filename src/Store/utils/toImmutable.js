@@ -1,12 +1,12 @@
 import Immutable from 'seamless-immutable'
 import memoize from 'weakmap-memoize'
-import {isPlainObject} from '../../utils'
+import isPlainObject from '../../utils/isPlainObject'
 // import isStoreRecord from './isStoreRecord'
 
 
 export function toImmutable (obj) {
   const isArray = Array.isArray(obj)
-  
+
   if (isArray || isPlainObject(obj)) {
     const output = isArray ? [] : {}
     const objKeys = Object.keys(obj)

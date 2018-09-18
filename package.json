@@ -1,45 +1,47 @@
 {
   "name": "react-radar",
-  "version": "1.0.0-beta.16",
-  "main": "commonjs/index.js",
-  "esnext": "es/index.js",
-  "jsnext:main": "es/index.js",
-  "module": "es/index.js",
-  "sideEffects": false,
+  "version": "2.0.0-beta",
+  "main": "cjs/index.js",
+  "browser": "es/index.browser.js",
+  "module": "es/index.esm.js",
+  "sideEffects": ["**/index.esm.js"],
   "author": "Jared Lunde",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jaredlunde/react-radar"
+    "url": "https://github.com/jaredLunde/react-radar"
   },
   "scripts": {
     "build": "npm run build:es && npm run build:cjs",
-    "build:es": "rm -rf es && cross-env NODE_ENV=production BABEL_ENV=es babel src --out-dir es && npm run prettier:es",
-    "build:cjs": "rm -rf cjs && cross-env NODE_ENV=production BABEL_ENV=cjs babel src --out-dir cjs && npm run prettier:cjs",
-    "watch": "cross-env NODE_ENV=development BABEL_ENV=es babel ./src -w --out-dir es",
+    "build:es": "rimraf es && cross-env NODE_ENV=production BABEL_ENV=es babel src --out-dir es && npm run prettier:es",
+    "build:cjs": "rimraf cjs && cross-env NODE_ENV=production BABEL_ENV=cjs babel src --out-dir cjs && npm run prettier:cjs",
+    "watch": "rimraf es && cross-env NODE_ENV=production BABEL_ENV=es babel ./src -w --out-dir es",
     "prettier:es": "prettier --single-quote --no-semi --no-bracket-spacing --trailing-comma es5 --write --tab-width 2 \"es/**/*.js\"",
     "prettier:cjs": "prettier --single-quote --no-semi --no-bracket-spacing --trailing-comma es5 --write --tab-width 2 \"cjs/**/*.js\""
   },
   "devDependencies": {
     "@inst-app/babel-preset-esx": "^1.0.2",
     "@inst-app/babel-preset-react": "^1.0.0",
-    "prettier": "^1.14.2"
+    "prettier": "^1.14.2",
+    "rimraf": "^2.6.2"
   },
   "dependencies": {
-    "@babel/runtime": "7.0.0",
+    "@babel/runtime": "^7.0.0",
     "@jaredlunde/get-unique-id": "^0.1.1",
-    "@render-props/debounce": "^0.1.9",
     "@render-props/utils": "^0.2.8",
-    "cancelable-promise": "^2.4.0",
+    "cancelable-promise": "^2.4.1",
+    "cdll-memoize": "^0.1.6",
     "empty": "^0.10.1",
-    "fast-deep-equal": "^1.0.0",
-    "fast-memoize": "^2.2.8",
     "is-mergeable-object": "^1.1.0",
     "lru-memoize-map": "^0.2.2",
     "memoize-two-args": "^1.0.7",
-    "prop-types": "^15.6.0",
-    "seamless-immutable": "^7.1.2",
-    "weakmap-memoize": "^0.0.3"
+    "node-fetch": "^2.2.0",
+    "react-tree-walker": "^4.3.0",
+    "seamless-immutable": "^7.1.4",
+    "weakmap-memoize": "^0.0.3",
+    "webpack": "^4.19.0",
+    "whatwg-fetch": "^3.0.0",
+    "workerize-loader": "^1.0.4"
   },
   "peerDependencies": {
     "prop-types": ">= 15.6.0",

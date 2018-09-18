@@ -1,12 +1,14 @@
 import React from 'react'
 import emptyObj from 'empty/object'
-import StoreConnections from './StoreConnections'
-import BitMask from '../utils/BitMask'
+import InternalContext from './InternalContext'
 
+
+const StoreContext = React.createContext(emptyObj, calculateChangedBits)
+export default StoreContext
 
 function calculateChangedBits (prev, next) {
-  const prevValue = prev.data
-  const nextValue = next.data
+  const prevValue = prev.state
+  const nextValue = next.state
   const nextKeys = Object.keys(nextValue)
   const prevKeys = Object.keys(prevValue)
   let valA, valB, keysA, keysB, len
@@ -44,11 +46,34 @@ function calculateChangedBits (prev, next) {
     }
   }
 
-  const bits = next.getChangedBits(changedKeys)
-  // console.log('Changed keys:', changedKeys)
-  // console.log('Changed bits:', (bits).toString(2))
+  const bits = next.getBits(changedKeys)
   return bits
 }
 
+export function StoreConsumer (props) {
+  function Renderer ({state}) {
+    return props.children(
+      typeof props.reducer === 'function'
+        ? props.reducer(state)
+        : state
+    )
+  }
 
-export default React.createContext(emptyObj, calculateChangedBits)
+  return (
+    <InternalContext.Consumer>
+      {cxt => (
+        <StoreContext.Consumer
+          unstable_observedBits={
+            typeof cxt === void 0 || cxt === null || typeof cxt.getBits !== 'function'
+              || props.observedKeys === void 0
+              || props.observedKeys.length === 0
+                ? 2147483647 // 0b1111111111111111111111111111111
+                : cxt.getBits(props.observedKeys)
+          }
+        >
+          {Renderer}
+        </StoreContext.Consumer>
+      )}
+    </InternalContext.Consumer>
+  )
+}

@@ -1,4 +1,4 @@
-export default function (prevArr, nextArr) {
+export default function diffKeys (prevArr, nextArr) {
   if (prevArr.length === 0 || nextArr.length === 0) {
     return prevArr
   }

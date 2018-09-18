@@ -1,23 +1,28 @@
-import emptyArr from 'empty/array'
 import emptyObj from 'empty/object'
-import {invariant, tag} from '../utils'
+import {invariant, tag, deepMerge, arrayMergeReplace, isSubset} from '../utils'
 import {normalize} from './grammar'
 import {recursivelyRequire, getFields, getKeyField, stringify} from './utils'
-import defaultReducer from './defaultReducer'
 
 
-function createRecord ({
+export function defaultReducer (
+  state,     /*Current GLOBAL state of the record @ current key*/
+  nextState  /*The new state being proposed via some mutation*/
+) {
+  if (isSubset(state, nextState)) {
+    return state
+  }
+
+  return deepMerge(state, nextState, {arrayMerge: arrayMergeReplace})
+}
+
+
+
+export default function createRecord ({
   name,
-  implement = emptyArr,
   fields = emptyObj,
   initialState = emptyObj,
   reducer = defaultReducer
 }) {
-  // assigns interfaces that this record implements
-  for (let x = 0; x < implement.length; x++) {
-    fields = Object.assign({}, fields, implement[x].fields)
-  }
-
   // finds the key field
   const keyField = getKeyField(fields)
 
@@ -80,6 +85,3 @@ function createRecord ({
 
   return Record
 }
-
-
-export default createRecord

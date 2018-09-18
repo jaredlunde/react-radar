@@ -1,18 +1,17 @@
-export createAction from './createAction'
-export createEndpoint from './createEndpoint'
-export createFetcher, {parseState} from './createFetcher'
-export createInterface from './createInterface'
-export createRecord from './createRecord'
-export createRecordMutation from './createRecordMutation'
-export createTemplate from './createTemplate'
-export createUnion from './createUnion'
-export Connect from './Connect'
-export Key from './Key'
-export RadarConsumer from './createEndpoint/EndpointConsumer'
-export {StoreProvider, StoreConsumer} from './Store'
-export {InternalConsumer} from './Store/InternalContext' 
-/** Mostly reducer utils */
-export {
+import Connect from './Connect'
+import createNetwork from './createNetwork'
+import createQuery, {createReducer, noop} from './createQuery'
+import createRecord from './createRecord'
+import createRecordUpdate from './createRecordUpdate'
+import load from './load'
+import Key from './Key'
+import Query from './Query'
+import Store, {createCache, EndpointConsumer as RadarConsumer} from './Store'
+import Updater from './Updater'
+import withRadar from './withRadar'
+
+// reducer utils
+import {
   isSubset,
   deepMerge,
   mergeIfMergeable,
@@ -20,3 +19,53 @@ export {
   arrayMergeConcat,
   arrayMergeReplace
 } from './utils'
+
+export {
+  Connect,
+  createNetwork,
+  createQuery,
+  createReducer,
+  noop,
+  createRecord,
+  createRecordUpdate,
+  load,
+  Key,
+  Query,
+  Store,
+  createCache,
+  RadarConsumer,
+  Updater,
+  withRadar,
+  // reducer utils
+  isSubset,
+  deepMerge,
+  mergeIfMergeable,
+  arrayMergeOverwrite,
+  arrayMergeConcat,
+  arrayMergeReplace
+}
+
+export default {
+  Connect,
+  createNetwork,
+  createQuery,
+  createReducer,
+  noop,
+  createRecord,
+  createRecordUpdate,
+  load,
+  Key,
+  Query,
+  Store,
+  createCache,
+  RadarConsumer,
+  Updater,
+  withRadar,
+  // reducer utils
+  isSubset,
+  deepMerge,
+  mergeIfMergeable,
+  arrayMergeOverwrite,
+  arrayMergeConcat,
+  arrayMergeReplace
+}

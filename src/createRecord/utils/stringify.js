@@ -5,7 +5,6 @@ import {isPlainObject} from '../../utils'
 
 const stringifyMemoizer = memoize(1024)
 
-
 const stringify = stringifyMemoizer(
   function (fields) {
     let out = ''
@@ -25,6 +24,5 @@ const stringify = stringifyMemoizer(
     return out.replace(trim, '')
   }
 )
-
 
 export default stringify

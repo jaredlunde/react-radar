@@ -1,4 +1,4 @@
-export default function (fields) {
+export default function getKeyField (fields) {
   for (let fieldName in fields) {
     const field = fields[fieldName]
 

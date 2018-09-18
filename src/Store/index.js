@@ -1,4 +1,4 @@
-export default from './StoreProvider'
+export default from './Store'
 export {isStoreRecord} from './utils'
-export StoreConsumer from './StoreConsumer'
-export StoreProvider from './StoreProvider'
+export {StoreConsumer} from './StoreContext'
+export {EndpointConsumer, createCache} from './Endpoint'

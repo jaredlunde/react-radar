@@ -1,6 +1,6 @@
 import memoize from 'weakmap-memoize'
 import isStoreRecord from './isStoreRecord'
-import {isPlainObject} from '../../utils'
+import isPlainObject from '../../utils/isPlainObject'
 import {RADAR_ID_KEY} from './invalidateID'
 import emptyObj from 'empty/object'
 
