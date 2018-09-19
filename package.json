@@ -1,6 +1,6 @@
 {
   "name": "react-radar",
-  "version": "2.0.0-beta.5",
+  "version": "2.0.0-beta.6",
   "main": "cjs/index.js",
   "browser": "es/index.browser.js",
   "module": "node-es/index.esm.js",
