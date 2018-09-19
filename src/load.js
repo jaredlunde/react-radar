@@ -1,4 +1,4 @@
-import reactTreeWalker from 'react-tree-walker'
+import reactTreeWalker from '@jaredlunde/react-tree-walker'
 import emptyObj from 'empty/object'
 
 

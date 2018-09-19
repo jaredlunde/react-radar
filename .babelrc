@@ -18,7 +18,7 @@
           {
             "env": {
               "modules": false,
-              "targets": {"node": "10"}
+              "targets": {"node": "8"}
             }
           }
         ]
