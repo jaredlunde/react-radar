@@ -56,7 +56,7 @@ export default class App extends React.PureComponent {
             )}
           </Updater>
 
-          <Query parallel stopIteration connect='viewer' run={[ViewerQuery(), ItemTypeQuery()]}>
+          <Query parallel connect='viewer' run={[ViewerQuery(), ItemTypeQuery()]}>
             {({viewer}, radar) => {
               // console.log(JSON.stringify(radar, null, 2))
               switch (radar.status) {
