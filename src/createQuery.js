@@ -44,7 +44,7 @@ export const noop = createReducer(
 
 export default function createQuery ({
   name,
-  contains,
+  requires,
   defaultProps,
   getOptimistic,
   getRollback,
@@ -54,20 +54,20 @@ export default function createQuery ({
     invariant(name, `Queries must be created with a 'name' property.`)
   }
 
-  function Query (props = emptyObj, contains_, reducer_) {
+  function Query (props = emptyObj, requires_, reducer_) {
     if (typeof props === 'function') {
-      contains_ = props
+      requires_ = props
       props = emptyObj
     }
     else {
       props = props = Object.assign({}, defaultProps, props)
     }
-    const queryContains = (contains_ || contains)(props)
+    const queryContains = (requires_ || requires)(props)
 
     return {
       name,
       props,
-      contains: queryContains,
+      requires: queryContains,
       optimistic: getOptimistic && getOptimistic(props, queryContains),
       rollback: getRollback && getRollback(props, queryContains),
       reducer: reducer || reducer_

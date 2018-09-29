@@ -51,19 +51,19 @@ export default function createRecord ({
   }
 
   function Record (requestedFields, ...values) {
-    let containsFields
+    let requiresFields
     requestedFields = tag(requestedFields, values)
 
     if (__DEV__) {
       try {
-        containsFields = getFields(fields, requestedFields)
+        requiresFields = getFields(fields, requestedFields)
       } catch (e) {
         throw new Error(`Record '${name}' requested field not found: \n${e}`)
       }
     }
 
     if (!(__DEV__)) {
-      containsFields = getFields(fields, requestedFields)
+      requiresFields = getFields(fields, requestedFields)
     }
 
     return {
@@ -71,7 +71,7 @@ export default function createRecord ({
       keyField,
       reducer: RecordReducer,
       fields,
-      containsFields,
+      requiresFields,
       toString: function () {
         return requestedFields.length ? requestedFields : stringify(fields)
       }

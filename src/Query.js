@@ -12,10 +12,10 @@ const WAITING = 0, ERROR = 1, LOADING = 2, DONE = 3
 
 function getQueryID (query) {
   const fn = `${query.name}(${JSON.stringify(query.props)}) =>`
-  let contains = {}
+  let requires = {}
 
-  for (let key in query.contains) {
-    contains[key] = query.contains[key].containsFields
+  for (let key in query.requires) {
+    requires[key] = query.requires[key].requiresFields
   }
 
   if (__DEV__) {
@@ -28,8 +28,8 @@ function getQueryID (query) {
     )
   }
 
-  contains = `${query.reducer.id}(${JSON.stringify(contains)})`
-  return `${fn} ${contains}`
+  requires = `${query.reducer.id}(${JSON.stringify(requires)})`
+  return `${fn} ${requires}`
 }
 
 function getStatusText (status) {
@@ -45,7 +45,7 @@ function getStatusText (status) {
 
 const queryShape = PropTypes.shape({
   name: PropTypes.string.isRequired,
-  contains: PropTypes.object.isRequired,
+  requires: PropTypes.object.isRequired,
   optimistic: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
   rollback: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
   props: PropTypes.object.isRequired,

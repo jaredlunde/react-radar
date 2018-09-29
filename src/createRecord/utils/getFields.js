@@ -4,7 +4,7 @@ import recursivelyRequire from './recursivelyRequire'
 import stringify from './stringify'
 
 
-const contains = memoize(
+const requires = memoize(
   function (fields, requestedFields) {
     let shape = {}
     const parsedFields = parser.parse(requestedFields)
@@ -28,5 +28,5 @@ export default function (availableFields, requestedFields) {
     return null
   }
 
-  return contains(availableFields, normalizedFields)
+  return requires(availableFields, normalizedFields)
 }

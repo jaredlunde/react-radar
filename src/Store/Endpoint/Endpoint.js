@@ -56,13 +56,13 @@ class Endpoint extends React.Component {
     const payload = []
 
     for (let query of queries) {
-      const contains = {}
+      const requires = {}
 
-      for (let key in query.contains) {
-        contains[key] = query.contains[key].containsFields
+      for (let key in query.requires) {
+        requires[key] = query.requires[key].requiresFields
       }
 
-      payload.push({name: query.name, props: query.props, contains})
+      payload.push({name: query.name, props: query.props, requires})
     }
 
     // makes the commit 'cancelable'
