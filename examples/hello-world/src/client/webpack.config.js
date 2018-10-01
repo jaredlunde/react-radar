@@ -1,7 +1,7 @@
 const path = require('path')
 const webpack = require('webpack')
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
-const createConfig = require('@jaredlunde/example-server/createConfig')
+const {createConfig} = require('@jaredlunde/example-server/react')
 
 
 let productionPlugins = [], productionOutput = {}, productionOptimization = {}

@@ -1,6 +1,6 @@
 const path = require('path')
 const webpack = require('webpack')
-const createConfig = require('@jaredlunde/example-server/createConfig')
+const {createConfig} = require('@jaredlunde/example-server/react')
 
 
 module.exports = createConfig({

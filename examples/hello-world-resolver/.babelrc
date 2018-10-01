@@ -1,3 +1,0 @@
-{
-  "presets": [["@inst-app/esx", {"env": {"modules": false}}]]
-}

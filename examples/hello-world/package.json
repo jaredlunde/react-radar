@@ -6,11 +6,11 @@
   "license": "MIT",
   "private": false,
   "devDependencies": {
-    "@jaredlunde/example-server": "^1.0.4",
     "rimraf": "^2.6.2",
     "workerize-loader": "^1.0.4"
   },
   "dependencies": {
+    "@jaredlunde/example-server": "^2.0.0",
     "react": "^16.5.0",
     "react-dom": "^16.5.0"
   },

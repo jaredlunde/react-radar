@@ -18,9 +18,9 @@
     "build:es": "rimraf dist/es && cross-env NODE_ENV=production BABEL_ENV=es babel src --out-dir dist/es && npm run prettier:es",
     "build:node-es": "rimraf dist/node-es && cross-env NODE_ENV=production BABEL_ENV=node-es babel src --out-dir dist/node-es && npm run prettier:node-es",
     "build:cjs": "rimraf dist/cjs && cross-env NODE_ENV=production BABEL_ENV=cjs babel src --out-dir dist/cjs && npm run prettier:cjs",
-    "build:resolver": "rimraf resolver/dist && cross-env NODE_ENV=production BABEL_ENV=node-es babel resolver/src --out-dir resolver/dist && npm run prettier:resolver",
+    "build:resolver": "rimraf resolver/dist && cross-env NODE_ENV=production BABEL_ENV=node-cjs babel resolver/src --out-dir resolver/dist && npm run prettier:resolver",
     "watch": "rimraf dist/es && rimraf dist/node-es && cross-env NODE_ENV=production BABEL_ENV=node-es babel ./src -w --out-dir dist/node-es & cross-env NODE_ENV=production BABEL_ENV=es babel ./src -w --out-dir dist/es",
-    "watch:resolver": "rimraf resolver/dist && cross-env NODE_ENV=production BABEL_ENV=node-es babel ./resolver/src -w --out-dir resolver/dist",
+    "watch:resolver": "rimraf resolver/dist && cross-env NODE_ENV=production BABEL_ENV=node-cjs babel ./resolver/src -w --out-dir resolver/dist",
     "prettier:es": "prettier --single-quote --no-semi --no-bracket-spacing --trailing-comma es5 --write --tab-width 2 \"dist/es/**/*.js\"",
     "prettier:node-es": "prettier --single-quote --no-semi --no-bracket-spacing --trailing-comma es5 --write --tab-width 2 \"dist/node-es/**/*.js\"",
     "prettier:cjs": "prettier --single-quote --no-semi --no-bracket-spacing --trailing-comma es5 --write --tab-width 2 \"dist/cjs/**/*.js\"",
@@ -30,6 +30,8 @@
     "@inst-app/babel-preset-esx": "^1.0.2",
     "@inst-app/babel-preset-react": "^1.0.0",
     "prettier": "^1.14.2",
+    "react": "^16.5.2",
+    "react-dom": "^16.5.2",
     "rimraf": "^2.6.2"
   },
   "dependencies": {

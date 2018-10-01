@@ -1,5 +1,5 @@
 const path = require('path')
-const startServer = require('@jaredlunde/example-server/startServer')
+const startServer = require('@jaredlunde/example-server/react/startServer')
 
 
 module.exports = startServer({

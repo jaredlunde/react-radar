@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOMServer from 'react-dom/server'
 import Radar from 'react-radar'
-import createRenderer, {getScripts} from '@jaredlunde/example-server/createRenderer'
+import createRenderer, {getScripts} from '@jaredlunde/example-server/react/createRenderer'
 import App from '../App'
 
 

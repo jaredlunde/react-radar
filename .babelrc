@@ -11,6 +11,18 @@
         ["@inst-app/esx", {"env": {"modules": false}}]
       ]
     },
+    "node-cjs": {
+      "presets": [
+        [
+          "@inst-app/esx",
+          {
+            "env": {
+              "targets": {"node": "8"}
+            }
+          }
+        ]
+      ]
+    },
     "node-es": {
       "presets": [
         [
