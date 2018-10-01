@@ -109,7 +109,7 @@ export default function parse ({state, nextState, queries, ...context}) {
 
     for (let j = 0; j < stateKeys.length; j++) {
       const key = stateKeys[j]
-      context.recordType = query.contains[key]
+      context.recordType = query.requires[key]
       context.state = queryState[key]
       records[key] = routeToRecords(context)
     }

@@ -23,7 +23,7 @@ const Viewer = Radar.createRecord({
 
 const GetViewer = Radar.createQuery({
   name: 'GetViewer',
-  contains: (props) => ({viewer: Viewer`username`})
+  requires: props => ({viewer: Viewer`username`})
 })
 
 

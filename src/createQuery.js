@@ -62,21 +62,20 @@ export default function createQuery ({
     else {
       props = props = Object.assign({}, defaultProps, props)
     }
-    const queryContains = (requires_ || requires)(props)
+    const queryRequires = (requires_ || requires)(props)
 
     return {
+      // network props
       name,
       props,
-      requires: queryContains,
-      optimistic: getOptimistic && getOptimistic(props, queryContains),
-      rollback: getRollback && getRollback(props, queryContains),
+      requires: queryRequires,
+      // local props
+      optimistic: getOptimistic && getOptimistic(props, queryRequires),
+      rollback: getRollback && getRollback(props, queryRequires),
       reducer: reducer || reducer_
     }
   }
 
-  if (__DEV__) {
-    Object.defineProperty(Query, 'name', {value: name})
-  }
-
+  Object.defineProperty(Query, 'name', {value: name})
   return Query
 }

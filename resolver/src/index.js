@@ -1,26 +1,39 @@
 /*
-import {createQueryResolver} from 'react-radar'
+import {
+  createRecordResolver,
+  createResolver,
+  fields
+} from 'react-radar/resolver'
 
+const pwaResolver = createResolver()
 
-const Viewer = createRecordResolver({
-  name: 'Viewer',
-  fields: {
-    uid: Key(fields.string),
-    name: NameObject,
+const ViewerResolver = createRecordResolver({
+  record: Viewer,
+  resolves: {
+    uid: fields.Key(fields.string),
+    username: fields.string,
     numFollowers: fields.int,
     numFollowing: fields.int
   }
 })
 
-const ViewerQuery = createQueryResolver({
-  name: 'ViewerQuery',
-  records: {
-    viewer: Viewer
+pwaResolver.resolve({
+  query: ViewerQuery,
+  resolves: {
+    viewer: ViewerResolver,
+    viewers: ViewerResolver.each,
   },
-  resolver: (requires, {session}) => {
+  getState: (props, requires, context) => {
     return {
-      viewer: session.viewer
+      viewer: context.req.session.viewer,
+      viewers: [context.req.session.viewer]
     }
   }
 })
 */
+export * from './fields'
+export * as fields from './fields'
+export createQueryResolver from './createQueryResolver'
+export createRecordResolver from './createRecordResolver'
+export createResolver from './createResolver'
+export createUnionResolver from './createUnionResolver'
