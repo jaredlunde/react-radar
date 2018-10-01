@@ -1,0 +1,1 @@
+export ViewerUnionResolver from './ViewerUnionResolver'

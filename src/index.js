@@ -3,6 +3,7 @@ import createNetwork from './createNetwork'
 import createQuery, {createReducer, noop} from './createQuery'
 import createRecord from './createRecord'
 import createRecordUpdate from './createRecordUpdate'
+import createUnion from './createUnion'
 import load from './load'
 import Key from './Key'
 import Query from './Query'
@@ -28,6 +29,7 @@ export {
   noop,
   createRecord,
   createRecordUpdate,
+  createUnion,
   load,
   Key,
   Query,
@@ -53,6 +55,7 @@ export default {
   noop,
   createRecord,
   createRecordUpdate,
+  createUnion,
   load,
   Key,
   Query,

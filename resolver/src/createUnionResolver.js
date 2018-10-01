@@ -3,15 +3,16 @@ import {defaultRecordReducer} from './createRecordResolver'
 import {equalKeys} from './utils'
 
 
-function defaultGetRecord (state, props, context) {
+function defaultGetRecordName (state, props, context) {
+  state = Array.isArray(state) ? state[0] : state
   return Object.keys(state)[0]
 }
 
 export default function createUnionResolver ({
   union,
   resolves,
-  reduce = defaultRecordReducer,
-  getRecord = defaultGetRecord
+  reducer = defaultRecordReducer,
+  getRecordName = defaultGetRecordName
 }) {
   if (__DEV__) {
     invariant(
@@ -37,8 +38,20 @@ export default function createUnionResolver ({
     }
   }
 
-  async function resolver (state, props, context) {
+  function resolve (state, props, context) {
+    const nextState = reducer(state, props, context)
+    const union = getRecordName(nextState, props, context)
 
+    if (nextState === false) {
+      return false
+    }
+
+    const childContext = {...context, requires: context.requires[union], union}
+    delete childContext.index
+
+    return Promise.resolve(resolves[union](nextState, props, childContext)).then(
+      state => ({[union]: state})
+    )
   }
 
   resolve.each = function resolveEach (state, props, context) {
@@ -48,9 +61,8 @@ export default function createUnionResolver ({
     while (true) {
       // copies context so 'index' can be used in async functions without
       // having to worry about mutations
-      const childContext = Object.assign({}, context, {index})
-      const acc = resolve(state, props, childContext)
-      if (acc === false) break;
+      const acc = resolve(state, props, {...context, index})
+      if (acc === false || index > 10) break;
       result.push(acc)
       index += 1
     }
@@ -58,7 +70,9 @@ export default function createUnionResolver ({
     return Promise.all(result)
   }
 
-  Object.defineProperty(resolver, 'name', {value: query.name})
-  Object.defineProperty(resolver, 'sync', {value: sync})
-  return resolver
+  Object.defineProperty(resolve, 'name', {value: union.name})
+  Object.defineProperty(resolve, 'resolves', {value: resolves})
+  Object.defineProperty(resolve.each, 'name', {value: union.name})
+  Object.defineProperty(resolve.each, 'resolves', {value: resolves})
+  return resolve
 }

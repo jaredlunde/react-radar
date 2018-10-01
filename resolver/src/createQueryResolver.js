@@ -107,7 +107,7 @@ export default function createQueryResolver ({
       // keys
       resolves = resolves(props, context)
     }
-    
+
     const required = getRequiredRecords(resolves, context.requires)
     const state = await getState(required, props, context)
 

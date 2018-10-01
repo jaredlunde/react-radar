@@ -4,16 +4,26 @@ import {promiseAllValues, equalKeys} from './utils'
 
 
 export function defaultRecordReducer (state, props, context) {
-  if (state === null || context.index === void 0) {
+  if (state === null) {
     return state
   }
 
-  // bails out of resolve.each iteration when the index has been surpassed
-  if (state.length === context.index) {
-    return false
+  if (context.index !== void 0) {
+    // bails out of resolve.each iteration when the index has been surpassed
+    if (context.index >= state.length) {
+      return false
+    }
+
+    if (context.index !== void 0) {
+      state = state[context.index]
+    }
   }
 
-  return state[context.index]
+  if (context.union !== void 0) {
+    state = state[context.union]
+  }
+
+  return state
 }
 
 
@@ -102,6 +112,7 @@ export default function createRecordResolver ({
     }
 
     const result = resolveFields(nextState, props, context)
+
     // sets the key field if it wasn't specifically requested
     if (result[record.keyField] === void 0) {
       const childContext = {
@@ -133,8 +144,7 @@ export default function createRecordResolver ({
     while (true) {
       // copies context so 'index' can be used in async functions without
       // having to worry about mutations
-      const childContext = {...context, index}
-      const acc = resolve(state, props, childContext)
+      const acc = resolve(state, props, {...context, index})
       if (acc === false) break;
       result.push(acc)
       index += 1
