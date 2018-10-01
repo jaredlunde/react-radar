@@ -1,1 +1,0 @@
-export ViewerQuery from './ViewerQuery'

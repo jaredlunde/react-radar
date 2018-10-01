@@ -1,6 +1,6 @@
 import {ViewerQuery} from '../../queries'
-import {ViewerUnionResolver} from '../unions'
-import resolver from '../resolver'
+import {ViewerUnionResolver} from '../../unions'
+import resolver from '../../resolver'
 
 
 export default resolver.resolve({

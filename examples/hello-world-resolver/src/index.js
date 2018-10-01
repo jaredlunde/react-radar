@@ -2,7 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import cookies from 'cookie-parser'
 import * as config from './config'
-import {resolver} from './radar/resolvers'
+import {resolver} from './radar'
 
 
 

@@ -1,6 +1,6 @@
 import {createUnionResolver, fields} from 'react-radar/resolver'
-import {ViewerUnion} from '../../unions'
-import {ViewerResolver} from '../records'
+import {ViewerResolver} from '../../records'
+import ViewerUnion from '../ViewerUnion'
 
 
 export default createUnionResolver({

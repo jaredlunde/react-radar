@@ -1,0 +1,1 @@
+export ViewerQueryResolver from './ViewerQueryResolver'

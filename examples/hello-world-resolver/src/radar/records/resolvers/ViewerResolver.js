@@ -1,5 +1,5 @@
 import {createRecordResolver, fields} from 'react-radar/resolver'
-import {Viewer} from '../../records'
+import Viewer from '../Viewer'
 
 
 export default createRecordResolver({
