@@ -46,8 +46,12 @@ export default function createUnionResolver ({
       return false
     }
 
-    const childContext = {...context, requires: context.requires[union], union}
-    delete childContext.index
+    const childContext = {
+      ...context,
+      requires: context.requires[union],
+      union,
+      index: void 0
+    }
 
     return Promise.resolve(resolves[union](nextState, props, childContext)).then(
       state => ({[union]: state})

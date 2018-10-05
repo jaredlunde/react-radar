@@ -3,7 +3,7 @@
   "version": "2.0.0-beta.10",
   "main": "dist/cjs/index.js",
   "browser": "dist/es/index.browser.js",
-  "module": "dist/node-es/index.esm.js",
+  "module": "dist/node-esm/index.esm.mjs",
   "sideEffects": [
     "**/index.esm.js"
   ],
@@ -14,15 +14,15 @@
     "url": "https://github.com/jaredLunde/react-radar"
   },
   "scripts": {
-    "build": "npm run build:es && npm run build:cjs && npm run build:node-es && npm run build:resolver",
+    "build": "npm run build:es && npm run build:cjs && npm run build:node-esm && npm run build:resolver",
     "build:es": "rimraf dist/es && cross-env NODE_ENV=production BABEL_ENV=es babel src --out-dir dist/es && npm run prettier:es",
-    "build:node-es": "rimraf dist/node-es && cross-env NODE_ENV=production BABEL_ENV=node-es babel src --out-dir dist/node-es && npm run prettier:node-es",
+    "build:node-esm": "rimraf dist/node-esm && cross-env NODE_ENV=production BABEL_ENV=node-esm babel src --out-dir dist/node-esm && npm run prettier:node-esm && renamer --find '/\\.js$/' --replace '.mjs' 'dist/node-esm/**'",
     "build:cjs": "rimraf dist/cjs && cross-env NODE_ENV=production BABEL_ENV=cjs babel src --out-dir dist/cjs && npm run prettier:cjs",
     "build:resolver": "rimraf resolver/dist && cross-env NODE_ENV=production BABEL_ENV=node-cjs babel resolver/src --out-dir resolver/dist && npm run prettier:resolver",
-    "watch": "rimraf dist/es && rimraf dist/node-es && cross-env NODE_ENV=production BABEL_ENV=node-es babel ./src -w --out-dir dist/node-es & cross-env NODE_ENV=production BABEL_ENV=es babel ./src -w --out-dir dist/es",
+    "watch": "rimraf dist/es && rimraf dist/node-esm && cross-env NODE_ENV=production BABEL_ENV=node-esm babel ./src -w --out-dir dist/node-esm & cross-env NODE_ENV=production BABEL_ENV=es babel ./src -w --out-dir dist/es",
     "watch:resolver": "rimraf resolver/dist && cross-env NODE_ENV=production BABEL_ENV=node-cjs babel ./resolver/src -w --out-dir resolver/dist",
     "prettier:es": "prettier --single-quote --no-semi --no-bracket-spacing --trailing-comma es5 --write --tab-width 2 \"dist/es/**/*.js\"",
-    "prettier:node-es": "prettier --single-quote --no-semi --no-bracket-spacing --trailing-comma es5 --write --tab-width 2 \"dist/node-es/**/*.js\"",
+    "prettier:node-esm": "prettier --single-quote --no-semi --no-bracket-spacing --trailing-comma es5 --write --tab-width 2 \"dist/node-esm/**/*.js\"",
     "prettier:cjs": "prettier --single-quote --no-semi --no-bracket-spacing --trailing-comma es5 --write --tab-width 2 \"dist/cjs/**/*.js\"",
     "prettier:resolver": "prettier --single-quote --no-semi --no-bracket-spacing --trailing-comma es5 --write --tab-width 2 \"resolver/dist/**/*.js\""
   },
@@ -32,6 +32,7 @@
     "prettier": "^1.14.2",
     "react": "^16.5.2",
     "react-dom": "^16.5.2",
+    "renamer": "^1.0.0",
     "rimraf": "^2.6.2"
   },
   "dependencies": {

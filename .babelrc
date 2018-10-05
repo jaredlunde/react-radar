@@ -23,7 +23,7 @@
         ]
       ]
     },
-    "node-es": {
+    "node-esm": {
       "presets": [
         [
           "@inst-app/esx",

@@ -6,7 +6,7 @@ function defaultResolver (state, props, context) {
 
   if (__DEV__) {
     const {record, query,/*...otherContext*/} = context
-    if (!state || state.hasOwnProperty(fieldName) === false) {
+    if (!state || state[fieldName] === void 0) {
       throw (
         `Field '${fieldName}' was undefined in Query '${query.name}' of ` +
         `Record: ${record.name}`

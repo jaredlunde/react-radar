@@ -80,8 +80,7 @@ export default function createRecordResolver ({
 
     if (context.requires === null) {
       for (let fieldName in resolves) {
-        const childContext = {...context, fieldName}
-        delete childContext.index
+        const childContext = {...context, fieldName, index: void 0}
         result[fieldName] = resolveField(state, props, childContext)
       }
     }
@@ -90,9 +89,9 @@ export default function createRecordResolver ({
         const childContext = {
           ...context,
           fieldName,
-          requires: context.requires[fieldName]
+          requires: context.requires[fieldName],
+          index: void 0
         }
-        delete childContext.index
         result[fieldName] = resolveField(
           state,
           props,
@@ -118,9 +117,9 @@ export default function createRecordResolver ({
       const childContext = {
         ...context,
         fieldName: record.keyField,
-        requires: context.requires[record.keyField]
+        requires: context.requires[record.keyField],
+        index: void 0
       }
-      delete childContext.index
       result[record.keyField] = resolveField(nextState, props, childContext)
     }
 
