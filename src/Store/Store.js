@@ -50,7 +50,7 @@ export default class Store extends React.Component {
 
   componentWillUnmount () {
     for (let commit of this.commits) {
-      this.commits.cancel()
+      commit.cancel()
     }
 
     Connections.clear()

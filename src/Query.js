@@ -152,7 +152,7 @@ export function createQueryComponent (opt = emptyObj) {
       return queries
     }
 
-    load = () => {
+    load = context => {
       // this.queries = this.getQueries()
       let {endpoint} = this.props
       const queries = {}, status = {}, response = {}
@@ -176,13 +176,13 @@ export function createQueryComponent (opt = emptyObj) {
         const commits = []
 
         for (let id in queries) {
-          commits.push(this.commit({[id]: queries[id]}))
+          commits.push(this.commit({[id]: queries[id]}, context))
         }
 
         return Promise.all(commits)
       }
       else {
-        return this.commit(queries)
+        return this.commit(queries, context)
       }
     }
 
@@ -205,15 +205,15 @@ export function createQueryComponent (opt = emptyObj) {
       )
     }
 
-    commit (queriesObject) {
+    commit (queriesObject, context) {
       const queries = Object.values(queriesObject)
 
       if (queries.length) {
-        const commit = this.props.endpoint.commit({
-          type: this.isRadarQuery ? 'QUERY' : 'UPDATE',
-          queries
-        })
-        return this.handleCommit(commit, queriesObject)
+        const commit = this.props.endpoint.commit(
+          {queries, type: this.isRadarQuery ? 'QUERY' : 'UPDATE'},
+          context
+        )
+        return this.handleCommit(commit, queriesObject, context)
       }
 
       const commits = []
@@ -226,7 +226,7 @@ export function createQueryComponent (opt = emptyObj) {
       return Promise.all(commits)
     }
 
-    handleCommit (commit, queries) {
+    handleCommit (commit, queries, context) {
       const {endpoint: {queryCache}} = this.props
       this.pending.add(commit)
 
@@ -238,6 +238,10 @@ export function createQueryComponent (opt = emptyObj) {
         this.pending.delete(commit)
         const STATUS =
           response.ok === true ? DONE : ERROR
+
+        if (context && context.setHeaders) {
+          context.setHeaders(response.headers)
+        }
 
         Object.keys(queries).forEach(
           (id, i) => {
@@ -262,10 +266,10 @@ export function createQueryComponent (opt = emptyObj) {
       ids.forEach(id => this.props.endpoint.queryCache.setStatus(id, WAITING))
     }
 
-    reload = (...ids) => {
+    reload = (ids, context) => {
       this.setWaiting(ids)
       this.unsubscribeAll()
-      this.load()
+      this.load(context)
     }
 
     render () {

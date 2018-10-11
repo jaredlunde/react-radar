@@ -51,8 +51,9 @@ export default function createCache (
         if (listeners.size === 0) {
           if (query.commit && parallel === true) {
             query.commit.cancel()
-            map.delete(k)
           }
+
+          map.delete(k)
         }
       }
     },

@@ -20,7 +20,7 @@ function removePendingUpdate (pendingUpdates, PENDING_UPDATE) {
 export default function createNetwork (props) {
   const pendingUpdates = []
 
-  function post (body) {
+  function post (body, context) {
     return new Promise(
       async (resolve, reject) => {
         let {url, timeout, headers, ...opt} = Object.assign({}, DEFAULT_FETCH, props)
@@ -29,6 +29,10 @@ export default function createNetwork (props) {
         opt.body = JSON.stringify(body)
         // sets user-defined headers
         headers = await getRequestHeaders({body, headers})
+        // sets headers from context
+        if (context && context.headers) {
+          headers = Object.assign(headers, context.headers)
+        }
         // sets required headers
         for (let name in REQUIRED_HEADERS) {
           headers[name] = REQUIRED_HEADERS[name]

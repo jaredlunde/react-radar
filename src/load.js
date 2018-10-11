@@ -17,7 +17,7 @@ export default function load (app, visitor, context = emptyObj) {
         stop = true
       }
 
-      return instance.load()
+      return instance.load(context)
     }
   }
 
@@ -31,7 +31,7 @@ export default function load (app, visitor, context = emptyObj) {
         return promise
       }
 
-      return visitor(element, instance)
+      return visitor(element, instance, context)
     }
   }
 

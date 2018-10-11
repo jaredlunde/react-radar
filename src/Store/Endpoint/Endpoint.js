@@ -50,7 +50,7 @@ class Endpoint extends React.Component {
     )
   }
 
-  commit = opt => {
+  commit = (opt, context) => {
     const optimistic = this.commitLocal(opt)
     let {type, queries} = opt
     const payload = []
@@ -70,7 +70,7 @@ class Endpoint extends React.Component {
       async resolve => {
         let state
         let [{response, nextState}] = await Promise.all(
-          [this.commitPayload(payload), optimistic]
+          [this.commitPayload(payload, context), optimistic]
         )
 
         switch (response.status) {
@@ -109,9 +109,9 @@ class Endpoint extends React.Component {
     )
   }
 
-  commitPayload (payload) {
+  commitPayload (payload, context) {
     // posts the JSON request
-    return this.props.post(payload).then(
+    return this.props.post(payload, context).then(
       response => ({response, nextState: response.json})
     )
   }
