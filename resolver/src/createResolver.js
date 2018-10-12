@@ -3,14 +3,14 @@ import emptyArr from 'empty/array'
 import createQueryResolver from './createQueryResolver'
 
 
-function errorToString (error) {
-  return error.toJSON !== void 0 ? error.toJSON() : error.toString()
+function errorToJSON (error) {
+  return error.toJSON !== void 0 ? error.toJSON() : error
 }
 
 function createErrorResponse (error) {
   return {
     isRadarError: true,
-    error: Array.isArray(error) ? error.map(errorToString) : errorToString(error)
+    error: Array.isArray(error) ? error.map(errorToJSON) : errorToJSON(error)
   }
 }
 
