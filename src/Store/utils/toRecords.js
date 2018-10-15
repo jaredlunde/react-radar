@@ -86,7 +86,7 @@ export default function parse ({state, nextState, queries, ...context}) {
   let hasRecordUpdates = false
 
   for (let i = 0; i < queries.length; i++) {
-    const queryState = nextState[i]
+    let queryState = nextState[i]
     const query = queries[i]
     context.query = query
     let records = {}
@@ -100,6 +100,8 @@ export default function parse ({state, nextState, queries, ...context}) {
     }
     else if (queryState.isRadarError === true) {
       context.hasErrors = true
+      queryState = {...queryState}
+      delete queryState.isRadarError
       state = query.reducer(state, queryState, context)
       continue
     }

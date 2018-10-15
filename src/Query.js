@@ -192,10 +192,21 @@ export function createQueryComponent (opt = emptyObj) {
       }
 
       this.setState(
-        prevState => ({
-          status: {...prevState.status, [id]: query.status},
-          response: {...prevState.response, [id]: query.response}
-        })
+        ({status, response}) => {
+          const nextStatus = {}, nextResponse = {}
+
+          for (let id in status) {
+            if (this.id.indexOf(id) > -1) {
+              nextStatus[id] = status[id]
+              nextResponse[id] = response[id]
+            }
+          }
+
+          nextStatus[id] = query.status
+          nextResponse[id] = query.response
+
+          return {status: nextStatus, response: nextResponse}
+        }
       )
     }
 
@@ -269,7 +280,7 @@ export function createQueryComponent (opt = emptyObj) {
     reload = (ids, context) => {
       this.setWaiting(ids)
       this.unsubscribeAll()
-      this.load(context)
+      return this.load(context)
     }
 
     render () {

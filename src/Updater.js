@@ -9,12 +9,12 @@ export default createQueryComponent({
   prototype: {
     setup () {
       this.isRadarQuery = false
-      this.queryContext.commit = this.reload
+      this.queryContext.update = this.reload
       delete this.queryContext.reload
     },
 
     componentDidMount () {},
-    componentDidUpdate () {
+    componentDidUpdate (_, prevState) {
       if (strictShallowEqual(this.getID(), this.id) === false) {
         this.unsubscribeAll()
         this.queries = this.getQueries()
