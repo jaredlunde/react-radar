@@ -76,7 +76,9 @@ export default function createCache (
         delete output[k].commit
         delete output[k].listeners
         delete output[k].query
-        delete output[k].response.url
+        if (output[k].response) {
+          delete output[k].response.url
+        }
       })
 
       return JSON.stringify(output, ...a)

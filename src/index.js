@@ -1,6 +1,6 @@
 import Connect from './Connect'
 import createNetwork from './createNetwork'
-import createQuery, {createReducer, noop} from './createQuery'
+import createQuery, {createReducer, defaultReducer, noop} from './createQuery'
 import createRecord from './createRecord'
 import createRecordUpdate from './createRecordUpdate'
 import createUnion from './createUnion'
@@ -26,6 +26,7 @@ export {
   createNetwork,
   createQuery,
   createReducer,
+  defaultReducer,
   noop,
   createRecord,
   createRecordUpdate,
@@ -52,6 +53,7 @@ export default {
   createNetwork,
   createQuery,
   createReducer,
+  defaultReducer,
   noop,
   createRecord,
   createRecordUpdate,

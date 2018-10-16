@@ -19,7 +19,7 @@ export function createReducer (name, reducer) {
   return reducer
 }
 
-const defaultReducer = createReducer(
+export const defaultReducer = createReducer(
   'defaultReducer',
   function (prevState, nextState, context) {
     // console.log('Reducer:', prevState, nextState, context)

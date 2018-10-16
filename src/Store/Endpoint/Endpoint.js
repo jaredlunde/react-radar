@@ -96,12 +96,7 @@ class Endpoint extends React.Component {
             }
         }
 
-        state = await this.props.updateState({
-          nextState,
-          queries,
-          response,
-          type
-        })
+        state = await this.props.updateState({nextState, queries, response, type})
         this.props.cache.initialState = state
 
         resolve({state, response})

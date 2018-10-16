@@ -4,7 +4,13 @@ import createQueryResolver from './createQueryResolver'
 
 
 function errorToJSON (error) {
-  return error.toJSON !== void 0 ? error.toJSON() : error
+  return (
+    error.toJSON !== void 0
+      ? error.toJSON()
+      : error instanceof Error
+        ? {message: String(error)}
+        : error
+  )
 }
 
 function createErrorResponse (error) {

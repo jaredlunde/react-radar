@@ -95,8 +95,7 @@ export function createQueryComponent (opt = emptyObj) {
         status[id] = query === void 0 ? WAITING : query.status
 
         if (query !== void 0) {
-          queryCache.subscribe(id, this)
-
+          // queryCache.subscribe(id, this)
           if (query.status === Query.LOADING) {
             this.handleCommit(query.commit, {[id]: this.queries[id]})
           }
