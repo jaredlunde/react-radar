@@ -12,12 +12,12 @@ export default resolver.resolve({
     viewer: [
       {
         ...props.viewer,
-        uid: 123,
+        uid: 13,
         name: {
-          first: 'Frank',
+          first: 'George',
           last: 'Donahue'
         },
-        numFollowing: 1002,
+        numFollowing: 2,
         numFollowers: "12222330",
         fishingRod: 'Jared, the resolver worked!'
       }

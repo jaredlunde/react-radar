@@ -76,7 +76,7 @@ export default function createUnionResolver ({
 
   resolve.id = union.id
   resolve.resolves = resolves
-  resolve.each = union.id
+  resolve.each.id = union.id
   resolve.each.resolves = resolves
   return resolve
 }

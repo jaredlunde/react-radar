@@ -1,7 +1,11 @@
+import isNode from '../utils/isNode'
+
+
 let fetcher
 
-if (typeof Worker !== 'undefined') {
-  fetcher = require('workerize-loader!./post')
+if (isNode === false) {
+  // fetcher = require('workerize-loader!./post')
+  fetcher = require('workerize-loader?inline!./post')
 }
 
 if (typeof Worker === 'undefined') {
