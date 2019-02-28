@@ -1,45 +1,26 @@
 import {ViewerQuery} from '../../queries'
-import {ViewerUnionResolver} from '../../unions'
+import {ViewerResolver} from '../../records/resolvers'
 import resolver from '../../resolver'
 
 
 export default resolver.resolve({
   query: ViewerQuery,
   resolves: {
-    viewer: ViewerUnionResolver.each
+    viewer: ViewerResolver.each
   },
   getState: (requires, props, context) => {
     return {
       viewer: [
         {
-          viewerA: {
-            ...props.viewer,
-            uid: 1235,
-            name: {
-              first: 'phil',
-              last: 'donahue'
-            }
-          }
-        },
-        {
-          viewerB: {
-            ...props.viewer,
-            uid: 1235,
-            name: {
-              first: 'phil',
-              last: 'donahue'
-            }
-          }
-        },
-        {
-          viewerA: {
-            ...props.viewer,
-            uid: 1235,
-            name: {
-              first: 'phil',
-              last: 'donahue'
-            }
-          }
+          ...props.viewer,
+          uid: 1235,
+          name: {
+            first: 'phil',
+            last: 'donahue'
+          },
+          numFollowing: 12,
+          numFollowers: 120,
+          fishingRod: 'foo'
         }
       ]
     }

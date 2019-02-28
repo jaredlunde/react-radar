@@ -11,8 +11,7 @@ export default createRenderer({
       // renders the app to a string
       const cache = Radar.createCache()
       const app = <App cache={cache} location={req.url}/>
-      await Radar.load(app)
-      const page = ReactDOMServer.renderToString(app)
+      const page = await Radar.load(app, ReactDOMServer.renderToString)
       // sends the request
       res.set('Content-Type', 'text/html')
       res.send(`

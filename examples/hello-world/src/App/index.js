@@ -5,34 +5,21 @@ import {
   Updater,
   Connect,
   createQuery,
-  createNetwork,
-  Key
+  createNetwork
 } from 'react-radar'
-import {Viewer, ItemType, Cursor} from './state/records'
+import {Viewer} from './state/records'
 
 
 const ViewerQuery = createQuery({
-  name: 'AdminViewerQuery',
+  name: 'ViewerQuery',
   requires: () => ({viewer: Viewer``})
 })
 
 const ViewerQuery2 = createQuery({
   name: 'ViewerQuery',
-  getOptimistic: () => ({viewer: {uid: 129343, name: {full: 'Jared'}}}),
+  getOptimistic: () => ({viewer: {uid: 129343, name: {first: 'Jared'}}}),
   getRollback: () => ({viewer: null}),
   requires: () => ({viewer: Viewer``})
-})
-
-
-const ItemTypeQuery = createQuery({
-  name: 'ItemTypePrivateQuery',
-  defaultProps: {
-    after: null,
-    // before: null,
-    next: 24,
-    sortBy: 'new'
-  },
-  requires: () => ({itemTypes: ItemType`uid name price`})
 })
 
 
@@ -43,7 +30,7 @@ export default class App extends React.PureComponent {
     return (
       <Store
         cache={this.props.cache}
-        network={createNetwork({url: 'https://dev-api.instaspace.app/admin/1.0/radar'})}
+        network={createNetwork({url: 'http://127.0.0.1:4000/1.0/radar'})}
       >
         <div style={{width: '100%'}}>
           <Updater connect='viewer' run={ViewerQuery2()}>
@@ -56,7 +43,7 @@ export default class App extends React.PureComponent {
             )}
           </Updater>
 
-          <Query parallel connect='viewer' run={[ViewerQuery(), ItemTypeQuery()]}>
+          <Query connect='viewer' run={[ViewerQuery()]}>
             {({viewer}, radar) => {
               // console.log(JSON.stringify(radar, null, 2))
               switch (radar.status) {
@@ -74,7 +61,7 @@ export default class App extends React.PureComponent {
                 default:
                   return (
                     <>
-                      1. Yo, {viewer && viewer.name.full} - <button onClick={radar.reload}>Reload</button>
+                      1. Yo, {viewer && viewer[0].name.first} - <button onClick={radar.reload}>Reload</button>
                       <Query connect='viewer' run={[ViewerQuery({test: 'crepe'}), ViewerQuery()]}>
                         {({viewer, errors}, radar) => {
                           // console.log(JSON.stringify(radar, null, 2))
@@ -93,7 +80,7 @@ export default class App extends React.PureComponent {
                             default:
                               return (
                                 <>
-                                  2. Yo, {viewer && viewer.name.full} - <button onClick={radar.reload}>Reload</button>
+                                  2. Yo, {viewer && viewer[0].name.first} - <button onClick={radar.reload}>Reload</button>
                                 </>
                               )
                           }
@@ -115,7 +102,7 @@ export default class App extends React.PureComponent {
                       Error - <button onClick={radar.reload}>Retry</button>
                     </>
                   )
-                break;
+                  break;
                 case Query.WAITING:
                 case Query.LOADING:
                   return 'Loading...'
@@ -123,7 +110,7 @@ export default class App extends React.PureComponent {
                 default:
                   return (
                     <>
-                      3. Yo, {viewer && viewer.name.full} - <button onClick={radar.reload}>Reload</button>
+                      3. Yo, {viewer && viewer[0].name.first} - <button onClick={radar.reload}>Reload</button>
                     </>
                   )
               }
@@ -133,12 +120,6 @@ export default class App extends React.PureComponent {
           <Connect to='viewer'>
             {({viewer}) => (
               <pre>{JSON.stringify(viewer, null, 2)}</pre>
-            )}
-          </Connect>
-
-          <Connect to='itemTypes'>
-            {({itemTypes}) => (
-              <pre>{JSON.stringify(itemTypes, null, 2)}</pre>
             )}
           </Connect>
         </div>

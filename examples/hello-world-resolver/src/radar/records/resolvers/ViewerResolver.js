@@ -11,6 +11,7 @@ export default createRecordResolver({
       last: fields.string
     }),
     numFollowers: fields.int,
-    numFollowing: fields.int
+    numFollowing: fields.int,
+    fishingRod: fields.string
   }
 })

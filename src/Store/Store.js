@@ -1,7 +1,8 @@
 import React from 'react'
 import Promise from 'cancelable-promise'
 import emptyObj from 'empty/object'
-// import now from 'performance-now'
+import {isNode} from '../utils'
+import now from 'performance-now'
 import toRecords from './utils/toRecords'
 import {stateDidChange, toImmutable} from './utils'
 import Connections from './Connections'
@@ -11,6 +12,14 @@ import Endpoint from './Endpoint'
 import createNetwork from '../createNetwork'
 
 
+const defaultState = {data: emptyObj}
+const formatHydrateQuery = query => ({
+  nextState: [query.response.json],
+  response: query.response,
+  queries: [query.query],
+  type: 'QUERY'
+})
+
 export default class Store extends React.Component {
   static defaultProps = {network: createNetwork()}
 
@@ -19,15 +28,13 @@ export default class Store extends React.Component {
     // parses any initial state in props or the DOM
     let initialState
 
-    if (props.cache !== void 0) {
+    if (props.cache !== void 0 && props.cache.size > 0) {
       initialState = props.cache.initialState
-      // if the initial state was from the DOM, defer its rendering until
-      // the endpoint is ready
-      this.state = {data: initialState || emptyObj}
+      this.state = isNode === true ? this.hydrateNode(props.cache) : defaultState
     }
     else {
       // didn't have an initial state
-      this.state = {data: emptyObj}
+      this.state = defaultState
     }
 
     this.commits = []
@@ -43,10 +50,33 @@ export default class Store extends React.Component {
     }
   }
 
-  // componentDidMount () {
-  //   // hacky way to fix some goings on with InternalContext I don't understand
-  //   this.internalContext = Object.assign({}, this.internalContext)
-  // }
+  async componentDidMount () {
+    if (this.props.cache && this.props.cache.size > 0) {
+      await this.hydrateBrowser()
+    }
+  }
+
+  hydrateBrowser () {
+    return Promise.all(
+      this.props.cache.map(
+        (id, query) => query.response && this.updateState(
+          formatHydrateQuery(query)
+        )
+      )
+    )
+  }
+
+  hydrateNode (cache) {
+    let state = {data: {}}
+
+    cache.forEach(
+      (id, query) =>
+        query.response
+        && (state = this.getNextState(state, formatHydrateQuery(query)) || state)
+    )
+
+    return state
+  }
 
   componentWillUnmount () {
     for (let commit of this.commits) {
@@ -56,26 +86,33 @@ export default class Store extends React.Component {
     Connections.clear()
   }
 
+  getNextState = (state = emptyObj, updates)=> {
+    let start = now()
+    let nextState = toRecords(Object.assign({state: state.data}, updates))
+    // do a shallow comparison of the previous state to this one to avoid
+    // unnecessary re-renders
+    if (nextState === null || stateDidChange(state.data, nextState) === false) {
+      console.log('[Radar] state profiler:', now() - start)
+      return null
+    }
+    // sets the local state
+    Connections.setBuckets(nextState)
+    console.log('[Radar] state profiler:', now() - start)
+    return {data: nextState}
+  }
+
   updateState = updates/*{nextState, queries, [<context> response, type]}*/ => {
     // handles actions and query updates
-    const willSet = new Promise(
+    let willSet
+    // this has to be done this way (with let) or there is a 'willSet is not
+    // defined' error that crops up
+    willSet = new Promise(
       resolve => this.setState(
         // sets the next state of the store
         state => {
-          // const start = now()
-          let nextState = toRecords(Object.assign({state: state.data}, updates))
-          // do a shallow comparison of the previous state to this one to avoid
-          // unnecessary re-renders
-          if (nextState === null || stateDidChange(state.data, nextState) === false) {
-            // console.log(`[nextState profiler] ${now() - start}ms`)
-            resolve(state.data)
-            return null
-          }
-          // sets the local state
-          Connections.setBuckets(nextState)
-          // console.log(`[nextState profiler] ${now() - start}ms`)
+          const nextState = this.getNextState(state, updates) || state
           resolve(nextState)
-          return {data: nextState}
+          return nextState
         },
         // removes the commit because it can't be canceled anymore
         () => {

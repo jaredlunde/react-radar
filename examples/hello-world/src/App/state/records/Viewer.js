@@ -1,13 +1,16 @@
-import {createRecord} from 'react-radar'
-import User from './User'
+import {createRecord, Key} from 'react-radar'
+
 
 export default createRecord({
-  name: 'AdminViewer',
+  name: 'Viewer',
   fields: {
-    ...User.fields,
-    activated: null,
-    settings: {
-      locale: null,
-    }
+    uid: Key(),
+    name: {
+      first: null,
+      last: null
+    },
+    numFollowers: null,
+    numFollowing: null,
+    fishingRod: null
   }
 })

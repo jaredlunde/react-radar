@@ -7,6 +7,11 @@ import {resolver} from './radar'
 
 
 export default createAPI({
+  OPTIONS: {
+    '/1.0./radar': (req, res) => {
+      res.set('Access-Control-Allow-Origin', '*')
+    }
+  },
   POST: {
     '/1.0/radar': resolver.handler
   },

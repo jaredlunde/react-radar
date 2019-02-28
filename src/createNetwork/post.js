@@ -1,5 +1,8 @@
-if (typeof fetch === 'undefined' && typeof Worker !== 'undefined') {
-  require('whatwg-fetch')
+import isNode from '../utils/isNode'
+
+
+if (typeof fetch === 'undefined' && isNode === false) {
+  require('unfetch/polyfill')
 }
 
 

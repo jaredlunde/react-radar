@@ -1,10 +1,11 @@
-import memoize from 'memoize-two-args'
+import memoize from 'trie-memoize'
 import {parser, normalize} from '../grammar'
 import recursivelyRequire from './recursivelyRequire'
 import stringify from './stringify'
 
 
 const requires = memoize(
+  [Map, Map],
   function (fields, requestedFields) {
     let shape = {}
     const parsedFields = parser.parse(requestedFields)
@@ -15,8 +16,7 @@ const requires = memoize(
     }
 
     return shape
-  },
-  Map
+  }
 )
 
 

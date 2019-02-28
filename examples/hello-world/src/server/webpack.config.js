@@ -24,8 +24,9 @@ module.exports = createConfig({
 
   resolve: {
     alias: {
-      'node-fetch$': 'node-fetch/lib/index.js'
-    }
+      'node-fetch$': 'node-fetch/lib/index.js',
+      webpack: path.join(__dirname, '../../node_modules/webpack'),
+    },
   },
 
   plugins: [

@@ -1,12 +1,11 @@
-import memoize from 'lru-memoize-map'
+import memoize from 'trie-memoize'
 import {trim} from '../grammar'
 import {isPlainObject} from '../../utils'
 
 
-const stringifyMemoizer = memoize(1024)
-
-const stringify = stringifyMemoizer(
-  function (fields) {
+const stringify = memoize(
+  [Map],
+  fields => {
     let out = ''
     const keys = Object.keys(fields).sort()
 

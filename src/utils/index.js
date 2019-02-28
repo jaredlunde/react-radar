@@ -8,5 +8,7 @@ export deepMerge, {
   mergeIfMergeable
 } from './deepMerge'
 export pick from './pick'
+export isNode from './isNode'
 export isSubset from './isSubset'
+export objectWithoutProps from './objectWithoutProps'
 export tag from './tag'

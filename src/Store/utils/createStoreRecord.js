@@ -1,3 +1,4 @@
+import {objectWithoutProps} from '../../utils'
 import Records from './Records'
 import toImmutable from './toImmutable'
 import shouldInvalidate, {childrenDidChange} from './shouldInvalidate'
@@ -10,7 +11,7 @@ import emptyObj from 'empty/object'
 
 /**
  * StoreRecord is a MUTABLE class object with its own state
- * @param  {Number|String} key  a UNIVERSALLY unique key to identify this record by
+ * @param  {Number|String} key a UNIVERSALLY unique key to identify this record by
  * @constructor
  */
 export class StoreRecord {
@@ -66,14 +67,11 @@ export class StoreRecord {
 
 StoreRecord.prototype.toJSON = StoreRecord.prototype.toImmutable
 
+const withoutContext = {state: 0, recordType: 0, reducer: 0}
 
 export default function createStoreRecord (context) {
-  // boosts performance with a ton of records
-  context = Object.assign({}, context)
   const {state, recordType, reducer} = context
-  delete context.state
-  delete context.recordType
-  delete context.reducer
+  context = objectWithoutProps(context, withoutContext)
 
   const key = state[recordType.keyField]
   // const context = reduceProps(props, ['state', 'recordType', 'reducer'])

@@ -1,5 +1,4 @@
-import memoize from 'weakmap-memoize'
+import memoize from 'trie-memoize'
 
 
-const wm = new WeakMap()
-export default memoize(wm, to => Object.keys(to))
+export default memoize([WeakMap], to => Object.keys(to))

@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import Promise from 'cancelable-promise'
-import emptyObj from 'empty/object'
+import {isNode} from '../../utils'
 import EndpointContext from './EndpointContext'
 import createCache from './createCache'
 
@@ -12,6 +12,8 @@ import createCache from './createCache'
  * @extends React.Component
  */
 class Endpoint extends React.Component {
+  mounted = false
+
   static propTypes = {
     cache: PropTypes.object,
     initialState: PropTypes.object,
@@ -21,7 +23,6 @@ class Endpoint extends React.Component {
 
   constructor (props) {
     super(props)
-    this.serverRendered = props.cache.size > 0
     this.endpointContext = {
       queryCache: props.cache || createCache(),
       // local 'optimistic' updates, does not send commit over the network
@@ -31,27 +32,8 @@ class Endpoint extends React.Component {
     }
   }
 
-  async componentDidMount () {
-    if (this.serverRendered === true) {
-      await this.hydrate()
-    }
-  }
-
-  hydrate () {
-    return Promise.all(
-      this.props.cache.map(
-        async (id, query) => query.response && this.props.updateState({
-          nextState: [query.response.json],
-          response: query.response,
-          queries: [query.query],
-          type: 'QUERY'
-        })
-      )
-    )
-  }
-
   commit = (opt, context) => {
-    const optimistic = this.commitLocal(opt)
+    const optimistic = isNode === false && this.commitLocal(opt)
     let {type, queries} = opt
     const payload = []
 
@@ -96,19 +78,23 @@ class Endpoint extends React.Component {
             }
         }
 
-        state = await this.props.updateState({nextState, queries, response, type})
-        this.props.cache.initialState = state
+        state = isNode === false && await this.props.updateState({
+          nextState,
+          queries,
+          response,
+          type
+        })
 
+        this.props.cache.initialState = state
         resolve({state, response})
       }
     )
   }
 
-  commitPayload (payload, context) {
+  async commitPayload (payload, context) {
     // posts the JSON request
-    return this.props.post(payload, context).then(
-      response => ({response, nextState: response.json})
-    )
+    const response = await this.props.post(payload, context)
+    return {response, nextState: response.json}
   }
 
   commitLocal = opt /*{type, queries}*/=> {

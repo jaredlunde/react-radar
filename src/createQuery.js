@@ -1,5 +1,5 @@
 import emptyObj from 'empty/object'
-import {invariant} from './utils'
+import {invariant, objectWithoutProps} from './utils'
 
 
 const REDUCER_NAMES = new Set()
@@ -23,15 +23,34 @@ export const defaultReducer = createReducer(
   'defaultReducer',
   function (prevState, nextState, context) {
     // console.log('Reducer:', prevState, nextState, context)
-    nextState = Object.assign({}, prevState, nextState)
+    let remove = [],
+        realNextState = {},
+        nextKeys = Object.keys(nextState),
+        prevKeys = Object.keys(prevState),
+        i = 0
 
-    for (let key in nextState) {
+    for (; i < nextKeys.length; i++) {
+      const key = nextKeys[i]
+
       if (nextState[key] === void 0 && nextState.hasOwnProperty(key)) {
-        delete nextState[key]
+        remove.push(nextState[key])
+      }
+      else {
+        realNextState[key] = nextState[key]
       }
     }
 
-    return nextState
+    for (i = 0; i < prevKeys.length; i++) {
+      const key = prevKeys[i]
+
+      if (realNextState[key] === void 0) {
+        realNextState[key] = prevState[key]
+      }
+    }
+
+    return remove.length > 0
+      ? objectWithoutProps(realNextState, remove)
+      : realNextState
   }
 )
 
@@ -56,6 +75,7 @@ export default function createQuery ({
 
   function Query (props = emptyObj, requires_, reducer_) {
     if (typeof props === 'function') {
+      reducer_ = requires_
       requires_ = props
       props = emptyObj
     }
@@ -72,7 +92,7 @@ export default function createQuery ({
       // local props
       optimistic: getOptimistic && getOptimistic(props, queryRequires),
       rollback: getRollback && getRollback(props, queryRequires),
-      reducer: reducer || reducer_
+      reducer: reducer_ || reducer
     }
   }
 

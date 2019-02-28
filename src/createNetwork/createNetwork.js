@@ -9,8 +9,7 @@ const DEFAULT_FETCH = {
   url: '/radar',
   method: 'POST',
   headers: {},
-  timeout: 30 * 1000,
-  credentials: 'include'
+  timeout: 30 * 1000
 }
 
 function removePendingUpdate (pendingUpdates, PENDING_UPDATE) {
@@ -22,7 +21,7 @@ export default function createNetwork (props) {
 
   function post (body, context) {
     return new Promise(
-      async (resolve, reject) => {
+      async resolve => {
         let {url, timeout, headers, ...opt} = Object.assign({}, DEFAULT_FETCH, props)
         timeout = timeout || 30 * 1000
         // we only use JSON requests
@@ -55,6 +54,7 @@ export default function createNetwork (props) {
               statusText: 'Request Timeout',
               json: false
             })
+
             removePendingUpdate(pendingUpdates, PENDING_UPDATE)
           },
           timeout
@@ -67,7 +67,7 @@ export default function createNetwork (props) {
           resolve(...args)
         }
         // creates a pending, cancelable update
-        const PENDING_UPDATE = [query, resolver, reject, queryTimeout]
+        const PENDING_UPDATE = [query, resolver, queryTimeout]
         pendingUpdates.push(PENDING_UPDATE)
         // if this is the only pending query, go ahead and resolve it
         if (pendingUpdates.length === 1) {

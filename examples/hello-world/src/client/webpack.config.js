@@ -1,6 +1,6 @@
 const path = require('path')
 const webpack = require('webpack')
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
+const UglifyJsPlugin = require('terser-webpack-plugin')
 const {createConfig} = require('@jaredlunde/example-server/react')
 
 
@@ -21,7 +21,7 @@ if (process.env.NODE_ENV === 'production') {
     minimizer: [
       new UglifyJsPlugin({
         cache: true,
-        uglifyOptions: {
+        terserOptions: {
           compress: {passes: 2, drop_console: false, dead_code: true},
           output: {comments: false},
           sourceMap: false
@@ -57,3 +57,5 @@ module.exports = createConfig({
 
   optimization: productionOptimization
 })
+
+console.log(module.exports)

@@ -1,16 +1,15 @@
-import memoize from 'weakmap-memoize'
+import memoize from 'trie-memoize'
 import isStoreRecord from './isStoreRecord'
-import isPlainObject from '../../utils/isPlainObject'
+import {isPlainObject} from '../../utils'
 import {RADAR_ID_KEY} from './invalidateID'
 import emptyObj from 'empty/object'
 
 
 export const RADAR_CHILDREN_KEY = '__@@RADAR_CHILDREN@@__'
-const wm = new WeakMap()
 
 const getRecordsFromPlainObject = memoize(
-  wm,
-  (obj) => {
+  [WeakMap],
+  obj => {
     const stateKeys = Object.keys(obj)
     let children = {}
     let x

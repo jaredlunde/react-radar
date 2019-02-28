@@ -11,7 +11,6 @@ export default createRecord({
     },
     numFollowers: null,
     numFollowing: null,
-
     fishingRod: null
   }
 })

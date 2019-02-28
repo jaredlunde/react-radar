@@ -1,39 +1,41 @@
-import reactTreeWalker from '@jaredlunde/react-tree-walker'
-import emptyObj from 'empty/object'
+import React from 'react'
+import {renderToStaticMarkup} from 'react-dom/server'
+import PropTypes from 'prop-types'
 
 
+// preloads all of the queries used in the current react tree
+export class WaitForPromises {
+  // Map from Query component instances to pending promises.
+  chunkPromises = []
 
-// preloads all of the async components used in the current react tree
-export default function load (app, visitor, context = emptyObj) {
-  let stop = false
+  load () {
+    return Promise.all(this.chunkPromises).then(() => this.chunkPromises = [])
+  }
+}
 
-  function loadVisitor (element, instance) {
-    if (stop === true) {
-      return false
+export default function load (app, render = renderToStaticMarkup) {
+  const waitForPromises = new WaitForPromises()
+
+  class WaitForPromisesProvider extends React.Component {
+    static childContextTypes = {
+      waitForPromises: PropTypes.object,
     }
 
-    if (instance && instance.isRadarQuery === true) {
-      if (instance.props.stopIteration === true) {
-        stop = true
-      }
+    getChildContext () {
+      return {waitForPromises}
+    }
 
-      return instance.load(context)
+    render () {
+      return app
     }
   }
 
-  let visitors = loadVisitor
-
-  if (visitor) {
-    visitors = function composedVisitor (element, instance) {
-      const promise = loadVisitor(element, instance)
-
-      if (promise !== void 0) {
-        return promise
-      }
-
-      return visitor(element, instance, context)
-    }
+  function process () {
+    const html = render(<WaitForPromisesProvider/>)
+    return waitForPromises.chunkPromises.length > 0
+      ? waitForPromises.load().then(process)
+      : html
   }
 
-  return reactTreeWalker(app, visitors, context)
+  return Promise.resolve().then(process)
 }

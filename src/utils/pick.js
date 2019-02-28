@@ -1,4 +1,4 @@
-import memoize from 'memoize-two-args'
+import memoize from 'trie-memoize'
 import isPlainObject from './isPlainObject'
 import Immutable from 'seamless-immutable'
 
@@ -53,5 +53,5 @@ export function pick (from, shape) {
 }
 
 
-const memoizedPick = memoize(pick, Map)
+const memoizedPick = memoize([WeakMap, Map], pick)
 export default memoizedPick

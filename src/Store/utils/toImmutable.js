@@ -1,5 +1,5 @@
 import Immutable from 'seamless-immutable'
-import memoize from 'weakmap-memoize'
+import memoize from 'trie-memoize'
 import isPlainObject from '../../utils/isPlainObject'
 // import isStoreRecord from './isStoreRecord'
 
@@ -35,6 +35,5 @@ export function toImmutable (obj) {
 }
 
 
-const ImmutableWeakMap = new WeakMap()
-const toImmutableMemoized = memoize(ImmutableWeakMap, toImmutable)
+const toImmutableMemoized = memoize([WeakMap], toImmutable)
 export default toImmutableMemoized

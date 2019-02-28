@@ -6,6 +6,7 @@ import emptyObj from 'empty/object'
 import {invariant} from './utils'
 import Connect from './Connect'
 import {EndpointConsumer} from './Store'
+import {isNode} from './utils'
 
 
 const WAITING = 0, ERROR = 1, LOADING = 2, DONE = 3
@@ -59,6 +60,12 @@ export function createQueryComponent (opt = emptyObj) {
   class Query extends React.Component {
     id = null
     unmounted = false
+    mounted = false
+
+    static contextTypes = {
+      // for react-broker preloading
+      waitForPromises: PropTypes.object
+    }
 
     static propTypes = {
       endpoint: PropTypes.shape({
@@ -75,7 +82,7 @@ export function createQueryComponent (opt = emptyObj) {
       stopIteration: PropTypes.bool
     }
 
-    constructor (props) {
+    constructor (props, context) {
       super(props)
       this.isRadarQuery = true
       this.pending = new Set()
@@ -104,6 +111,14 @@ export function createQueryComponent (opt = emptyObj) {
             query.query = this.queries[id]
           }
         }
+        else if (
+          // this checks to see if we're in a Node (SSR) environment
+          isNode
+          // doesn't load if there's no context waiting for it
+          && context.waitForPromises
+        ) {
+          context.waitForPromises.chunkPromises.push(this.load())
+        }
 
         response[id] = query ? query.response : null
       }
@@ -113,7 +128,11 @@ export function createQueryComponent (opt = emptyObj) {
     }
 
     componentDidMount () {
-      this.load()
+      this.mounted = true
+
+      if (this.state.status !== DONE) {
+        this.load()
+      }
     }
 
     componentDidUpdate (prevProps) {
@@ -186,7 +205,7 @@ export function createQueryComponent (opt = emptyObj) {
     }
 
     updateQuery = (id, query) => {
-      if (this.unmounted === true) {
+      if (this.unmounted === true || this.mounted === false) {
         return
       }
 

@@ -1,8 +1,11 @@
 import React from 'react'
 import {strictShallowEqual} from '@render-props/utils'
+import {objectWithoutProps} from './utils'
 import {EndpointConsumer} from './Store'
 import {createQueryComponent} from './Query'
 
+
+const withoutReload = [{reload: 0}]
 
 export default createQueryComponent({
   name: 'Updater',
@@ -10,7 +13,7 @@ export default createQueryComponent({
     setup () {
       this.isRadarQuery = false
       this.queryContext.update = this.reload
-      delete this.queryContext.reload
+      this.queryContext = objectWithoutProps(this.queryContext, withoutReload)
     },
 
     componentDidMount () {},

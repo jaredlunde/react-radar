@@ -1,3 +1,4 @@
+import {objectWithoutProps} from '../../utils'
 import createStoreRecord from './createStoreRecord'
 import deepInvalidate from './deepInvalidate'
 
@@ -68,7 +69,7 @@ function fromArray(props/*{state, query, recordType}*/) {
 function routeToRecords (props/*{state, query, recordType}*/) {
   const state = props.state
 
-  if (Array.isArray(state)) {
+  if (Array.isArray(state) === true) {
     return fromArray(props)
   }
   else if (state === null) {
@@ -81,6 +82,9 @@ function routeToRecords (props/*{state, query, recordType}*/) {
   return typeof props.recordType === 'function' ? props.recordType(state) : state
 }
 
+
+const withoutError = ['isRadarError']
+const withoutContext = ['recordType', 'state']
 
 export default function parse ({state, nextState, queries, ...context}) {
   let hasRecordUpdates = false
@@ -100,8 +104,7 @@ export default function parse ({state, nextState, queries, ...context}) {
     }
     else if (queryState.isRadarError === true) {
       context.hasErrors = true
-      queryState = {...queryState}
-      delete queryState.isRadarError
+      queryState = objectWithoutProps(queryState, ['isRadarError'])
       state = query.reducer(state, queryState, context)
       continue
     }
@@ -115,9 +118,9 @@ export default function parse ({state, nextState, queries, ...context}) {
       context.state = queryState[key]
       records[key] = routeToRecords(context)
     }
-    delete context.recordType
-    delete context.state
-    state = query.reducer(state, records, context)
+    // delete context.recordType
+    // delete context.state
+    state = query.reducer(state, records, objectWithoutProps(context, withoutContext))
   }
 
   if (hasRecordUpdates === true) {

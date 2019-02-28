@@ -1,6 +1,7 @@
 import {CDLL} from 'cdll-memoize'
+import {objectWithoutProps} from '../../utils'
 
-
+const jsonExclusions = {commit: 0, listeners: 0, query: 0}
 export default function createCache (
   initialQueries = (
     typeof document !== 'undefined'
@@ -66,21 +67,18 @@ export default function createCache (
       map.forEach((v, k) => output.push(fn(k, v)))
       return output
     },
+    forEach: fn => map.forEach((v, k) => fn(k, v)),
     clear: map.clear.bind(map),
     getIDs: map.keys.bind(map),
     toJSON (...a) {
       const output = {}
-
       map.forEach((v, k) => {
-        output[k] = Object.assign({}, v)
-        delete output[k].commit
-        delete output[k].listeners
-        delete output[k].query
+        output[k] = objectWithoutProps(v, jsonExclusions)
+
         if (output[k].response) {
           delete output[k].response.url
         }
       })
-
       return JSON.stringify(output, ...a)
     },
     fromJSON (json) {
