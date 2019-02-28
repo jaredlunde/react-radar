@@ -82,7 +82,7 @@ export default function createRecord ({
   Record.keyField = keyField
   Record.fields = fields
   Record.isRadarRecord = true
-  Object.defineProperty(Record, 'name', {value: name})
+  Record.id = name
 
   return Record
 }

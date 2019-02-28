@@ -129,9 +129,13 @@ export function createQueryComponent (opt = emptyObj) {
 
     componentDidMount () {
       this.mounted = true
+      const statuses = Object.values(this.state.status)
 
-      if (this.state.status !== DONE) {
-        this.load()
+      for (let i = 0; i < status.length; i++) {
+       if (status[i] !== DONE) {
+         this.load()
+         break
+       }
       }
     }
 

@@ -10,8 +10,6 @@ export function createReducer (name, reducer) {
       'Query reducers must have unique names in order to prevent errors in ' +
       `SSR hydration. '${name}' has already been used in this application.`
     )
-
-    Object.defineProperty(reducer, 'name', {value: name})
   }
 
   REDUCER_NAMES.add(name)
@@ -96,6 +94,6 @@ export default function createQuery ({
     }
   }
 
-  Object.defineProperty(Query, 'name', {value: name})
+  Query.id = name
   return Query
 }

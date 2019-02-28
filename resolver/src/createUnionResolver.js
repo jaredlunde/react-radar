@@ -31,7 +31,7 @@ export default function createUnionResolver ({
       const resDiff = resolvesKeys.filter(x => !unionKeys.includes(x))
       const recDiff = unionKeys.filter(x => !resolvesKeys.includes(x))
       console.warn(
-        `[Warning] ${union.name}.resolves did not match ${union.name}.fields:`,
+        `[Warning] ${union.id}.resolves did not match ${union.id}.fields:`,
         resDiff.length ? resDiff : '', resDiff.length ? 'in resolves, but not union' : '',
         recDiff.length ? recDiff : '', recDiff.length ? 'in union, but not resolves' : ''
       )
@@ -74,9 +74,9 @@ export default function createUnionResolver ({
     return Promise.all(result)
   }
 
-  Object.defineProperty(resolve, 'name', {value: union.name})
-  Object.defineProperty(resolve, 'resolves', {value: resolves})
-  Object.defineProperty(resolve.each, 'name', {value: union.name})
-  Object.defineProperty(resolve.each, 'resolves', {value: resolves})
+  resolve.id = union.id
+  resolve.resolves = resolves
+  resolve.each = union.id
+  resolve.each.resolves = resolves
   return resolve
 }

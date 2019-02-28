@@ -53,11 +53,9 @@ export default class App extends React.PureComponent {
                       Error - <button onClick={radar.reload}>Retry</button>
                     </>
                   )
-                break;
                 case Query.WAITING:
                 case Query.LOADING:
                   return 'Loading...'
-                break;
                 default:
                   return (
                     <>
@@ -102,11 +100,9 @@ export default class App extends React.PureComponent {
                       Error - <button onClick={radar.reload}>Retry</button>
                     </>
                   )
-                  break;
                 case Query.WAITING:
                 case Query.LOADING:
                   return 'Loading...'
-                break;
                 default:
                   return (
                     <>

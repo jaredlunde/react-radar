@@ -25,7 +25,7 @@ export default function createResolver (initialQueries = emptyArr) {
 
   function addQueries (qs) {
     for (let q of qs) {
-      queries[q.name] = q
+      queries[q.id] = q
     }
   }
 
@@ -47,11 +47,11 @@ export default function createResolver (initialQueries = emptyArr) {
           // null queries just return null responses
           return null
         }
-        else if (queries[query.name] !== void 0) {
+        else if (queries[query.id] !== void 0) {
           // found a query that matches the name so we will add its result
           // to the list, catching any errors
           try {
-            const queryResolver = queries[query.name]
+            const queryResolver = queries[query.id]
             const acc = queryResolver(
               query.props || emptyObj,
               {
@@ -74,7 +74,7 @@ export default function createResolver (initialQueries = emptyArr) {
         else {
           // a query with this name was not found so we throw an error to
           // completely bail out
-          result.push(createErrorResponse(`Query not found: '${query.name}'`))
+          result.push(createErrorResponse(`Query not found: '${query.id}'`))
         }
       }
 

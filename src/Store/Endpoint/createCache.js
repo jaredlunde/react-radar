@@ -1,7 +1,9 @@
 import {CDLL} from 'cdll-memoize'
 import {objectWithoutProps} from '../../utils'
 
+
 const jsonExclusions = {commit: 0, listeners: 0, query: 0}
+
 export default function createCache (
   initialQueries = (
     typeof document !== 'undefined'

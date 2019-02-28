@@ -56,7 +56,7 @@ export default function createRecordResolver ({
       const resDiff = resolvesKeys.filter(x => !recordKeys.includes(x))
       const recDiff = recordKeys.filter(x => !resolvesKeys.includes(x))
       console.warn(
-        `[Warning] ${record.name}.resolves did not match ${record.name}.fields:`,
+        `[Warning] ${record.id}.resolves did not match ${record.id}.fields:`,
         resDiff.length ? resDiff : '', resDiff.length ? 'in resolves, but not record' : '',
         recDiff.length ? recDiff : '', recDiff.length ? 'in record, but not resolves' : ''
       )
@@ -129,7 +129,7 @@ export default function createRecordResolver ({
     ) {
       throw (
         `Key field '${record.keyField}' returned null or undefined in ` +
-        `Record: ${record.name}`
+        `Record: ${record.id}`
       )
     }
 
@@ -154,7 +154,7 @@ export default function createRecordResolver ({
 
   resolve.resolves = resolves
   resolve.each.resolves = resolves
-  Object.defineProperty(resolve, 'name', {value: record.name})
-  Object.defineProperty(resolve.each, 'name', {value: record.name})
+  resolve.id = record.id
+  resolve.each.id = record.id
   return resolve
 }

@@ -35,7 +35,7 @@ function getRequiredFields (name, record, requires) {
       if (field === void 0) {
         const isObjectField = record instanceof ObjectField
         const mapType = isObjectField ? 'ObjectField' : 'Record'
-        const recName = isObjectField ? name : record.name
+        const recName = isObjectField ? name : record.id
         throw `Field '${fieldName}' not found in ${mapType}: ${recName}`
       }
 
@@ -113,7 +113,7 @@ export default function createQueryResolver ({
 
     for (let recordName in required) {
       if (state && state[recordName] === void 0) {
-        throw `Record for '${recordName}' was undefined in ${query.name} `
+        throw `Record for '${recordName}' was undefined in ${query.id} `
       }
 
       result[recordName] =
@@ -133,7 +133,7 @@ export default function createQueryResolver ({
     return promiseAllValues(result)
   }
 
-  Object.defineProperty(resolver, 'name', {value: query.name})
-  Object.defineProperty(resolver, 'sync', {value: sync})
+  resolver.id = query.id
+  resolver.sync = sync
   return resolver
 }

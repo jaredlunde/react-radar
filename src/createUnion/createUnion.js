@@ -19,6 +19,6 @@ export default function createUnion ({name, records}) {
   Union.isRadarUnion = true
   Union.fields = records
   Union.sharedFields = sharedFields
-
+  Union.id = name
   return Union
 }

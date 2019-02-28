@@ -8,21 +8,19 @@ export default resolver.resolve({
   resolves: {
     viewer: ViewerResolver.each
   },
-  getState: (requires, props, context) => {
-    return {
-      viewer: [
-        {
-          ...props.viewer,
-          uid: 1235,
-          name: {
-            first: 'phil',
-            last: 'donahue'
-          },
-          numFollowing: 12,
-          numFollowers: 120,
-          fishingRod: 'foo'
-        }
-      ]
-    }
-  }
+  getState: (requires, props, context) => ({
+    viewer: [
+      {
+        ...props.viewer,
+        uid: 123,
+        name: {
+          first: 'Frank',
+          last: 'Donahue'
+        },
+        numFollowing: 1002,
+        numFollowers: "12222330",
+        fishingRod: 'Jared, the resolver worked!'
+      }
+    ]
+  })
 })
