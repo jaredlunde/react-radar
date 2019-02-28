@@ -92,12 +92,19 @@ export default class Store extends React.Component {
     // do a shallow comparison of the previous state to this one to avoid
     // unnecessary re-renders
     if (nextState === null || stateDidChange(state.data, nextState) === false) {
-      console.log('[Radar] state profiler:', now() - start)
+      if (__DEV__) {
+        console.log('[Radar] state profiler:', now() - start)
+      }
+
       return null
     }
     // sets the local state
     Connections.setBuckets(nextState)
-    console.log('[Radar] state profiler:', now() - start)
+
+    if (__DEV__) {
+      console.log('[Radar] state profiler:', now() - start)
+    }
+
     return {data: nextState}
   }
 
