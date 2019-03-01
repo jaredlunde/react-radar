@@ -14,17 +14,17 @@
     "url": "https://github.com/jaredLunde/react-radar"
   },
   "scripts": {
-    "build": "npm run build:es && npm run build:cjs && npm run build:node-esm && npm run build:resolver",
+    "build": "npm run build:es && npm run build:cjs && npm run build:node-esm && npm run build:server",
     "build:es": "rimraf dist/es && cross-env NODE_ENV=production BABEL_ENV=es babel src --out-dir dist/es && npm run prettier:es",
     "build:node-esm": "rimraf dist/node-esm && cross-env NODE_ENV=production BABEL_ENV=node-esm babel src --out-dir dist/node-esm && npm run prettier:node-esm",
     "build:cjs": "rimraf dist/cjs && cross-env NODE_ENV=production BABEL_ENV=cjs babel src --out-dir dist/cjs && npm run prettier:cjs",
-    "build:resolver": "rimraf resolver/dist && cross-env NODE_ENV=production BABEL_ENV=node-cjs babel resolver/src --out-dir resolver/dist && npm run prettier:resolver",
+    "build:server": "rimraf server/dist && cross-env NODE_ENV=production BABEL_ENV=node-cjs babel server/src --out-dir server/dist && npm run prettier:server",
     "watch": "rimraf dist/es && rimraf dist/node-esm && cross-env NODE_ENV=production BABEL_ENV=node-esm babel ./src -w --out-dir dist/node-esm & cross-env NODE_ENV=production BABEL_ENV=es babel ./src -w --out-dir dist/es",
-    "watch:resolver": "rimraf resolver/dist && cross-env NODE_ENV=production BABEL_ENV=node-cjs babel ./resolver/src -w --out-dir resolver/dist",
+    "watch:server": "rimraf server/dist && cross-env NODE_ENV=production BABEL_ENV=node-cjs babel ./server/src -w --out-dir server/dist",
     "prettier:es": "prettier --single-quote --no-semi --no-bracket-spacing --trailing-comma es5 --write --tab-width 2 \"dist/es/**/*.js\"",
     "prettier:node-esm": "prettier --single-quote --no-semi --no-bracket-spacing --trailing-comma es5 --write --tab-width 2 \"dist/node-esm/**/*.js\"",
     "prettier:cjs": "prettier --single-quote --no-semi --no-bracket-spacing --trailing-comma es5 --write --tab-width 2 \"dist/cjs/**/*.js\"",
-    "prettier:resolver": "prettier --single-quote --no-semi --no-bracket-spacing --trailing-comma es5 --write --tab-width 2 \"resolver/dist/**/*.js\""
+    "prettier:server": "prettier --single-quote --no-semi --no-bracket-spacing --trailing-comma es5 --write --tab-width 2 \"server/dist/**/*.js\""
   },
   "devDependencies": {
     "@stellar-apps/babel-preset-es": "^1.0.3",

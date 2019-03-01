@@ -1,4 +1,4 @@
-import {createResolver} from 'react-radar/resolver'
+import {createResolver} from 'react-radar/server'
 
 
 export default createResolver()

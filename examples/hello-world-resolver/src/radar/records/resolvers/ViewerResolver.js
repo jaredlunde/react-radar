@@ -1,4 +1,4 @@
-import {createRecordResolver, fields} from 'react-radar/resolver'
+import {createRecordResolver, fields} from 'react-radar/server'
 import Viewer from '../Viewer'
 
 

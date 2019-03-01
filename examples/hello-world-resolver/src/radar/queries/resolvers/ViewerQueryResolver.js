@@ -6,21 +6,19 @@ import resolver from '../../resolver'
 export default resolver.resolve({
   query: ViewerQuery,
   resolves: {
-    viewer: ViewerResolver.each
+    viewer: ViewerResolver
   },
   getState: (requires, props, context) => ({
-    viewer: [
-      {
-        ...props.viewer,
-        uid: 13,
-        name: {
-          first: 'George',
-          last: 'Donahue'
-        },
-        numFollowing: 2,
-        numFollowers: "12222330",
-        fishingRod: 'Jared, the resolver worked!'
-      }
-    ]
+    viewer: {
+      ...props.viewer,
+      uid: props.uid || Math.random(),
+      name: {
+        first: 'Phil',
+        last: 'Donahue'
+      },
+      numFollowing: null,
+      numFollowers: "12330",
+      fishingRod: 'Jared, the resolver worked. Again!'
+    }
   })
 })
