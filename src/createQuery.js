@@ -73,7 +73,7 @@ export default ({
       props = emptyObj
     }
     else {
-      props = props = Object.assign({}, defaultProps, props)
+      props = Object.assign({}, defaultProps, props)
     }
     const queryRequires = (requires_ || requires)(props)
 
