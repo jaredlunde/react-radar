@@ -3,7 +3,7 @@ import invariant from 'invariant'
 import {promiseAllValues} from '../utils'
 
 
-export class ObjectField extends Field {
+export class MappingField extends Field {
   constructor (opt) {
     if (__DEV__) {
       invariant(
@@ -35,7 +35,7 @@ export class ObjectField extends Field {
           )
 
           result[fieldName] =
-            field instanceof Field && !(field instanceof ObjectField)
+            field instanceof Field && !(field instanceof MappingField)
               ? field(state, props, childContext)
               : field(state[context.fieldName], props, childContext)
         }
@@ -53,7 +53,7 @@ export class ObjectField extends Field {
 
   each (state, props, context) {
     const result = []
-    const obj = new ObjectField(this.opt)
+    const obj = new MappingField(this.opt)
     let index = 0
 
     while (true) {
@@ -66,6 +66,6 @@ export class ObjectField extends Field {
   }
 }
 
-export default function object (resolves) {
-  return new ObjectField({resolves})
+export default function mapping (resolves) {
+  return new MappingField({resolves})
 }

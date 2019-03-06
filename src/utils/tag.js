@@ -1,4 +1,4 @@
-export default function tag (strings, values) {
+export default (strings, values) => {
   let output = ''
 
   for (let x = 0; x < strings.length; x++) {

@@ -3,7 +3,7 @@ import createStoreRecord from './createStoreRecord'
 import deepInvalidate from './deepInvalidate'
 
 
-export function toRecord (props/*{state, query, recordType}*/) {
+function toRecord (props/*{state, query, recordType}*/) {
   props.recordType = (
     props.recordType.reducer === void 0
     ? props.recordType`${props.recordType.keyField}`
@@ -104,7 +104,7 @@ export default function parse ({state, nextState, queries, ...context}) {
     }
     else if (queryState.isRadarError === true) {
       context.hasErrors = true
-      queryState = objectWithoutProps(queryState, ['isRadarError'])
+      queryState = objectWithoutProps(queryState, withoutError)
       state = query.reducer(state, queryState, context)
       continue
     }

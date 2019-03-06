@@ -93,6 +93,9 @@ export function createQueryComponent (opt = emptyObj) {
         abort: this.abort,
         reload: this.reload,
       }
+      // this must be before the query loop because it defines 'isRadarQuery' in Updater
+      this.setup && this.setup()
+
       const {endpoint: {queryCache}} = this.props
       this.queries = this.getQueries()
       const response = {}, status = {}
@@ -116,6 +119,8 @@ export function createQueryComponent (opt = emptyObj) {
           isNode
           // doesn't load if there's no context waiting for it
           && context.waitForPromises
+          // makes sure this is a Query, not an update
+          && this.isRadarQuery
         ) {
           context.waitForPromises.chunkPromises.push(this.load())
         }
@@ -124,15 +129,14 @@ export function createQueryComponent (opt = emptyObj) {
       }
 
       this.state = {status, response}
-      this.setup && this.setup()
     }
 
     componentDidMount () {
       this.mounted = true
       const statuses = Object.values(this.state.status)
 
-      for (let i = 0; i < status.length; i++) {
-       if (status[i] !== DONE) {
+      for (let i = 0; i < statuses.length; i++) {
+       if (statuses[i] !== DONE) {
          this.load()
          break
        }

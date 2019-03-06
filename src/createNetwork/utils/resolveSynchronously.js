@@ -1,9 +1,13 @@
-export default async function resolveSynchronously (promises) {
+const resolveSynchronously = promises => {
   // Has side-effects on @promises
   if (promises.length) {
     const [next, resolve] = promises[0]
-    resolve(await next)
-    promises.shift()
-    resolveSynchronously(promises)
+    next.then(value => {
+      resolve(value)
+      promises.shift()
+      resolveSynchronously(promises)
+    })
   }
 }
+
+export default resolveSynchronously

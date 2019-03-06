@@ -2,7 +2,7 @@ import getChildRecords, {RADAR_CHILDREN_KEY} from './getChildRecords'
 import {RADAR_ID_KEY, RADAR_PREV_ID_KEY} from './invalidateID'
 
 
-export function childrenDidChange (children) {
+export const childrenDidChange = children => {
   const childKeys = Object.keys(children)
 
   for (let x = 0; x < childKeys.length; x++) {
@@ -19,7 +19,7 @@ export function childrenDidChange (children) {
 }
 
 
-export default function shouldInvalidate (record) {
+export default record => {
   if (record[RADAR_PREV_ID_KEY] !== record[RADAR_ID_KEY]) {
     // next children are lazy loaded here
     return false

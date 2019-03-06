@@ -14,6 +14,8 @@ export default function createUnionResolver ({
   reducer = defaultRecordReducer,
   getRecordName = defaultGetRecordName
 }) {
+  let unionId = `Union(${Object.keys(union.fields).join(', ')})`
+  
   if (__DEV__) {
     invariant(
       union !== void 0,
@@ -31,7 +33,7 @@ export default function createUnionResolver ({
       const resDiff = resolvesKeys.filter(x => !unionKeys.includes(x))
       const recDiff = unionKeys.filter(x => !resolvesKeys.includes(x))
       console.warn(
-        `[Warning] ${union.id}.resolves did not match ${union.id}.fields:`,
+        `[Warning] ${unionId}.resolves did not match ${unionId}.fields:`,
         resDiff.length ? resDiff : '', resDiff.length ? 'in resolves, but not union' : '',
         recDiff.length ? recDiff : '', recDiff.length ? 'in union, but not resolves' : ''
       )
@@ -74,9 +76,7 @@ export default function createUnionResolver ({
     return Promise.all(result)
   }
 
-  resolve.id = union.id
   resolve.resolves = resolves
-  resolve.each.id = union.id
   resolve.each.resolves = resolves
   return resolve
 }

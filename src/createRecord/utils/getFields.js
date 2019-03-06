@@ -1,12 +1,11 @@
 import memoize from 'trie-memoize'
 import {parser, normalize} from '../grammar'
 import recursivelyRequire from './recursivelyRequire'
-import stringify from './stringify'
 
 
 const requires = memoize(
   [Map, Map],
-  function (fields, requestedFields) {
+  (fields, requestedFields) => {
     let shape = {}
     const parsedFields = parser.parse(requestedFields)
 
@@ -20,7 +19,7 @@ const requires = memoize(
 )
 
 
-export default function (availableFields, requestedFields) {
+export default (availableFields, requestedFields) => {
   let normalizedFields = normalize(requestedFields)
 
   if (normalizedFields.length === 0) {

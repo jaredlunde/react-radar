@@ -1,5 +1,5 @@
 export createStoreRecord from './createStoreRecord'
-export * as toRecords from './toRecords'
+export toRecords from './toRecords'
 export toImmutable from './toImmutable'
 export isStoreRecord from './isStoreRecord'
 export getChildRecords, {RADAR_CHILDREN_KEY} from './getChildRecords'

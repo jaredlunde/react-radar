@@ -17,6 +17,7 @@ const getRecordsFromPlainObject = memoize(
     for (let x = 0; x < stateKeys.length; x++) {
       const nextChildren = getChildRecords(obj[stateKeys[x]])
       const childKeys = Object.keys(nextChildren)
+
       for (let x = 0; x < childKeys.length; x++) {
         const childKey = childKeys[x]
         children[childKey] = nextChildren[childKey]
@@ -28,7 +29,7 @@ const getRecordsFromPlainObject = memoize(
 )
 
 
-function getChildRecords (obj) {
+const getChildRecords = obj => {
   if (isStoreRecord(obj)) {
     const childRecs = getChildRecords(obj.state)
     childRecs[obj[RADAR_ID_KEY]] = obj

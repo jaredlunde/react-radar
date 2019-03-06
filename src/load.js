@@ -13,7 +13,7 @@ export class WaitForPromises {
   }
 }
 
-export default function load (app, render = renderToStaticMarkup) {
+export default (app, render = renderToStaticMarkup) => {
   const waitForPromises = new WaitForPromises()
 
   class WaitForPromisesProvider extends React.Component {
@@ -30,7 +30,7 @@ export default function load (app, render = renderToStaticMarkup) {
     }
   }
 
-  function process () {
+  const process = () => {
     const html = render(<WaitForPromisesProvider/>)
     return waitForPromises.chunkPromises.length > 0
       ? waitForPromises.load().then(process)

@@ -6,12 +6,12 @@ export default createRecordResolver({
   record: Viewer,
   resolves: {
     uid: fields.string,
-    name: fields.object({
+    name: fields.mapping({
       first: fields.string,
       last: fields.string
     }),
-    numFollowers: fields.int,
-    numFollowing: fields.int,
+    numFollowers: fields.integer,
+    numFollowing: fields.integer,
     fishingRod: fields.string
   }
 })

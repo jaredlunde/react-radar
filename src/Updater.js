@@ -1,7 +1,6 @@
 import React from 'react'
 import {strictShallowEqual} from '@render-props/utils'
 import {objectWithoutProps} from './utils'
-import {EndpointConsumer} from './Store'
 import {createQueryComponent} from './Query'
 
 
@@ -17,7 +16,7 @@ export default createQueryComponent({
     },
 
     componentDidMount () {},
-    componentDidUpdate (_, prevState) {
+    componentDidUpdate () {
       if (strictShallowEqual(this.getID(), this.id) === false) {
         this.unsubscribeAll()
         this.queries = this.getQueries()

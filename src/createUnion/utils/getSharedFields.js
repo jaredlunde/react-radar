@@ -1,7 +1,7 @@
 import {deepIntersection} from '../../utils'
 
 
-export default function (records) {
+export default records => {
   const recs = []
 
   for (let name in records) {

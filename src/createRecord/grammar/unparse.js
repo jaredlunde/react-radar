@@ -8,7 +8,6 @@ const unparseField = (field, inputParams) => {
   return ` ${field.name}${unparseShape(field.shape, inputParams)}`
 }
 
-
 const unparseFields = (fields, inputParams) => {
   let str = ''
 
@@ -18,6 +17,5 @@ const unparseFields = (fields, inputParams) => {
 
   return str.trim()
 }
-
 
 export default unparseFields

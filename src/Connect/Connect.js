@@ -7,20 +7,21 @@ import {toShape, toBaseKeys} from './utils'
 
 const whitespace = /\s+/
 
-export default function Connect ({to, children}) {
+const Connect = ({to, children}) => {
   const shape = toShape(to.replace(whitespace, ''))
   const observedKeys = toBaseKeys(shape)
 
   return <EndpointConsumer children={
     radar => StoreConsumer({
       observedKeys,
-      children: state => children(pick(state, shape), radar)
+      children: state => children(shape ? pick(state, shape) : state, radar)
     })
   }/>
 }
 
-
-Connect.propTypes = {
+Connect.propTypes = /* remove-proptypes */ {
   to: PropTypes.string.isRequired,
   children: PropTypes.func.isRequired
 }
+
+export default Connect

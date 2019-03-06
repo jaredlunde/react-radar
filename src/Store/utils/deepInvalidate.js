@@ -1,7 +1,7 @@
 import isPlainObject from '../../utils/isPlainObject'
 
 
-export default function deepInvalidate (obj) {
+const deepInvalidate = obj => {
   const isArray = Array.isArray(obj)
 
   if (isArray || isPlainObject(obj)) {
@@ -19,3 +19,5 @@ export default function deepInvalidate (obj) {
 
   return obj
 }
+
+export default deepInvalidate

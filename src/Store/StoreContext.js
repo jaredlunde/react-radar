@@ -1,19 +1,13 @@
 import React from 'react'
-import emptyObj from 'empty/object'
 import InternalContext from './InternalContext'
 
 
-const StoreContext = React.createContext(emptyObj, calculateChangedBits)
-export default StoreContext
-
-function calculateChangedBits (prev, next) {
-  const prevValue = prev.state
-  const nextValue = next.state
-  const nextKeys = Object.keys(nextValue)
-  const prevKeys = Object.keys(prevValue)
+const calculateChangedBits = (prev, next) => {
+  const prevValue = prev.state,
+        nextValue = next.state,
+        nextKeys = Object.keys(nextValue),
+        prevKeys = Object.keys(prevValue)
   let valA, valB, keysA, keysB, len
-  // console.log('Calculating changed bits between:', prevValue, next)
-  // console.log('Store', next.store)
 
   if (prevKeys.length > nextKeys.length) {
     len = prevKeys.length
@@ -46,18 +40,18 @@ function calculateChangedBits (prev, next) {
     }
   }
 
-  const bits = next.getBits(changedKeys)
-  return bits
+  return next.getBits(changedKeys)
 }
 
-export function StoreConsumer (props) {
-  function Renderer ({state}) {
-    return props.children(
-      typeof props.reducer === 'function'
-        ? props.reducer(state)
-        : state
-    )
-  }
+const StoreContext = React.createContext({}, calculateChangedBits)
+export default StoreContext
+
+export const StoreConsumer = props => {
+  const Renderer = ({state}) => props.children(
+    typeof props.reducer === 'function'
+      ? props.reducer(state)
+      : state
+  )
 
   return (
     <InternalContext.Consumer>

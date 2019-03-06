@@ -3,10 +3,9 @@ import {invariant, tag} from '../utils'
 import {getSharedFields} from './utils'
 
 
-export default function createUnion ({name, records}) {
+export default ({records}) => {
   if (__DEV__) {
-    invariant(name, 'Union must be constructed with a \'name\' option.')
-    invariant(records, 'Union must be constructed with a \'records\' option.')
+    invariant(records, `Unions must be constructed with a \'records\' option.`)
   }
 
   const sharedFields = getSharedFields(records)
@@ -19,6 +18,5 @@ export default function createUnion ({name, records}) {
   Union.isRadarUnion = true
   Union.fields = records
   Union.sharedFields = sharedFields
-  Union.id = name
   return Union
 }

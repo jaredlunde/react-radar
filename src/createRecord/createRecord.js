@@ -1,13 +1,12 @@
 import emptyObj from 'empty/object'
 import {invariant, tag, deepMerge, arrayMergeReplace, isSubset} from '../utils'
-import {normalize} from './grammar'
-import {recursivelyRequire, getFields, getKeyField, stringify} from './utils'
+import {getFields, getKeyField, stringify} from './utils'
 
 
-export function defaultReducer (
+export const defaultReducer = (
   state,     /*Current GLOBAL state of the record @ current key*/
   nextState  /*The new state being proposed via some mutation*/
-) {
+) => {
   if (isSubset(state, nextState)) {
     return state
   }
@@ -15,29 +14,27 @@ export function defaultReducer (
   return deepMerge(state, nextState, {arrayMerge: arrayMergeReplace})
 }
 
-
-
-export default function createRecord ({
-  name,
+export default ({
   fields = emptyObj,
   initialState = emptyObj,
   reducer = defaultReducer
-}) {
+}) => {
   // finds the key field
   const keyField = getKeyField(fields)
+  let name
 
   // debug checks in development mode
   if (__DEV__) {
-    invariant(name, `Radar Records must include a 'name' option.`)
+    name = `Record(${Object.keys(fields).join(', ')})`
 
     invariant(
       Object.keys(fields).length,
-      `Record '${name}' must include a 'fields' option.`
+      `[${name}] must include a 'fields' option.`
     )
 
     invariant(
       keyField !== void 0,
-      `Record '${name}' must include a Radar.Key field.`
+      `[${name}] must include a Radar.Key field.`
     )
   }
 
@@ -58,7 +55,7 @@ export default function createRecord ({
       try {
         requiresFields = getFields(fields, requestedFields)
       } catch (e) {
-        throw new Error(`Record '${name}' requested field not found: \n${e}`)
+        throw new Error(`[${name}] requested field not found: \n${e}`)
       }
     }
 
@@ -67,7 +64,6 @@ export default function createRecord ({
     }
 
     return {
-      name,
       keyField,
       reducer: RecordReducer,
       fields,
@@ -82,7 +78,6 @@ export default function createRecord ({
   Record.keyField = keyField
   Record.fields = fields
   Record.isRadarRecord = true
-  Record.id = name
 
   return Record
 }

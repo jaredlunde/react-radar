@@ -1,9 +1,9 @@
 import invariant from 'invariant'
-import {Field, ObjectField} from './fields'
+import {Field, MappingField} from './fields'
 import {promiseAllValues, equalKeys} from './utils'
 
 
-export function defaultRecordReducer (state, props, context) {
+export const defaultRecordReducer = (state, props, context) => {
   if (state === null) {
     return state
   }
@@ -32,6 +32,8 @@ export default function createRecordResolver ({
   resolves,
   reducer = defaultRecordReducer
 }) {
+  let recordId = `Record(${Object.keys(record.fields).join(', ')})`
+
   if (__DEV__) {
     invariant(
       record !== void 0,
@@ -46,7 +48,7 @@ export default function createRecordResolver ({
     for (let key in resolves) {
       invariant(
         record.fields.hasOwnProperty(key) === true,
-        `Field '${key}' of 'resolves' was not found in record: ${record.name}`
+        `Field '${key}' of 'resolves' was not found in record: ${recordName}`
       )
     }
 
@@ -56,7 +58,7 @@ export default function createRecordResolver ({
       const resDiff = resolvesKeys.filter(x => !recordKeys.includes(x))
       const recDiff = recordKeys.filter(x => !resolvesKeys.includes(x))
       console.warn(
-        `[Warning] ${record.id}.resolves did not match ${record.id}.fields:`,
+        `[Warning] ${recordId}.resolves did not match its fields:`,
         resDiff.length ? resDiff : '', resDiff.length ? 'in resolves, but not record' : '',
         recDiff.length ? recDiff : '', recDiff.length ? 'in record, but not resolves' : ''
       )
@@ -66,7 +68,7 @@ export default function createRecordResolver ({
   function resolveField (state, props, context) {
     const field = resolves[context.fieldName]
 
-    if (field instanceof Field && !(field instanceof ObjectField)) {
+    if (field instanceof Field && !(field instanceof MappingField)) {
       return field(state, props, context)
     }
     else {
@@ -129,7 +131,7 @@ export default function createRecordResolver ({
     ) {
       throw (
         `Key field '${record.keyField}' returned null or undefined in ` +
-        `Record: ${record.id}`
+        `Record: ${recordId}`
       )
     }
 
@@ -154,7 +156,5 @@ export default function createRecordResolver ({
 
   resolve.resolves = resolves
   resolve.each.resolves = resolves
-  resolve.id = record.id
-  resolve.each.id = record.id
   return resolve
 }

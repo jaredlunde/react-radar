@@ -3,13 +3,12 @@ import isPlainObject from './isPlainObject'
 import Immutable from 'seamless-immutable'
 
 
-export function pickShape (from, shape) {
+export const pickShape = (from, shape) => {
   if (shape === null) {
     return Immutable(from)
   }
 
   const output = {}
-  const origShape = shape
   shape = shape.isRadarRecord || shape.isRadarUnion ? shape.fields : shape
   const shapeKeys = Object.keys(shape)
 
@@ -22,8 +21,10 @@ export function pickShape (from, shape) {
       // the way store records are structured (immutable and re-used)
       output[key] = (
         typeof fromVal === 'object'
-        ? memoizedPick(fromVal, shape[key])
-        : fromVal
+          ? shape[key] !== null && typeof shape[key] === 'object'
+            ? pick(fromVal, shape[key])
+            : fromVal
+          : fromVal
       )
     }
   }
@@ -31,10 +32,9 @@ export function pickShape (from, shape) {
   return Immutable(output)
 }
 
-
 // picks a shape {foo: null, bar: null} out of an object
 // (from) [{foo: 'abweb', bar: 'babeob'}]
-export function pick (from, shape) {
+export const pick = memoize([WeakMap, WeakMap], (from, shape) => {
   if (Array.isArray(from)) {
     const output = []
 
@@ -50,8 +50,6 @@ export function pick (from, shape) {
   else {
     return from
   }
-}
+})
 
-
-const memoizedPick = memoize([WeakMap, Map], pick)
-export default memoizedPick
+export default pick

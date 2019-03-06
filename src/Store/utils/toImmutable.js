@@ -4,7 +4,7 @@ import isPlainObject from '../../utils/isPlainObject'
 // import isStoreRecord from './isStoreRecord'
 
 
-export function toImmutable (obj) {
+export const toImmutable = memoize([WeakMap], obj => {
   const isArray = Array.isArray(obj)
 
   if (isArray || isPlainObject(obj)) {
@@ -19,12 +19,12 @@ export function toImmutable (obj) {
 
       output[key] = (
         val === null || val === void 0
-        ? val
-        : val.toImmutable !== void 0
-          ? val.toImmutable()
-          : typeof val === 'object'
-            ? toImmutableMemoized(val)
-            : val
+          ? val
+          : val.toImmutable !== void 0
+            ? val.toImmutable()
+            : typeof val === 'object'
+              ? toImmutable(val)
+              : val
       )
     }
 
@@ -32,8 +32,6 @@ export function toImmutable (obj) {
   }
 
   return obj
-}
+})
 
-
-const toImmutableMemoized = memoize([WeakMap], toImmutable)
-export default toImmutableMemoized
+export default toImmutable

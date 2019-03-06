@@ -1,7 +1,7 @@
 import Promise from 'cancelable-promise'
 
 
-export default function getRequestHeaders ({body, headers}) {
+export default ({body, headers}) => {
   let realHeaders
 
   if (headers === void 0 || headers === null) {

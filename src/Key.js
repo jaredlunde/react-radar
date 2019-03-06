@@ -1,3 +1,3 @@
-export default function Key (cast) {
+export default cast => {
   return {isRadarKey: true, apply: cast}
 }

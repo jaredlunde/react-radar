@@ -59,7 +59,7 @@ export default class App extends React.PureComponent {
                 default:
                   return (
                     <>
-                      1. Yo, {viewer && viewer[0].name.first} - <button onClick={radar.reload}>Reload</button>
+                      1. Yo, {viewer && viewer.name.first} - <button onClick={radar.reload}>Reload</button>
                       <Query connect='viewer' run={[ViewerQuery({test: 'crepe'}), ViewerQuery()]}>
                         {({viewer, errors}, radar) => {
                           // console.log(JSON.stringify(radar, null, 2))
@@ -78,7 +78,7 @@ export default class App extends React.PureComponent {
                             default:
                               return (
                                 <>
-                                  2. Yo, {viewer && viewer[0].name.first} - <button onClick={radar.reload}>Reload</button>
+                                  2. Yo, {viewer && viewer.name.first} - <button onClick={radar.reload}>Reload</button>
                                 </>
                               )
                           }
@@ -106,7 +106,7 @@ export default class App extends React.PureComponent {
                 default:
                   return (
                     <>
-                      3. Yo, {viewer && viewer[0].name.first} - <button onClick={radar.reload}>Reload</button>
+                      3. Yo, {viewer && viewer.name.first} - <button onClick={radar.reload}>Reload</button>
                     </>
                   )
               }

@@ -4,7 +4,7 @@ import {RADAR_CHILDREN_KEY} from './getChildRecords'
 import emptyArr from 'empty/array'
 
 
-export default function getRecordKeys (obj) {
+const getRecordKeys = obj => {
   if (isStoreRecord(obj)) {
     const output = []
     const children = obj[RADAR_CHILDREN_KEY]
@@ -32,3 +32,5 @@ export default function getRecordKeys (obj) {
 
   return emptyArr
 }
+
+export default getRecordKeys()

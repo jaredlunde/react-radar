@@ -3,7 +3,7 @@ import {RADAR_ID_KEY} from './invalidateID'
 import isStoreRecord from './isStoreRecord'
 
 
-function recordDidChange (prevRecord, nextRecord) {
+const recordDidChange = (prevRecord, nextRecord) => {
   if (prevRecord[RADAR_ID_KEY] !== nextRecord[RADAR_ID_KEY]) {
     return true
   }
@@ -12,7 +12,7 @@ function recordDidChange (prevRecord, nextRecord) {
 }
 
 
-export default function stateDidChange (prevState, nextState) {
+export default (prevState, nextState) => {
   if (nextState === null || nextState === void 0) {
     return false
   }

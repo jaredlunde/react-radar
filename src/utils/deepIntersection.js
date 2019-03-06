@@ -1,7 +1,7 @@
 import isPlainObject from './isPlainObject'
 
 
-export default function deepIntersection (...objects) {
+const deepIntersection = (...objects) => {
   let keys = []
 
   for (let x = 0; x < objects.length; x++) {
@@ -52,10 +52,12 @@ export default function deepIntersection (...objects) {
 
     output[key] = (
       deepIntersections === null || Object.keys(deepIntersections).length === 0
-      ? null
-      : deepIntersections
+        ? null
+        : deepIntersections
     )
   }
 
   return output
 }
+
+export default deepIntersection

@@ -1,4 +1,4 @@
-function isSubset (superset, subset) {
+const isSubset = (superset, subset) => {
   if (superset === subset) {
     return true
   }
@@ -36,6 +36,5 @@ function isSubset (superset, subset) {
     return false
   }
 }
-
 
 export default isSubset

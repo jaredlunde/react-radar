@@ -3,7 +3,7 @@ import {invariant} from '../../utils'
 
 
 // !!WARNING!! It's a mind boggler but it works ??
-function recursivelyRequire (shape, allowedFields, field) {
+const recursivelyRequire = (shape, allowedFields, field) => {
   if (__DEV__) {
     invariant(
       allowedFields[field.name] !== void 0,

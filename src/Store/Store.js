@@ -3,8 +3,7 @@ import Promise from 'cancelable-promise'
 import emptyObj from 'empty/object'
 import {isNode} from '../utils'
 import now from 'performance-now'
-import toRecords from './utils/toRecords'
-import {stateDidChange, toImmutable} from './utils'
+import {toRecords, stateDidChange, toImmutable} from './utils'
 import Connections from './Connections'
 import StoreContext from './StoreContext'
 import InternalContext from './InternalContext'
@@ -87,7 +86,12 @@ export default class Store extends React.Component {
   }
 
   getNextState = (state = emptyObj, updates)=> {
-    let start = now()
+    let start
+
+    if (__DEV__) {
+      start = now()
+    }
+
     let nextState = toRecords(Object.assign({state: state.data}, updates))
     // do a shallow comparison of the previous state to this one to avoid
     // unnecessary re-renders

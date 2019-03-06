@@ -1,12 +1,12 @@
 import invariant from 'invariant'
-import {Field, ObjectField} from './fields'
+import {Field, MappingField} from './fields'
 import {promiseAllValues} from './utils'
 
 
 function getRequiredField (name, field, childFields) {
   if (
     field === null
-    || (field instanceof Field && !(field instanceof ObjectField))
+    || (field instanceof Field && !(field instanceof MappingField))
   ) {
     return null
   }
@@ -33,7 +33,7 @@ function getRequiredFields (name, record, requires) {
       const childFields = requires[fieldName]
 
       if (field === void 0) {
-        const isObjectField = record instanceof ObjectField
+        const isObjectField = record instanceof MappingField
         const mapType = isObjectField ? 'ObjectField' : 'Record'
         const recName = isObjectField ? name : record.id
         throw `Field '${fieldName}' not found in ${mapType}: ${recName}`

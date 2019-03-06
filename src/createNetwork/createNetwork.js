@@ -16,7 +16,7 @@ function removePendingUpdate (pendingUpdates, PENDING_UPDATE) {
   return pendingUpdates.splice(pendingUpdates.indexOf(PENDING_UPDATE), 1)
 }
 
-export default function createNetwork (props) {
+export default props => {
   const pendingUpdates = []
 
   function post (body, context) {

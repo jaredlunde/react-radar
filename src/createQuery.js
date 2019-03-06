@@ -3,7 +3,7 @@ import {invariant, objectWithoutProps} from './utils'
 
 
 const REDUCER_NAMES = new Set()
-export function createReducer (name, reducer) {
+export const createReducer = (name, reducer) => {
   if (__DEV__) {
     invariant(
       REDUCER_NAMES.has(name) === false,
@@ -19,7 +19,7 @@ export function createReducer (name, reducer) {
 
 export const defaultReducer = createReducer(
   'defaultReducer',
-  function (prevState, nextState, context) {
+  (prevState, nextState, context) => {
     // console.log('Reducer:', prevState, nextState, context)
     let remove = [],
         realNextState = {},
@@ -52,21 +52,16 @@ export const defaultReducer = createReducer(
   }
 )
 
-export const noop = createReducer(
-  'noop',
-  function (prevState) {
-    return prevState
-  }
-)
+export const noop = createReducer('noop', prevState => prevState)
 
-export default function createQuery ({
+export default ({
   name,
   requires,
   defaultProps,
   getOptimistic,
   getRollback,
   reducer = defaultReducer
-}) {
+}) => {
   if (__DEV__) {
     invariant(name, `Queries must be created with a 'name' property.`)
   }

@@ -69,7 +69,7 @@ StoreRecord.prototype.toJSON = StoreRecord.prototype.toImmutable
 
 const withoutContext = {state: 0, recordType: 0, reducer: 0}
 
-export default function createStoreRecord (context) {
+export default context => {
   const {state, recordType, reducer} = context
   context = objectWithoutProps(context, withoutContext)
 
@@ -80,7 +80,7 @@ export default function createStoreRecord (context) {
     return
   }
 
-  function stateReducer (currentState) {
+  const stateReducer = currentState => {
     // wraps the defined reducer or by default the record type reducer
     // with the context of the action/query
     const reducerContext = {record: recordType, ...context}

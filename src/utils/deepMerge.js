@@ -2,14 +2,13 @@ import isMergeableObject from 'is-mergeable-object'
 import {isStoreRecord} from '../Store'
 
 
-export function mergeIfMergeable (value, optionsArgument) {
-	return isMergeableObject(value)
-		? deepMerge(Array.isArray(value) ? [] : {}, value, optionsArgument)
-		: value
+export const mergeIfMergeable = (value, optionsArgument) => {
+  return isMergeableObject(value)
+    ? deepMerge(Array.isArray(value) ? [] : {}, value, optionsArgument)
+    : value
 }
 
-
-export function arrayMergeOverwrite (target, source, optionsArgument) {
+export const arrayMergeOverwrite = (target, source, optionsArgument) => {
   if (target === source) {
     return target
   }
@@ -23,8 +22,7 @@ export function arrayMergeOverwrite (target, source, optionsArgument) {
   return output
 }
 
-
-export function arrayMergeConcat (target, source, optionsArgument) {
+export const arrayMergeConcat = (target, source, optionsArgument) => {
   if (target === source) {
     return target
   }
@@ -38,8 +36,7 @@ export function arrayMergeConcat (target, source, optionsArgument) {
   return output
 }
 
-
-export function arrayMergeReplace (target, source, optionsArgument) {
+export const arrayMergeReplace = (target, source, optionsArgument) => {
   if (target === source) {
     return target
   }
@@ -53,8 +50,7 @@ export function arrayMergeReplace (target, source, optionsArgument) {
   return output
 }
 
-
-function mergeObject (target, source, optionsArgument) {
+const mergeObject = (target, source, optionsArgument) => {
   if (target === source) {
     return target
   }
@@ -63,7 +59,7 @@ function mergeObject (target, source, optionsArgument) {
     return source
   }
 
-	var destination = {...target}
+	const destination = {...target}
   /**
 	if (isMergeableObject(target)) {
     const targetKeys = Object.keys(target)
@@ -89,22 +85,19 @@ function mergeObject (target, source, optionsArgument) {
 	return destination
 }
 
-
-function deepMerge (target, source, optionsArgument) {
-	var sourceIsArray = Array.isArray(source)
-	var targetIsArray = Array.isArray(target)
-	var options = optionsArgument || { arrayMerge: arrayMergeOverwrite }
-	var sourceAndTargetTypesMatch = sourceIsArray === targetIsArray
+const deepMerge = (target, source, optionsArgument) => {
+	const sourceIsArray = Array.isArray(source),
+        targetIsArray = Array.isArray(target),
+        options = optionsArgument || { arrayMerge: arrayMergeOverwrite },
+        sourceAndTargetTypesMatch = sourceIsArray === targetIsArray
 
 	if (!sourceAndTargetTypesMatch) {
 		return mergeIfMergeable(source, optionsArgument)
 	} else if (sourceIsArray) {
-		var arrayMerge = options.arrayMerge || arrayMergeOverwrite
-		return arrayMerge(target, source, optionsArgument)
+		return (options.arrayMerge || arrayMergeOverwrite)(target, source, optionsArgument)
 	} else {
 		return mergeObject(target, source, optionsArgument)
 	}
 }
-
 
 export default deepMerge
