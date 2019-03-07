@@ -83,8 +83,8 @@ export default ({
       props,
       requires: queryRequires,
       // local props
-      optimistic: getOptimistic && getOptimistic(props, queryRequires),
-      rollback: getRollback && getRollback(props, queryRequires),
+      optimistic: getOptimistic,
+      rollback: getRollback,
       reducer: reducer_ || reducer
     }
   }

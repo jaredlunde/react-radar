@@ -156,6 +156,7 @@ export default class Store extends React.Component {
         <StoreContext.Provider value={this.storeContext}>
           <Endpoint
             {...this.internalContext}
+            state={this.storeContext.state}
             cache={this.props.cache}
             network={this.props.network}
             children={this.props.children}

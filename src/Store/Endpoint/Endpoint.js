@@ -17,8 +17,9 @@ class Endpoint extends React.Component {
   static propTypes = {
     cache: PropTypes.object,
     initialState: PropTypes.object,
-    post: PropTypes.func.isRequired,
-    updateState: PropTypes.func.isRequired
+    state: PropTypes.object,
+    updateState: PropTypes.func.isRequired,
+    post: PropTypes.func.isRequired
   }
 
   constructor (props) {
@@ -64,9 +65,9 @@ class Endpoint extends React.Component {
             const rollbacks = [], rollbackQueries = []
 
             for (let query of queries) {
-              if (query.rollback) {
+              if (typeof query.rollback === 'function') {
                 // optimistic updates can rollback on errors
-                rollbacks.push(query.rollback)
+                rollbacks.push(query.rollback(query.props, this.props.state, query.requires))
                 rollbackQueries.push(query)
               }
             }
@@ -101,8 +102,8 @@ class Endpoint extends React.Component {
     const optimisticUpdates = [], optimisticQueries = []
 
     for (let query of opt.queries) {
-      if (query.optimistic !== void 0 && query.optimistic !== null) {
-        optimisticUpdates.push(query.optimistic)
+      if (typeof query.optimistic === 'function') {
+        optimisticUpdates.push(query.optimistic(query.props, this.props.state, query.requires))
         optimisticQueries.push(query)
       }
     }
