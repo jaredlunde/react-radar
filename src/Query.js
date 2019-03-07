@@ -50,7 +50,8 @@ const queryShape = PropTypes.shape({
   optimistic: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
   rollback: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
   props: PropTypes.object.isRequired,
-  reducer: PropTypes.func.isRequired
+  reducer: PropTypes.func.isRequired,
+  isRecordUpdate: PropTypes.bool.isRequired
 })
 
 
@@ -163,7 +164,7 @@ export function createQueryComponent (opt = emptyObj) {
 
     getQueries () {
       this.id = this.getID()
-      let {run, endpoint} = this.props
+      let {run} = this.props
       const queries = {}
 
       if (Array.isArray(run)) {
@@ -306,6 +307,7 @@ export function createQueryComponent (opt = emptyObj) {
     reload = (ids, context) => {
       this.setWaiting(ids)
       this.unsubscribeAll()
+      this.queries = this.getQueries()
       return this.load(context)
     }
 
