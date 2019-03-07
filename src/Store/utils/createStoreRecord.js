@@ -87,13 +87,13 @@ export default context => {
     return (reducer || recordType.reducer)(currentState, state, reducerContext)
   }
 
-  let record = Records[key]
+  let record = Records.get(key)
 
   if (!record) {
     // record = StoreRecordFn(key)
     record = new StoreRecord(key)
     // tracks all the records globally
-    Records[key] = record
+    Records.set(key, record)
     // sets the state of the record
     record.setState(stateReducer)
   } else {

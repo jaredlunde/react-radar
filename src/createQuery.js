@@ -85,7 +85,8 @@ export default ({
       // local props
       optimistic: getOptimistic,
       rollback: getRollback,
-      reducer: reducer_ || reducer
+      reducer: reducer_ || reducer,
+      isRecordUpdate: Query.isRecordUpdate || false
     }
   }
 
