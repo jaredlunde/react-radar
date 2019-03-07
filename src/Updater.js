@@ -14,8 +14,9 @@ export default createQueryComponent({
       this.queryContext.update = this.reload
       this.queryContext = objectWithoutProps(this.queryContext, withoutReload)
     },
-
-    componentDidMount () {},
+    componentDidMount () {
+      this.mounted = true
+    },
     componentDidUpdate () {
       if (strictShallowEqual(this.getID(), this.id) === false) {
         this.unsubscribeAll()
