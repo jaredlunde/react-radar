@@ -80,7 +80,7 @@ export function createQueryComponent (opt = emptyObj) {
         queryShape
       ]).isRequired,
       parallel: PropTypes.bool,
-      stopIteration: PropTypes.bool
+      forceReload: PropTypes.bool
     }
 
     constructor (props, context) {
@@ -106,7 +106,6 @@ export function createQueryComponent (opt = emptyObj) {
         status[id] = query === void 0 ? WAITING : query.status
 
         if (query !== void 0) {
-          // queryCache.subscribe(id, this)
           if (query.status === Query.LOADING) {
             this.handleCommit(query.commit, {[id]: this.queries[id]})
           }
@@ -118,10 +117,10 @@ export function createQueryComponent (opt = emptyObj) {
         else if (
           // this checks to see if we're in a Node (SSR) environment
           isNode
-          // doesn't load if there's no context waiting for it
-          && context.waitForPromises
           // makes sure this is a Query, not an update
           && this.isRadarQuery
+          // doesn't load if there's no context waiting for it
+          && typeof context.waitForPromises === 'object'
         ) {
           context.waitForPromises.chunkPromises.push(this.load())
         }
@@ -135,12 +134,13 @@ export function createQueryComponent (opt = emptyObj) {
     componentDidMount () {
       this.mounted = true
       const statuses = Object.values(this.state.status)
+      const anyDone = statuses.some(s => s === DONE)
 
-      for (let i = 0; i < statuses.length; i++) {
-       if (statuses[i] !== DONE) {
-         this.load()
-         break
-       }
+      if (anyDone === true && this.props.forceReload === true) {
+        this.reload()
+      }
+      else if (anyDone === false || statuses.some(s => s !== DONE && s !== LOADING) === true) {
+        this.load()
       }
     }
 
