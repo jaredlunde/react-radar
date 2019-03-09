@@ -46,9 +46,9 @@ function getStatusText (status) {
 
 const queryShape = PropTypes.shape({
   name: PropTypes.string.isRequired,
-  requires: PropTypes.object.isRequired,
-  optimistic: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
-  rollback: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
+  requires: PropTypes.oneOfType([PropTypes.object, PropTypes.func]).isRequired,
+  optimistic: PropTypes.func,
+  rollback: PropTypes.func,
   props: PropTypes.object.isRequired,
   reducer: PropTypes.func.isRequired,
   isRecordUpdate: PropTypes.bool.isRequired
