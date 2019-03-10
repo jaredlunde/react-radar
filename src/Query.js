@@ -10,6 +10,7 @@ import {isNode} from './utils'
 
 
 const WAITING = 0, ERROR = 1, LOADING = 2, DONE = 3
+const statusText = ['waiting', 'error', 'loading', 'done']
 
 function getQueryID (query) {
   const fn = `${query.name}(${JSON.stringify(query.props)}) =>`
@@ -76,7 +77,8 @@ export function createQueryComponent (opt = emptyObj) {
       this.isRadarQuery = true
       this.pending = new Set()
       this.queryContext = {
-        status: 1,
+        status: LOADING,
+        is: 'loading',
         queries: [],
         abort: this.abort,
         reload: this.reload,
@@ -93,7 +95,7 @@ export function createQueryComponent (opt = emptyObj) {
         status[id] = query === void 0 ? WAITING : query.status
 
         if (query !== void 0) {
-          if (query.status === Query.LOADING) {
+          if (query.status === LOADING) {
             this.handleCommit(query.commit, {[id]: this.queries[id]})
           }
 
@@ -313,6 +315,7 @@ export function createQueryComponent (opt = emptyObj) {
       }
 
       this.queryContext.status = Math.min(...statusValues)
+      this.queryContext.is = statusText[this.queryContext.status]
 
       return (
         this.props.connections === void 0

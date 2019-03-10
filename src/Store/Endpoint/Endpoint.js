@@ -126,14 +126,14 @@ class Endpoint extends React.Component {
     }
 
     if (optimisticUpdates.length > 0) {
-      const state = this.props.store.updateState({
+      const update = this.props.store.updateState({
         nextState: optimisticUpdates,
         queries: optimisticQueries,
         type: `OPTIMISTIC_${opt.type.toUpperCase()}`
       })
 
-      this.props.store.cache.initialState = state
-      return state
+      update.then(state => this.props.store.cache.initialState = state)
+      return update
     }
 
     return Promise.resolve(this.props.store.cache.initialState || null)

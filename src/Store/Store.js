@@ -40,7 +40,6 @@ export default class Store extends React.Component {
       this.state = defaultState
     }
 
-    this.commits = []
     // context for the endpoint and store consumers
     this.internalContext = {
       getBits: this.getBits,
@@ -62,9 +61,7 @@ export default class Store extends React.Component {
   hydrateBrowser () {
     return Promise.all(
       this.props.cache.map(
-        (id, query) => query.response && this.updateState(
-          formatHydrateQuery(query)
-        )
+        (id, query) => query.response && this.updateState(formatHydrateQuery(query))
       )
     )
   }
@@ -82,10 +79,6 @@ export default class Store extends React.Component {
   }
 
   componentWillUnmount () {
-    for (let commit of this.commits) {
-      commit.cancel()
-    }
-
     Connections.clear()
   }
 
@@ -132,16 +125,10 @@ export default class Store extends React.Component {
           const nextState = this.getNextState(state, updates) || state
           resolve(nextState)
           return nextState
-        },
-        // removes the commit because it can't be canceled anymore
-        () => {
-          // removes the commit because it can't be canceled anymore
-          this.commits.splice(this.commits.indexOf(willSet), 1)
         }
       )
     )
 
-    this.commits.push(willSet)
     return willSet
   }
 
