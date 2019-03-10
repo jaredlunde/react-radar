@@ -2,6 +2,7 @@ import memoize from 'trie-memoize'
 import {isPlainObject} from '../../utils'
 import isStoreRecord from './isStoreRecord'
 import {RADAR_CHILDREN_KEY} from './getChildRecords'
+import Records from './Records'
 
 
 const getRecordKeys = memoize([WeakMap], obj => {
@@ -36,4 +37,23 @@ const getRecordKeys = memoize([WeakMap], obj => {
   }
 })
 
-export default getRecordKeys
+
+export default (nextState) => {
+  const nextKeys = getRecordKeys(nextState)
+
+  const prevSize = Records.size
+
+  if (prevSize === 0) {
+    return
+  }
+
+  for (let key of Records.keys()) {
+    if (nextKeys.has(key) === false) {
+      Records.delete(key)
+    }
+  }
+  
+  if (__DEV__) {
+    console.log('[Radar] records:', Records.size, '->', Records)
+  }
+}

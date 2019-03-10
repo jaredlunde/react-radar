@@ -29,6 +29,7 @@
   "devDependencies": {
     "@stellar-apps/babel-preset-es": "^1.0.3",
     "@stellar-apps/babel-preset-react": "^1.0.0",
+    "babel-plugin-tailcall-optimization": "^2.0.0",
     "prettier": "^1.16.4",
     "react": "^16.8.3",
     "react-dom": "^16.8.3",

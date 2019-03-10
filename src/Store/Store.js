@@ -1,9 +1,10 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 import Promise from 'cancelable-promise'
 import emptyObj from 'empty/object'
 import {isNode} from '../utils'
 import now from 'performance-now'
-import {toRecords, stateDidChange, toImmutable} from './utils'
+import {toRecords, stateDidChange, toImmutable, collectStaleRecords} from './utils'
 import Connections from './Connections'
 import StoreContext from './StoreContext'
 import InternalContext from './InternalContext'
@@ -20,7 +21,13 @@ const formatHydrateQuery = query => ({
 })
 
 export default class Store extends React.Component {
-  static defaultProps = {network: createNetwork()}
+  static defaultProps = {
+    network: createNetwork(),
+  }
+
+  static propTypes = {
+    network: PropTypes.func.isRequired
+  }
 
   constructor (props) {
     super(props)
@@ -43,6 +50,7 @@ export default class Store extends React.Component {
       getBits: this.getBits,
       updateState: this.updateState
     }
+
     this.storeContext = {
       state: this.getState(),
       getBits: this.getBits
@@ -54,6 +62,8 @@ export default class Store extends React.Component {
       await this.hydrateBrowser()
     }
   }
+
+  staleCounter = 0
 
   hydrateBrowser () {
     return Promise.all(
@@ -102,8 +112,12 @@ export default class Store extends React.Component {
 
       return null
     }
-    // sets the local state
-    Connections.setBuckets(nextState)
+    // used for calculating changed bits for context
+    Connections.setBuckets(this.state)
+    // removes stale records to avoid unexpected behaviors
+    // when a record is removed from the state tree, it should be
+    // assumed that this record is 'cleared', as well
+    collectStaleRecords(nextState)
 
     if (__DEV__) {
       console.log('[Radar] state profiler:', now() - start)

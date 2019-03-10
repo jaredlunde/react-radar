@@ -2,6 +2,9 @@
   "presets": [
     ["@stellar-apps/react", {"removePropTypes":  false}]
   ],
+  "plugins": [
+    "tailcall-optimization"
+  ],
   "env": {
     "cjs": {
       "presets": [

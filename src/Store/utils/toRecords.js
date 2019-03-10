@@ -3,7 +3,7 @@ import createStoreRecord from './createStoreRecord'
 import deepInvalidate from './deepInvalidate'
 
 
-function toRecord (props/*{state, query, recordType}*/) {
+const toRecord = (props/*{state, query, recordType}*/) => {
   props.recordType = (
     props.recordType.reducer === void 0
     ? props.recordType`${props.recordType.keyField}`
@@ -14,7 +14,7 @@ function toRecord (props/*{state, query, recordType}*/) {
 }
 
 
-function fromPlainObject (props/*{state, query, recordType, ...context}*/) {
+const fromPlainObject = (props/*{state, query, recordType, ...context}*/) => {
   const output = {}
   const recordType = props.recordType
   const state = props.state
@@ -52,7 +52,7 @@ function fromPlainObject (props/*{state, query, recordType, ...context}*/) {
 }
 
 
-function fromArray(props/*{state, query, recordType}*/) {
+const fromArray = (props/*{state, query, recordType}*/) => {
   const mutableProps = Object.assign({}, props)
   const records = []
   const state = mutableProps.state
@@ -66,7 +66,7 @@ function fromArray(props/*{state, query, recordType}*/) {
 }
 
 
-function routeToRecords (props/*{state, query, recordType}*/) {
+const routeToRecords = (props/*{state, query, recordType}*/) => {
   const state = props.state
 
   if (Array.isArray(state) === true) {
@@ -86,7 +86,7 @@ function routeToRecords (props/*{state, query, recordType}*/) {
 const withoutError = ['isRadarError']
 const withoutContext = ['recordType', 'state']
 
-export default function parse ({state, nextState, queries, ...context}) {
+export default ({state, nextState, queries, ...context}) => {
   let hasRecordUpdates = false
 
   for (let i = 0; i < queries.length; i++) {
