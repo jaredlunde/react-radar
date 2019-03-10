@@ -1,4 +1,1 @@
-import getUniqueID from '@jaredlunde/get-unique-id'
-
-
-export default getUniqueID
+export default from '@jaredlunde/get-unique-id'

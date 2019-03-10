@@ -1,30 +1,26 @@
 import memoize from 'trie-memoize'
-import {isPlainObject} from '../../utils'
 import isStoreRecord from './isStoreRecord'
 import {RADAR_CHILDREN_KEY} from './getChildRecords'
 import Records from './Records'
 
 
 const getRecordKeys = memoize([WeakMap], obj => {
-  if (isStoreRecord(obj)) {
-    const output = new Set()
-    const children = obj[RADAR_CHILDREN_KEY]
-    const childrenKeys = Object.keys(children)
-    // removes the record children
-    for (let x = 0; x < childrenKeys.length; x++)
-      output.add(children[childrenKeys[x]].key)
-    // removes the top-`level record
-    output.add(obj.key)
-    return output
-  }
-  else if (Array.isArray(obj) || isPlainObject(obj)) {
-    let output = new Set()
-    const objKeys = Object.keys(obj)
+  let output = new Set()
+  const objKeys = Object.keys(obj)
 
-    for (let x = 0; x < objKeys.length; x++) {
-      const value = obj[objKeys[x]]
+  for (let i = 0; i < objKeys.length; i++) {
+    const value = obj[objKeys[i]]
 
-      if (typeof value === 'object' && value !== null) {
+    if (typeof value === 'object' && value !== null) {
+      if (isStoreRecord(value)) {
+        output.add(value.key)
+        const children = value[RADAR_CHILDREN_KEY]
+        const childrenKeys = Object.keys(children)
+        // removes the record children
+        for (let j = 0; j < childrenKeys.length; j++)
+          output.add(children[childrenKeys[j]].key)
+      }
+      else {
         const nestedValues = getRecordKeys(value)
 
         if (nestedValues !== void 0 && nestedValues.size) {
@@ -32,11 +28,10 @@ const getRecordKeys = memoize([WeakMap], obj => {
         }
       }
     }
-
-    return output
   }
-})
 
+  return output
+})
 
 export default (nextState) => {
   if (Records.size === 0) {

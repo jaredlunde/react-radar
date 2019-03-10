@@ -24,7 +24,7 @@ export class StoreRecord {
     // tracking which stores listen to what records but I did not.
     this[RADAR_CHILDREN_KEY] = emptyObj
     // used for tracking invalidations
-    this[RADAR_ID_KEY] = getID(this)
+    this[RADAR_ID_KEY] = getID()
   }
 
   isInvalid () {
@@ -89,7 +89,7 @@ export default context => {
 
   let record = Records.get(key)
 
-  if (!record) {
+  if (record === void 0) {
     // record = StoreRecordFn(key)
     record = new StoreRecord(key)
     // tracks all the records globally

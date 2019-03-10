@@ -1,7 +1,6 @@
-import Immutable from 'seamless-immutable'
+// import Immutable from 'seamless-immutable'
 import memoize from 'trie-memoize'
 import isPlainObject from '../../utils/isPlainObject'
-// import isStoreRecord from './isStoreRecord'
 
 
 export const toImmutable = memoize([WeakMap], obj => {
@@ -11,8 +10,8 @@ export const toImmutable = memoize([WeakMap], obj => {
     const output = isArray ? [] : {}
     const objKeys = Object.keys(obj)
 
-    for (let x = 0; x < objKeys.length; x++) {
-      const key = objKeys[x]
+    for (let i = 0; i < objKeys.length; i++) {
+      const key = objKeys[i]
       const val = obj[key]
       // checks if the value is a store record. if so we want to avoid
       // memoizing it directly.
@@ -23,12 +22,17 @@ export const toImmutable = memoize([WeakMap], obj => {
           : val.toImmutable !== void 0
             ? val.toImmutable()
             : typeof val === 'object'
-              ? toImmutable(val)
+              ? (__DEV__ ? Object.freeze(val) : val)
               : val
       )
     }
 
-    return Immutable(output)
+    if (__DEV__) {
+      return Object.freeze(output)
+    }
+    else {
+      return output
+    }
   }
 
   return obj

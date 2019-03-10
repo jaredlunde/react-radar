@@ -11,17 +11,16 @@ const getRecordsFromPlainObject = memoize(
   [WeakMap],
   obj => {
     const stateKeys = Object.keys(obj)
-    let children = {}
-    let x
+    let children = {},
+        i = 0,
+        j = 0
 
-    for (let x = 0; x < stateKeys.length; x++) {
-      const nextChildren = getChildRecords(obj[stateKeys[x]])
+    for (; i < stateKeys.length; i++) {
+      const nextChildren = getChildRecords(obj[stateKeys[i]])
       const childKeys = Object.keys(nextChildren)
 
-      for (let x = 0; x < childKeys.length; x++) {
-        const childKey = childKeys[x]
-        children[childKey] = nextChildren[childKey]
-      }
+      for (j = 0; j < childKeys.length; j++)
+        children[childKeys[j]] = nextChildren[childKeys[j]]
     }
 
     return children

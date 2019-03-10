@@ -9,9 +9,8 @@ const deepInvalidate = obj => {
     const objKeys = Object.keys(obj)
     // let didChange = false
 
-    for (let x = 0; x < objKeys.length; x++) {
-      const key = objKeys[x]
-      output[key] = deepInvalidate(obj[key])
+    for (let i = 0; i < objKeys.length; i++) {
+      output[objKeys[i]] = deepInvalidate(obj[objKeys[i]])
     }
 
     return output

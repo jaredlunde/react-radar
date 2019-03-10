@@ -24,22 +24,24 @@ export default (prevState, nextState) => {
     return true
   }
 
-  for (let x = 0; x < nextStateKeys.length; x++) {
-    const key = nextStateKeys[x]
+  let i = 0, j = 0
+
+  for (; i < nextStateKeys.length; i++) {
+    const key = nextStateKeys[i]
     const nextVal = nextState[key]
     const prevVal = prevState[key]
 
     if (
       (Array.isArray(nextVal) || isPlainObject(nextVal))
-      && prevVal !== null
       && typeof prevVal === 'object'
+      && prevVal !== null
     ) {
       const nextKeys = Object.keys(nextVal)
 
       // traverse descending because the assumption is most mutations will
       // be pushes rather than shifts
-      for (let y = nextKeys.length; y > -1; y--) {
-        const nextKey = nextKeys[y]
+      for (j = nextKeys.length; j > -1; j--) {
+        const nextKey = nextKeys[j]
         const nextRec = nextVal[nextKey]
         const prevRec = prevVal[nextKey]
         // if its a record and unequal, we know it is invalid. with other

@@ -1,7 +1,16 @@
 import {getFields} from '../createRecord/utils'
-import {invariant, tag} from '../utils'
-import {getSharedFields} from './utils'
+import {invariant, tag, deepIntersection} from '../utils'
 
+
+const getSharedFields = records => {
+  const recs = []
+
+  for (let name in records) {
+    recs.push(records[name].fields)
+  }
+
+  return deepIntersection(...recs)
+}
 
 export default ({records}) => {
   if (__DEV__) {

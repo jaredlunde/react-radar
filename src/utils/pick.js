@@ -1,11 +1,11 @@
 import memoize from 'trie-memoize'
 import isPlainObject from './isPlainObject'
-import Immutable from 'seamless-immutable'
+// import Immutable from 'seamless-immutable'
 
 
 export const pickShape = (from, shape) => {
   if (shape === null) {
-    return Immutable(from)
+    return from
   }
 
   const output = {}
@@ -29,7 +29,8 @@ export const pickShape = (from, shape) => {
     }
   }
 
-  return Immutable(output)
+  // return Immutable(output)
+  return __DEV__ ? Object.freeze(output) : output
 }
 
 // picks a shape {foo: null, bar: null} out of an object
@@ -42,7 +43,8 @@ export const pick = memoize([WeakMap, WeakMap], (from, shape) => {
       output.push(pickShape(from[x], shape))
     }
 
-    return Immutable(output)
+    // return Immutable(output)
+    return __DEV__ ? Object.freeze(output) : output
   }
   else if (isPlainObject(from)) {
     return pickShape(from, shape)
