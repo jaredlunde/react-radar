@@ -39,20 +39,18 @@ const getRecordKeys = memoize([WeakMap], obj => {
 
 
 export default (nextState) => {
-  const nextKeys = getRecordKeys(nextState)
-
-  const prevSize = Records.size
-
-  if (prevSize === 0) {
+  if (Records.size === 0) {
     return
   }
 
-  for (let key of Records.keys()) {
+  const nextKeys = getRecordKeys(nextState)
+
+  for (let [key, _] of Records) {
     if (nextKeys.has(key) === false) {
       Records.delete(key)
     }
   }
-  
+
   if (__DEV__) {
     console.log('[Radar] records:', Records.size, '->', Records)
   }

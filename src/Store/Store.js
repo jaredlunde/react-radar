@@ -63,8 +63,6 @@ export default class Store extends React.Component {
     }
   }
 
-  staleCounter = 0
-
   hydrateBrowser () {
     return Promise.all(
       this.props.cache.map(
@@ -113,7 +111,7 @@ export default class Store extends React.Component {
       return null
     }
     // used for calculating changed bits for context
-    Connections.setBuckets(this.state)
+    Connections.setBuckets(nextState)
     // removes stale records to avoid unexpected behaviors
     // when a record is removed from the state tree, it should be
     // assumed that this record is 'cleared', as well
