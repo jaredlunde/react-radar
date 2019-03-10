@@ -13,10 +13,10 @@ const deepInvalidate = obj => {
       output[objKeys[i]] = deepInvalidate(obj[objKeys[i]])
     }
 
-    return output
+    return __DEV__ ? Object.freeze(output) : output
   }
 
-  return obj
+  return __DEV__ ? Object.freeze(obj) : obj
 }
 
 export default deepInvalidate

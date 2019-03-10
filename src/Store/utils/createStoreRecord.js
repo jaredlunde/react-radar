@@ -39,7 +39,8 @@ export class StoreRecord {
     // we will convert to Immutable plain state structures
     if (shouldInvalidate(this)) {
       // an invalidation in a subrecord occurred
-      this.state = toImmutable(deepInvalidate(this.state))
+      // deep invalidate returns frozen objects so no 'toImmutable' is required
+      this.state = deepInvalidate(this.state)
       this[RADAR_CHILDREN_KEY] = getChildRecords(this.state)
     }
     // the state has been successfully invalidated so we can reset the keys
