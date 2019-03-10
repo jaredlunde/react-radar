@@ -100,7 +100,7 @@ export default class Store extends React.Component {
       start = now()
     }
 
-    let nextState = toRecords(Object.assign({state: state.data}, updates))
+    let nextState = toRecords(Object.assign({state: toImmutable(state.data)}, updates))
     // do a shallow comparison of the previous state to this one to avoid
     // unnecessary re-renders
     if (nextState === null || stateDidChange(state.data, nextState) === false) {
