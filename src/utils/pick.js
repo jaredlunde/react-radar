@@ -2,10 +2,9 @@ import memoize from 'trie-memoize'
 import isPlainObject from './isPlainObject'
 // import Immutable from 'seamless-immutable'
 
-
 export const pickShape = (from, shape) => {
   if (shape === null) {
-    return from
+    return __DEV__ ? Object.freeze(from) : from
   }
 
   const output = {}

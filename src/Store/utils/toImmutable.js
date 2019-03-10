@@ -27,12 +27,7 @@ export const toImmutable = memoize([WeakMap], obj => {
       )
     }
 
-    if (__DEV__) {
-      return Object.freeze(output)
-    }
-    else {
-      return output
-    }
+    return __DEV__ ? Object.freeze(output) : output
   }
 
   return obj
