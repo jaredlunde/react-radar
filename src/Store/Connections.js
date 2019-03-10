@@ -10,13 +10,13 @@ const Connections = {
       return bits
     }
 
-    for (let x = 0; x < keys.length; x++) {
-      let idx = buckets.indexOf(keys[x])
+    for (let i = 0; i < keys.length; i++) {
+      let idx = buckets.indexOf(keys[i])
 
       if (idx === -1) {
         // this is here in the situation that one connects to a prop that hasn't
         // been fetched yet
-        buckets.push(keys[x])
+        buckets.push(keys[i])
         idx = buckets.length - 1
       }
 

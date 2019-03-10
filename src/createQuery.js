@@ -20,7 +20,6 @@ export const createReducer = (name, reducer) => {
 export const defaultReducer = createReducer(
   'defaultReducer',
   (prevState, nextState, context) => {
-    // console.log('Reducer:', prevState, nextState, context)
     let remove = [],
         realNextState = {},
         nextKeys = Object.keys(nextState),

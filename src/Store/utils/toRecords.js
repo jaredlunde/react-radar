@@ -118,8 +118,7 @@ export default function parse ({state, nextState, queries, ...context}) {
       context.state = queryState[key]
       records[key] = routeToRecords(context)
     }
-    // delete context.recordType
-    // delete context.state
+
     state = query.reducer(state, records, objectWithoutProps(context, withoutContext))
   }
 
