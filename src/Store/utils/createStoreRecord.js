@@ -39,13 +39,13 @@ export class StoreRecord {
     // we will convert to Immutable plain state structures
     if (shouldInvalidate(this)) {
       // an invalidation in a subrecord occurred
-      this.state = deepInvalidate(this.state)
+      this.state = toImmutable(deepInvalidate(this.state))
       this[RADAR_CHILDREN_KEY] = getChildRecords(this.state)
     }
     // the state has been successfully invalidated so we can reset the keys
     // in order to not re-invalidate unnecessary
     this[RADAR_PREV_ID_KEY] = this[RADAR_ID_KEY]
-    return toImmutable(this.state)
+    return this.state
   }
 
   setState (reducer) {
@@ -53,14 +53,14 @@ export class StoreRecord {
     const nextState = reducer(this.state)
 
     if (nextState !== null && nextState !== this.state) {
-      this.state = nextState
+      this.state = toImmutable(nextState)
       this[RADAR_CHILDREN_KEY] = getChildRecords(this.state)
       invalidateID(this)
     }
   }
 
   replaceState (state) {
-    this.state = state
+    this.state = toImmutable(state)
     invalidateID(this)
   }
 }
