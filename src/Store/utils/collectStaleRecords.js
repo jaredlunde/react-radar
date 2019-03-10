@@ -5,10 +5,12 @@ import Records from './Records'
 
 
 const getRecordKeys = memoize([WeakMap], obj => {
-  let output = new Set()
+  let output = new Set(),
+      i = 0,
+      j = 0
   const objKeys = Object.keys(obj)
 
-  for (let i = 0; i < objKeys.length; i++) {
+  for (; i < objKeys.length; i++) {
     const value = obj[objKeys[i]]
 
     if (typeof value === 'object' && value !== null) {
@@ -17,7 +19,7 @@ const getRecordKeys = memoize([WeakMap], obj => {
         const children = value[RADAR_CHILDREN_KEY]
         const childrenKeys = Object.keys(children)
         // removes the record children
-        for (let j = 0; j < childrenKeys.length; j++)
+        for (j = 0; j < childrenKeys.length; j++)
           output.add(children[childrenKeys[j]].key)
       }
       else {

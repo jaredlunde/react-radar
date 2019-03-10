@@ -14,23 +14,36 @@ import createCache from './createCache'
 class Endpoint extends React.Component {
   mounted = false
 
-  static propTypes = {
-    cache: PropTypes.object,
-    initialState: PropTypes.object,
-    state: PropTypes.object,
-    updateState: PropTypes.func.isRequired,
-    post: PropTypes.func.isRequired
+  static contextTypes = {
+    // for react-broker preloading
+    waitForPromises: PropTypes.object
   }
 
-  constructor (props) {
+  static propTypes = {
+    store: PropTypes.shape({
+      cache: PropTypes.object,
+      state: PropTypes.object,
+      updateState: PropTypes.func.isRequired,
+    }).isRequired,
+    network: PropTypes.shape({
+      post: PropTypes.func.isRequired,
+      abort: PropTypes.func.isRequired,
+    }).isRequired
+  }
+
+  constructor (props, context) {
     super(props)
     this.endpointContext = {
-      queryCache: props.cache || createCache(),
+      queryCache: props.store.cache || createCache(),
       // local 'optimistic' updates, does not send commit over the network
       commitLocal: this.commitLocal,
       // remote + optimistic updates - commits to the network
       commit: this.commit
     }
+  }
+
+  componentWillUnmount () {
+    this.props.network.abort()
   }
 
   commit = (opt, context) => {
@@ -67,7 +80,9 @@ class Endpoint extends React.Component {
             for (let query of queries) {
               if (typeof query.rollback === 'function') {
                 // optimistic updates can rollback on errors
-                rollbacks.push(query.rollback(query.props, this.props.state, query.requires))
+                rollbacks.push(
+                  query.rollback(query.props, this.props.store.state, query.requires)
+                )
                 rollbackQueries.push(query)
               }
             }
@@ -79,14 +94,14 @@ class Endpoint extends React.Component {
             }
         }
 
-        state = isNode === false && await this.props.updateState({
+        state = isNode === false && await this.props.store.updateState({
           nextState,
           queries,
           response,
           type
         })
 
-        this.props.cache.initialState = state
+        this.props.store.cache.initialState = state
         resolve({state, response})
       }
     )
@@ -94,7 +109,7 @@ class Endpoint extends React.Component {
 
   async commitPayload (payload, context) {
     // posts the JSON request
-    const response = await this.props.post(payload, context)
+    const response = await this.props.network.post(payload, context)
     return {response, nextState: response.json}
   }
 
@@ -103,23 +118,25 @@ class Endpoint extends React.Component {
 
     for (let query of opt.queries) {
       if (typeof query.optimistic === 'function') {
-        optimisticUpdates.push(query.optimistic(query.props, this.props.state, query.requires))
+        optimisticUpdates.push(
+          query.optimistic(query.props, this.props.store.state, query.requires)
+        )
         optimisticQueries.push(query)
       }
     }
 
     if (optimisticUpdates.length > 0) {
-      const state = this.props.updateState({
+      const state = this.props.store.updateState({
         nextState: optimisticUpdates,
         queries: optimisticQueries,
         type: `OPTIMISTIC_${opt.type.toUpperCase()}`
       })
 
-      this.props.cache.initialState = state
+      this.props.store.cache.initialState = state
       return state
     }
 
-    return Promise.resolve(this.props.cache.initialState || null)
+    return Promise.resolve(this.props.store.cache.initialState || null)
   }
 
   render () {
@@ -131,7 +148,8 @@ class Endpoint extends React.Component {
   }
 }
 
-export default function NetworkEndpoint (props) {
-  // Networking layer
-  return props.network(context => <Endpoint {...context} {...props}/>)
-}
+export default ({children, ...props}) => props.network(context => <Endpoint
+  network={context}
+  store={props}
+  children={children}
+/>)

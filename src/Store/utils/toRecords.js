@@ -21,8 +21,8 @@ const fromPlainObject = (props/*{state, query, recordType, ...context}*/) => {
   const stateKeys = Object.keys(state)
   const mutableBaseRecord = Object.assign({}, props)
 
-  for (let x = 0; x < stateKeys.length; x++) {
-    const key = stateKeys[x]
+  for (let i = 0; i < stateKeys.length; i++) {
+    const key = stateKeys[i]
     mutableBaseRecord.state = state[key]
     mutableBaseRecord.recordType = (
       recordType === void 0
@@ -57,8 +57,8 @@ const fromArray = (props/*{state, query, recordType}*/) => {
   const records = []
   const state = mutableProps.state
 
-  for (let x = 0; x < state.length; x++) {
-    mutableProps.state = state[x]
+  for (let i = 0; i < state.length; i++) {
+    mutableProps.state = state[i]
     records.push(routeToRecords(mutableProps))
   }
 
@@ -90,10 +90,10 @@ export default ({state, nextState, queries, ...context}) => {
   let hasRecordUpdates = false
 
   for (let i = 0; i < queries.length; i++) {
+    let records = {}
     let queryState = nextState[i]
     const query = queries[i]
     context.query = query
-    let records = {}
 
     if (query.isRecordUpdate === true) {
       hasRecordUpdates = true

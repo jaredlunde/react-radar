@@ -33,17 +33,6 @@ function getQueryID (query) {
   return `${fn} ${requires}`
 }
 
-function getStatusText (status) {
-  switch (status) {
-    case ERROR:
-      return 'error'
-    case DONE:
-      return 'done'
-    default:
-      return 'loading'
-  }
-}
-
 const queryShape = PropTypes.shape({
   name: PropTypes.string.isRequired,
   requires: PropTypes.oneOfType([PropTypes.object, PropTypes.func]).isRequired,
@@ -53,7 +42,6 @@ const queryShape = PropTypes.shape({
   reducer: PropTypes.func.isRequired,
   isRecordUpdate: PropTypes.bool.isRequired
 })
-
 
 export function createQueryComponent (opt = emptyObj) {
   let {name = 'Query', prototype = emptyObj} = opt
@@ -89,7 +77,6 @@ export function createQueryComponent (opt = emptyObj) {
       this.pending = new Set()
       this.queryContext = {
         status: 1,
-        statusText: 'loading',
         queries: [],
         abort: this.abort,
         reload: this.reload,
@@ -321,13 +308,11 @@ export function createQueryComponent (opt = emptyObj) {
         this.queryContext.queries.push({
           id: ids[i],
           status: statusValues[i],
-          statusText: getStatusText(statusValues[i]),
           response: responseValues[i]
         })
       }
 
       this.queryContext.status = Math.min(...statusValues)
-      this.queryContext.statusText = getStatusText(this.queryContext.status)
 
       return (
         this.props.connections === void 0

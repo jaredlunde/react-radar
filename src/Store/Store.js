@@ -32,10 +32,7 @@ export default class Store extends React.Component {
   constructor (props) {
     super(props)
     // parses any initial state in props or the DOM
-    let initialState
-
     if (props.cache !== void 0 && props.cache.size > 0) {
-      initialState = props.cache.initialState
       this.state = isNode === true ? this.hydrateNode(props.cache) : defaultState
     }
     else {
@@ -46,7 +43,6 @@ export default class Store extends React.Component {
     this.commits = []
     // context for the endpoint and store consumers
     this.internalContext = {
-      initialState,
       getBits: this.getBits,
       updateState: this.updateState
     }
@@ -74,7 +70,7 @@ export default class Store extends React.Component {
   }
 
   hydrateNode (cache) {
-    let state = {data: {}}
+    let state = defaultState
 
     cache.forEach(
       (id, query) =>
@@ -100,7 +96,7 @@ export default class Store extends React.Component {
       start = now()
     }
 
-    let nextState = toRecords(Object.assign({state: toImmutable(state.data)}, updates))
+    let nextState = toRecords(Object.assign({state: state.data}, updates))
     // do a shallow comparison of the previous state to this one to avoid
     // unnecessary re-renders
     if (nextState === null || stateDidChange(state.data, nextState) === false) {
@@ -121,7 +117,7 @@ export default class Store extends React.Component {
       console.log('[Radar] state profiler:', now() - start)
     }
 
-    return {data: nextState}
+    return {data: __DEV__ ? Object.freeze(nextState) : state.data}
   }
 
   updateState = updates/*{nextState, queries, [<context> response, type]}*/ => {
@@ -167,8 +163,8 @@ export default class Store extends React.Component {
       <InternalContext.Provider value={this.internalContext}>
         <StoreContext.Provider value={this.storeContext}>
           <Endpoint
-            {...this.internalContext}
-            state={this.storeContext.state}
+            updateState={this.updateState}
+            state={nextState}
             cache={this.props.cache}
             network={this.props.network}
             children={this.props.children}

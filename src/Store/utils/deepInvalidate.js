@@ -16,7 +16,7 @@ const deepInvalidate = obj => {
     return __DEV__ ? Object.freeze(output) : output
   }
 
-  return __DEV__ ? Object.freeze(obj) : obj
+  return obj
 }
 
 export default deepInvalidate
