@@ -1,4 +1,4 @@
-import isNode from '../utils/isNode'
+import {workerify} from '../utils'
 
 
 // POST w/ fetch or fetch polyfill
@@ -80,41 +80,4 @@ const post = self => (url, opt) => {
   )
 }
 
-let fetcher
-
-const workerCode = `this.onmessage=function(e){(${Function.prototype.toString.call(post)})(self).apply(null,e.data.params).then(function(r){postMessage({type:'RPC',id:e.data.id,result:r});});};`
-
-if (isNode === false && typeof Worker !== 'undefined') {
-  let blob
-
-  try {
-    blob = new Blob([workerCode], {type: 'application/json'})
-  }
-  catch (e) {
-    window.BlobBuilder = window.BlobBuilder
-      || window.WebKitBlobBuilder
-      || window.MozBlobBuilder
-    blob = new BlobBuilder()
-    blob.append(workerCode)
-    blob = blob.getBlob()
-  }
-
-  let worker = new Worker((window.URL || window.webkitURL).createObjectURL(blob)),
-    counter = 0,
-    callbacks = {}
-
-  worker.onmessage = e => {
-    callbacks[e.data.id](e.data.result)
-  }
-
-  fetcher = (...args) => new Promise(resolve => {
-    let id = `rpc${++counter}`
-    callbacks[id] = resolve
-    worker.postMessage({type: 'RPC', id, params: args})
-  })
-}
-else {
-  fetcher = post(typeof window === 'undefined' ? global : window)
-}
-
-export default fetcher
+export default workerify(post)
