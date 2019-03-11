@@ -1,6 +1,6 @@
 {
   "name": "react-radar",
-  "version": "2.0.0-beta.42",
+  "version": "2.0.0-beta.43",
   "main": "dist/cjs/index.js",
   "browser": "dist/es/index.browser.js",
   "module": "dist/node-esm/index.esm.js",
@@ -25,8 +25,7 @@
     "prettier:node-esm": "prettier --single-quote --no-semi --no-bracket-spacing --trailing-comma es5 --write --tab-width 2 \"dist/node-esm/**/*.js\"",
     "prettier:cjs": "prettier --single-quote --no-semi --no-bracket-spacing --trailing-comma es5 --write --tab-width 2 \"dist/cjs/**/*.js\"",
     "prettier:server": "prettier --single-quote --no-semi --no-bracket-spacing --trailing-comma es5 --write --tab-width 2 \"server/dist/**/*.js\"",
-    "prepublishOnly": "yarn remove webpack",
-    "postpublish": "yarn add webpack"
+    "prepublishOnly": "yarn build"
   },
   "devDependencies": {
     "@stellar-apps/babel-preset-es": "^1.0.3",
