@@ -1,8 +1,8 @@
-import {CDLL} from 'cdll-memoize'
 import {objectWithoutProps} from '../../utils'
 
 
 const jsonExclusions = {commit: 0, listeners: 0, query: 0}
+const urlExclusion = {url: 0}
 
 export default (
   initialQueries = (
@@ -33,10 +33,10 @@ export default (
         map.set(id, q)
       }
 
-      q.listeners = q.listeners || new CDLL()
+      q.listeners = q.listeners || new Set()
 
-      if (q.listeners.find(c) === void 0) {
-        q.listeners.push(c)
+      if (q.listeners.has(c) === false) {
+        q.listeners.add(c)
       }
     },
     unsubscribe (id, c, parallel = false) {
@@ -45,9 +45,9 @@ export default (
       const listeners = query.listeners
 
       if (listeners) {
-        const el = listeners.find(c)
+        const el = listeners.has(c)
 
-        if (el !== void 0) {
+        if (el === true) {
           listeners.delete(el)
         }
 
@@ -74,7 +74,7 @@ export default (
         output[k] = objectWithoutProps(v, jsonExclusions)
 
         if (output[k].response) {
-          delete output[k].response.url
+          output[k].response = objectWithoutProps(output[k].response, urlExclusion)
         }
       })
 
@@ -93,7 +93,7 @@ export default (
   Object.defineProperty(cache, 'size', {get: () => map.size})
 
   if (initialQueries && typeof initialQueries === 'object') {
-    const textContent = initialQueries.textContent
+    const textContent = initialQueries.firstChild.data
 
     if (textContent) {
       cache.fromJSON(initialQueries.textContent)

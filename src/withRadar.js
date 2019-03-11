@@ -1,4 +1,5 @@
-import {EndpointConsumer} from './Store'
+import React from 'react'
+import {RadarConsumer} from './Store'
 
 
-export default Component => <EndpointConsumer children={cxt => <Component radar={cxt}/>}/>
+export default Component => <RadarConsumer children={cxt => <Component radar={cxt}/>}/>

@@ -768,7 +768,7 @@
     "@babel/plugin-transform-react-jsx-self" "^7.0.0"
     "@babel/plugin-transform-react-jsx-source" "^7.0.0"
 
-"@babel/runtime-corejs2@^7.3.1", "@babel/runtime-corejs2@^7.3.4":
+"@babel/runtime-corejs2@^7.3.4":
   version "7.3.4"
   resolved "https://registry.yarnpkg.com/@babel/runtime-corejs2/-/runtime-corejs2-7.3.4.tgz#63f8bbc77622da202e9ea6f8f6e3bf28991832d9"
   integrity sha512-QwPuQE65kNxjsNKk34Rfgen2R5fk0J2So99SD45uXBp34QOfyz11SqVgJ4xvyCpnCIieSQ0X0hSSc9z/ymlJJw==
@@ -776,7 +776,7 @@
     core-js "^2.5.7"
     regenerator-runtime "^0.12.0"
 
-"@babel/runtime@^7.3.1", "@babel/runtime@^7.3.4":
+"@babel/runtime@^7.3.4":
   version "7.3.4"
   resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.3.4.tgz#73d12ba819e365fcf7fd152aed56d6df97d21c83"
   integrity sha512-IvfvnMdSaLBateu0jfsYIpZTxAc2cKEXEMiezGGN75QcBcecDUKd3PgLAncT0oOgxKy8dd8hrJKj9MfzgfZd6g==
@@ -820,15 +820,6 @@
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/@jaredlunde/get-unique-id/-/get-unique-id-0.1.1.tgz#e2b1c769fe076f26a1de929614cc81751ff150e8"
   integrity sha512-PpsMYDhv5pRBO0CZMkMeo/WebvvRL8Wf5F88TcnUu2fwNFP0ldv7WW2kZx+XWXrXQje/+n2Eqc+twWNfNtO7Xw==
-
-"@render-props/utils@^0.2.11", "@render-props/utils@^0.2.2":
-  version "0.2.11"
-  resolved "https://registry.yarnpkg.com/@render-props/utils/-/utils-0.2.11.tgz#7dff4611d326bae77d3f1f63c668adf3ce721ad7"
-  integrity sha512-jxMRonUsFdjRF3OnnZKRhkeAdsSS9/brsb09y4Y3VHAliyBgyHxzeWIxtkh7yPnTY6n1jrvrei7GLhkuTbjBBA==
-  dependencies:
-    "@babel/runtime" "^7.3.1"
-    "@babel/runtime-corejs2" "^7.3.1"
-    raf "^3.4.0"
 
 "@stellar-apps/babel-preset-es@^1.0.3":
   version "1.0.3"
@@ -1121,13 +1112,6 @@ caniuse-lite@^1.0.30000939:
   version "1.0.30000939"
   resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30000939.tgz#b9ab7ac9e861bf78840b80c5dfbc471a5cd7e679"
   integrity sha512-oXB23ImDJOgQpGjRv1tCtzAvJr4/OvrHi5SO2vUgB0g0xpdZZoA/BxfImiWfdwoYdUTtQrPsXsvYU/dmCSM8gg==
-
-cdll-memoize@^0.1.9:
-  version "0.1.9"
-  resolved "https://registry.yarnpkg.com/cdll-memoize/-/cdll-memoize-0.1.9.tgz#1c00a471cbb511b3e23631705be98f01cbb49845"
-  integrity sha512-0e4XnkiaQVzumBNsqTokoIjiUxdlvirUV7mueHolHJI6LOJlSGy5Xzf0QlAa2dPrbppZvq87QELVXudWl9tiNA==
-  dependencies:
-    "@render-props/utils" "^0.2.2"
 
 chalk@^2.0.0, chalk@^2.4.1:
   version "2.4.2"
@@ -2322,13 +2306,6 @@ q@^1.1.2:
   version "1.5.1"
   resolved "https://registry.yarnpkg.com/q/-/q-1.5.1.tgz#7e32f75b41381291d04611f1bf14109ac00651d7"
   integrity sha1-fjL3W0E4EpHQRhHxvxQQmsAGUdc=
-
-raf@^3.4.0:
-  version "3.4.1"
-  resolved "https://registry.yarnpkg.com/raf/-/raf-3.4.1.tgz#0742e99a4a6552f445d73e3ee0328af0ff1ede39"
-  integrity sha512-Sq4CW4QhwOHE8ucn6J34MqtZCeWFP2aQSmrlroYgqAV1PjStIhJXxYuTgUIfkEk7zTLjmIjLmU5q+fbD1NnOJA==
-  dependencies:
-    performance-now "^2.1.0"
 
 rc@^1.2.7:
   version "1.2.8"

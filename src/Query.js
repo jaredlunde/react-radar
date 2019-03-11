@@ -1,12 +1,11 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import {strictShallowEqual} from '@render-props/utils'
 import emptyObj from 'empty/object'
 import emptyArr from 'empty/array'
 import Connect from './Connect'
 import {WAITING, LOADING, ERROR, DONE, getQueryID} from './Store/Endpoint/Endpoint'
 import {EndpointConsumer} from './Store'
-import {isNode} from './utils'
+import {isNode, strictShallowEqual} from './utils'
 
 
 const is = ['waiting', 'error', 'loading', 'done']

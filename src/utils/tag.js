@@ -1,15 +1,15 @@
 export default (strings, values) => {
-  let output = ''
+  let output = '', i = 0
 
-  for (let x = 0; x < strings.length; x++) {
-    const string = strings[x]
-    const value = values[x]
+  for (; i < strings.length; i++) {
+    const string = strings[i]
+    const value = values[i]
     output += string + (
       value === void 0
       ? ''
-      : value.toString !== void 0
-        ? value.toString()
-        : value
+      : value.toString === void 0
+        ? value
+        : value.toString()
     )
   }
 

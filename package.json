@@ -1,6 +1,6 @@
 {
   "name": "react-radar",
-  "version": "2.0.0-beta.43",
+  "version": "2.0.0-beta.44",
   "main": "dist/cjs/index.js",
   "browser": "dist/es/index.browser.js",
   "module": "dist/node-esm/index.esm.js",
@@ -41,12 +41,11 @@
     "@babel/runtime": "^7.3.4",
     "@babel/runtime-corejs2": "^7.3.4",
     "@jaredlunde/get-unique-id": "^0.1.1",
-    "@render-props/utils": "^0.2.11",
     "cancelable-promise": "^2.4.1",
-    "cdll-memoize": "^0.1.9",
     "empty": "^0.10.1",
     "is-mergeable-object": "^1.1.0",
     "node-fetch": "^2.3.0",
+    "performance-now": "^2.1.0",
     "trie-memoize": "^1.0.3"
   },
   "peerDependencies": {

@@ -1,9 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import Promise from 'cancelable-promise'
 import emptyObj from 'empty/object'
 import {isNode} from '../utils'
-import now from 'performance-now'
 import {
   toRecords, 
   stateDidChange, 
@@ -14,6 +12,12 @@ import {
 import StoreContext, {InternalContext} from './StoreContext'
 import Endpoint from './Endpoint'
 import createNetwork from '../createNetwork'
+
+let now
+if (__DEV__) {
+  now = require('performance-now')
+}
+
 
 const defaultState = {data: emptyObj}
 const formatHydrateQuery = query => ({
@@ -96,14 +100,12 @@ export default class Store extends React.Component {
 
       return null
     }
-    // used for calculating changed bits for context
+    // used for calculating changed bits in React context
     this.keyObserver.setBuckets(nextState)
     // removes stale records to avoid unexpected behaviors
     // when a record is removed from the state tree, it should be
     // assumed that this record is 'cleared', as well
     collectStaleRecords(nextState)
-    // creates a new initial state for the query cache
-    this.props.cache.initialState = nextState
 
     if (__DEV__) {
       console.log('[Radar] state profiler:', now() - start)

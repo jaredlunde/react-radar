@@ -1,6 +1,5 @@
 import React from 'react'
-import {strictShallowEqual} from '@render-props/utils'
-import {objectWithoutProps} from './utils'
+import {objectWithoutProps, strictShallowEqual} from './utils'
 import {createQueryComponent, getID} from './Query'
 
 

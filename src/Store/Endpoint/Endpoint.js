@@ -1,6 +1,5 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import {CDLL} from 'cdll-memoize'
 import memoize from 'trie-memoize'
 import {invariant, isNode} from '../../utils'
 import {createKeyObserver} from '../utils'
@@ -88,17 +87,21 @@ class Endpoint extends React.Component {
   listeners = {}
 
   subscribe = (id, component) => {
-    (this.listeners[id] = this.listeners[id] || new CDLL()).push(component)
-    // used for calculating changed bits for context
-    this.keyObserver.setBuckets(this.listeners)
-    this.cache.subscribe(id, this)
+    if (this.listeners[id] === void 0) {
+      this.listeners[id] = new Set()
+      this.cache.subscribe(id, this)
+      // used for calculating changed bits for context
+      this.keyObserver.setBuckets(this.listeners)
+    }
+
+    this.listeners[id].add(component)
   }
 
   unsubscribe = (id, component) => {
     const listeners = this.listeners[id]
-    const el = listeners && listeners.find(component)
+    const el = listeners && listeners.has(component)
 
-    if (el !== void 0) {
+    if (el === true) {
       listeners.delete(el)
       // TODO: Figure out a way to unsubscribe the endpoint from the query when
       //       there are FOR SURE no child listeners
@@ -128,7 +131,6 @@ class Endpoint extends React.Component {
       payload.push({name: query.name, props: query.props, requires})
     }
 
-    // makes the commit 'cancelable'
     const commit = await this.commitPayload(payload, context)
 
     for (let query of queries) {
@@ -136,6 +138,9 @@ class Endpoint extends React.Component {
     }
 
     let {response, nextState} = await commit
+    // We only want to perform state updates with setState in the browser.
+    // On the server side we use the query cache and multiple iterations to populate the
+    // data in the tree.
     isNode === false && this.props.store.updateState(
       state => {
         switch (response.status) {
