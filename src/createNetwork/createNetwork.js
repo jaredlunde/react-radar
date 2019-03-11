@@ -1,7 +1,7 @@
 import Promise from 'cancelable-promise'
 import {getRequestHeaders, resolveSynchronously} from './utils'
 import emptyObj from 'empty/object'
-import fetcher from './fetcher'
+import postFetch from './post'
 
 
 const REQUIRED_HEADERS = {'Content-Type': 'application/json; charset=utf-8'}
@@ -38,7 +38,7 @@ export default props => {
         }
         // must be wrapped in CancelablePromise to make it cancelable
         const query = new Promise(
-          resolve => fetcher.post(url, {...opt, headers}).then(resolve)
+          resolve => postFetch(url, {...opt, headers}).then(resolve)
         )
         // creates a timeout for the fetch request
         const queryTimeout = setTimeout(

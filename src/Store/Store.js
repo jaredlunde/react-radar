@@ -108,7 +108,7 @@ export default class Store extends React.Component {
     if (__DEV__) {
       console.log('[Radar] state profiler:', now() - start)
     }
-    return {data: __DEV__ ? Object.freeze(nextState) : state.data}
+    return {data: __DEV__ ? Object.freeze(nextState) : nextState}
   }
 
   updateState = updates/*(state) => ({nextState, queries, [<context> response, type]})*/ => {

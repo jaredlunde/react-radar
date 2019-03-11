@@ -26,7 +26,7 @@
     "prettier:cjs": "prettier --single-quote --no-semi --no-bracket-spacing --trailing-comma es5 --write --tab-width 2 \"dist/cjs/**/*.js\"",
     "prettier:server": "prettier --single-quote --no-semi --no-bracket-spacing --trailing-comma es5 --write --tab-width 2 \"server/dist/**/*.js\"",
     "prepublishOnly": "yarn remove webpack",
-    "postpublish":  "yarn add webpack"
+    "postpublish": "yarn add webpack"
   },
   "devDependencies": {
     "@stellar-apps/babel-preset-es": "^1.0.3",
@@ -48,16 +48,11 @@
     "empty": "^0.10.1",
     "is-mergeable-object": "^1.1.0",
     "node-fetch": "^2.3.0",
-    "trie-memoize": "^1.0.3",
-    "unfetch": "^4.0.1",
-    "webpack": "^4.29.6",
-    "workerize": "^0.1.7",
-    "workerize-loader": "^1.0.4"
+    "trie-memoize": "^1.0.3"
   },
   "peerDependencies": {
     "prop-types": ">= 15.6.0",
     "react": ">= 16.3.0",
-    "react-dom": ">= 16.3.0",
-    "webpack": "^4.29.5"
+    "react-dom": ">= 16.3.0"
   }
 }
