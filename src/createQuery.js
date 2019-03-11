@@ -74,11 +74,7 @@ export default ({
     else {
       props = Object.assign({}, defaultProps, props)
     }
-    // TODO: pass state to requires and make send the state of the record
-    //       rather than teh application state to optimistic, rollback, and
-    //       requires when performing record updates. getting the state of
-    //       the record will require knowing its key, which would be an
-    //       api change
+
     const queryRequires = (requires_ || requires)(props)
 
     return {

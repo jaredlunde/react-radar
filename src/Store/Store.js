@@ -1,15 +1,22 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import Promise from 'cancelable-promise'
 import emptyObj from 'empty/object'
 import {isNode} from '../utils'
-import now from 'performance-now'
-import {toRecords, stateDidChange, toImmutable, collectStaleRecords} from './utils'
-import Connections from './Connections'
-import StoreContext from './StoreContext'
-import InternalContext from './InternalContext'
+import {
+  toRecords, 
+  stateDidChange, 
+  toImmutable, 
+  collectStaleRecords, 
+  createKeyObserver
+} from './utils'
+import StoreContext, {InternalContext} from './StoreContext'
 import Endpoint from './Endpoint'
 import createNetwork from '../createNetwork'
+
+let now
+if (__DEV__) {
+  now = require('performance-now')
+}
 
 
 const defaultState = {data: emptyObj}
@@ -31,6 +38,9 @@ export default class Store extends React.Component {
 
   constructor (props) {
     super(props)
+    // used for only updating connections that actually changed with unstable_observeBits
+    // in react context
+    this.keyObserver = createKeyObserver()
     // parses any initial state in props or the DOM
     if (props.cache !== void 0 && props.cache.size > 0) {
       this.state = isNode === true ? this.hydrateNode(props.cache) : defaultState
@@ -40,16 +50,7 @@ export default class Store extends React.Component {
       this.state = defaultState
     }
 
-    // context for the endpoint and store consumers
-    this.internalContext = {
-      getBits: this.getBits,
-      updateState: this.updateState
-    }
-
-    this.storeContext = {
-      state: this.getState(),
-      getBits: this.getBits
-    }
+    this.storeContext = {state: this.getState(), getBits: this.keyObserver.getBits}
   }
 
   async componentDidMount () {
@@ -61,7 +62,7 @@ export default class Store extends React.Component {
   hydrateBrowser () {
     return Promise.all(
       this.props.cache.map(
-        (id, query) => query.response && this.updateState(formatHydrateQuery(query))
+        (id, query) => query.response && this.updateState(() => formatHydrateQuery(query))
       )
     )
   }
@@ -79,7 +80,7 @@ export default class Store extends React.Component {
   }
 
   componentWillUnmount () {
-    Connections.clear()
+    this.keyObserver.clear()
   }
 
   getNextState = (state = emptyObj, updates)=> {
@@ -99,8 +100,8 @@ export default class Store extends React.Component {
 
       return null
     }
-    // used for calculating changed bits for context
-    Connections.setBuckets(nextState)
+    // used for calculating changed bits in React context
+    this.keyObserver.setBuckets(nextState)
     // removes stale records to avoid unexpected behaviors
     // when a record is removed from the state tree, it should be
     // assumed that this record is 'cleared', as well
@@ -109,31 +110,14 @@ export default class Store extends React.Component {
     if (__DEV__) {
       console.log('[Radar] state profiler:', now() - start)
     }
-
-    return {data: __DEV__ ? Object.freeze(nextState) : state.data}
+    return {data: __DEV__ ? Object.freeze(nextState) : nextState}
   }
 
-  updateState = updates/*{nextState, queries, [<context> response, type]}*/ => {
-    // handles actions and query updates
-    let willSet
-    // this has to be done this way (with let) or there is a 'willSet is not
-    // defined' error that crops up
-    willSet = new Promise(
-      resolve => this.setState(
-        // sets the next state of the store
-        state => {
-          const nextState = this.getNextState(state, updates) || state
-          resolve(nextState)
-          return nextState
-        }
-      )
-    )
-
-    return willSet
+  updateState = updates/*(state) => ({nextState, queries, [<context> response, type]})*/ => {
+    this.setState(state => this.getNextState(state, updates(state)))
   }
 
   getState = () => toImmutable(this.state.data)
-  getBits = keys =>  Connections.getBits(keys)
 
   render () {
     if (__DEV__) console.log('[Radux] state:\n', this.state.data)
@@ -147,11 +131,10 @@ export default class Store extends React.Component {
     }
 
     return (
-      <InternalContext.Provider value={this.internalContext}>
+      <InternalContext.Provider value={this.storeContext.getBits}>
         <StoreContext.Provider value={this.storeContext}>
           <Endpoint
             updateState={this.updateState}
-            state={nextState}
             cache={this.props.cache}
             network={this.props.network}
             children={this.props.children}

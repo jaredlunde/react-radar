@@ -1,5 +1,4 @@
 import React from 'react'
-import {renderToStaticMarkup} from 'react-dom/server'
 import PropTypes from 'prop-types'
 
 
@@ -13,7 +12,7 @@ export class WaitForPromises {
   }
 }
 
-export default (app, render = renderToStaticMarkup) => {
+export default (app, render = require('react-dom/server').renderToStaticMarkup) => {
   const waitForPromises = new WaitForPromises()
 
   class WaitForPromisesProvider extends React.Component {

@@ -1,3 +1,1 @@
-export default cast => {
-  return {isRadarKey: true, apply: cast}
-}
+export default cast => ({isRadarKey: true, apply: cast})

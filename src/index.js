@@ -7,7 +7,7 @@ import createUnion from './createUnion'
 import load from './load'
 import Key from './Key'
 import Query from './Query'
-import Store, {createCache, EndpointConsumer as RadarConsumer} from './Store'
+import Store, {createCache, RadarConsumer} from './Store'
 import Updater from './Updater'
 import withRadar from './withRadar'
 

@@ -1,3 +1,3 @@
 export default from './Endpoint'
-export {EndpointConsumer} from './EndpointContext'
+export {EndpointConsumer, RadarConsumer} from './EndpointContext'
 export createCache from './createCache'

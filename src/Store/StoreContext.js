@@ -1,41 +1,35 @@
 import React from 'react'
-import InternalContext from './InternalContext'
 
 
-const calculateChangedBits = (prev, next) => {
-  const prevValue = prev.state,
-        nextValue = next.state,
-        nextKeys = Object.keys(nextValue),
-        prevKeys = Object.keys(prevValue)
-  let valA, valB, keysA, keysB, len
+export const calculateChangedBits = stateKey => (prev, next) => {
+  let valA, valB, keysA, keysB
+  const prevKeys =  Object.keys(prev[stateKey]),
+        nextKeys =  Object.keys(next[stateKey])
 
   if (prevKeys.length > nextKeys.length) {
-    len = prevKeys.length
-    valA = prevValue
     keysA = prevKeys
-    valB = nextValue
+    valA = prev[stateKey]
     keysB = nextKeys
+    valB = next[stateKey]
   }
   else {
-    len = nextKeys.length
-    valA = nextValue
     keysA = nextKeys
-    valB = prevValue
+    valA = next[stateKey]
     keysB = prevKeys
+    valB = prev[stateKey]
   }
 
-  let x = 0
-  const changedKeys = []
+  let i = 0,
+      changedKeys = []
 
-  for (x; x < len; x++) {
-    const keyA = keysA[x]
-    const keyB = keysB[x]
+  for (i; i < keysA.length; i++) {
+    const keyA = keysA[i]
+    const keyB = keysB[i]
 
     if (keyB === void 0 || valA[keyA] !== valB[keyB]) {
       changedKeys.push(keyA)
     }
-
-    if (keysB.indexOf(keyA) === -1 && changedKeys.indexOf(keyA) === -1) {
+    else if (keysB.indexOf(keyA) === -1 && changedKeys.indexOf(keyA) === -1) {
       changedKeys.push(keyA)
     }
   }
@@ -43,26 +37,23 @@ const calculateChangedBits = (prev, next) => {
   return next.getBits(changedKeys)
 }
 
-const StoreContext = React.createContext({}, calculateChangedBits)
+export const InternalContext = React.createContext(null)
+const StoreContext = React.createContext({}, calculateChangedBits('state'))
 export default StoreContext
 
-export const StoreConsumer = props => {
-  const Renderer = ({state}) => props.children(
-    typeof props.reducer === 'function'
-      ? props.reducer(state)
-      : state
-  )
+export const StoreConsumer = ({children, observedKeys}) => {
+  const Renderer = ({state}) => children(state)
 
   return (
     <InternalContext.Consumer>
-      {cxt => (
+      {getBits => (
         <StoreContext.Consumer
           unstable_observedBits={
-            typeof cxt === void 0 || cxt === null || typeof cxt.getBits !== 'function'
-              || props.observedKeys === void 0
-              || props.observedKeys.length === 0
-                ? 2147483647 // 0b1111111111111111111111111111111
-                : cxt.getBits(props.observedKeys)
+            typeof getBits !== 'function'
+            || observedKeys === void 0
+            || observedKeys.length === 0
+              ? 2147483647 // 0b1111111111111111111111111111111
+              : getBits(observedKeys)
           }
         >
           {Renderer}

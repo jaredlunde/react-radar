@@ -1,7 +1,6 @@
 import Promise from 'cancelable-promise'
-import {getRequestHeaders, resolveSynchronously} from './utils'
 import emptyObj from 'empty/object'
-import fetcher from './fetcher'
+import postFetch from './post'
 
 
 const REQUIRED_HEADERS = {'Content-Type': 'application/json; charset=utf-8'}
@@ -12,9 +11,39 @@ const DEFAULT_FETCH = {
   timeout: 30 * 1000
 }
 
-function removePendingUpdate (pendingUpdates, PENDING_UPDATE) {
-  return pendingUpdates.splice(pendingUpdates.indexOf(PENDING_UPDATE), 1)
+const getRequestHeaders = ({body, headers}) => {
+  let realHeaders
+
+  if (typeof headers === 'function') {
+    const promiseOrResult = headers(body)
+
+    if (promiseOrResult && typeof promiseOrResult.then === 'function') {
+      return promiseOrResult
+    } else {
+      realHeaders = promiseOrResult
+    }
+  } else {
+    realHeaders = headers
+  }
+
+  // realHeaders = new Headers(realHeaders)
+  return Promise.resolve(realHeaders || emptyObj)
 }
+
+const resolveSynchronously = promises => {
+  // Has side-effects on @promises
+  if (promises.length) {
+    const [next, resolve] = promises[0]
+    next.then(value => {
+      resolve(value)
+      promises.shift()
+      resolveSynchronously(promises)
+    })
+  }
+}
+
+const removePendingUpdate = (pendingUpdates, PENDING_UPDATE) =>
+  pendingUpdates.splice(pendingUpdates.indexOf(PENDING_UPDATE), 1)
 
 export default props => {
   const pendingUpdates = []
@@ -27,9 +56,9 @@ export default props => {
         // we only use JSON requests
         opt.body = JSON.stringify(body)
         // sets user-defined headers
-        headers = await getRequestHeaders({body, headers})
+        headers = Object.assign({}, await getRequestHeaders({body, headers}))
         // sets headers from context
-        if (context && context.headers) {
+        if (typeof context === 'object' && context.headers !== void 0) {
           headers = Object.assign(headers, context.headers)
         }
         // sets required headers
@@ -38,12 +67,11 @@ export default props => {
         }
         // must be wrapped in CancelablePromise to make it cancelable
         const query = new Promise(
-          resolve => fetcher.post(url, {...opt, headers}).then(resolve)
+          resolve => postFetch(url, {...opt, headers}).then(resolve)
         )
         // creates a timeout for the fetch request
         const queryTimeout = setTimeout(
           function () {
-            // console.log('[Fetch] query timed out:', query)
             query.cancel()
             // resolves with a fake, but relevant response since there
             // was no real one
@@ -79,7 +107,7 @@ export default props => {
 
   function abort () {
     while (pendingUpdates.length) {
-      const [promise, re, rj, timeout] = pendingUpdates.shift()
+      const [promise, resolver, timeout] = pendingUpdates.shift()
       promise.cancel()
       clearTimeout(timeout)
     }

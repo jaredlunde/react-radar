@@ -1,7 +1,6 @@
 import React from 'react'
-import {strictShallowEqual} from '@render-props/utils'
-import {objectWithoutProps} from './utils'
-import {createQueryComponent} from './Query'
+import {objectWithoutProps, strictShallowEqual} from './utils'
+import {createQueryComponent, getID} from './Query'
 
 
 const withoutReload = [{reload: 0}]
@@ -11,18 +10,18 @@ export default createQueryComponent({
   prototype: {
     setup () {
       this.isRadarQuery = false
-      this.queryContext.update = this.reload
-      this.queryContext = objectWithoutProps(this.queryContext, withoutReload)
+      this.state.update = this.reload
+      this.state = objectWithoutProps(this.state, withoutReload)
     },
 
     componentDidMount () {
       this.mounted = true
     },
 
-    componentDidUpdate () {
-      if (strictShallowEqual(this.getID(), this.id) === false) {
+    componentDidUpdate (_, {id}) {
+      if (strictShallowEqual(id, this.state.id) === false) {
         this.unsubscribeAll()
-        this.queries = this.getQueries()
+        this.setQueries()
       }
     }
   }

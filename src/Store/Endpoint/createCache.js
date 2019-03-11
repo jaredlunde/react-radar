@@ -1,8 +1,8 @@
-import {CDLL} from 'cdll-memoize'
 import {objectWithoutProps} from '../../utils'
 
 
 const jsonExclusions = {commit: 0, listeners: 0, query: 0}
+const urlExclusion = {url: 0}
 
 export default (
   initialQueries = (
@@ -14,56 +14,52 @@ export default (
 
   const cache = {
     get: map.get.bind(map),
-    set (k, v) {
-      let q = map.get(k)
+    set (id, v) {
+      let q = map.get(id)
 
       if (q === void 0) {
         q = {}
-        map.set(k, q)
+        map.set(id, q)
       }
 
       Object.assign(q, v)
-      q.listeners && q.listeners.forEach(c => c.updateQuery(k, q))
+      q.listeners && q.listeners.forEach(c => c.notify(id, q))
     },
-    subscribe (k, c) {
-      let q = map.get(k)
+    subscribe (id, c) {
+      let q = map.get(id)
 
       if (q === void 0) {
         q = {}
-        map.set(k, q)
+        map.set(id, q)
       }
 
-      q.listeners = q.listeners || new CDLL()
+      q.listeners = q.listeners || new Set()
 
-      if (q.listeners.find(c) === void 0) {
-        q.listeners.push(c)
+      if (q.listeners.has(c) === false) {
+        q.listeners.add(c)
       }
     },
-    unsubscribe (k, c, parallel = false) {
-      const query = map.get(k)
+    unsubscribe (id, c, parallel = false) {
+      const query = map.get(id)
       if (query === void 0) return;
       const listeners = query.listeners
 
       if (listeners) {
-        const el = listeners.find(c)
+        const el = listeners.has(c)
 
-        if (el !== void 0) {
+        if (el === true) {
           listeners.delete(el)
         }
 
         if (listeners.size === 0) {
-          if (query.commit && parallel === true) {
-            query.commit.cancel()
-          }
-
-          map.delete(k)
+          map.delete(id)
         }
       }
     },
-    setStatus: (k, v) => cache.set(k, {status: v}),
-    setCommit: (k, v) => cache.set(k, {commit: v}),
+    setStatus: (id, v) => cache.set(id, {status: v}),
+    setCommit: (id, v) => cache.set(id, {commit: v}),
     has: map.has.bind(map),
-    delete: (...ks) => ks.forEach(k => map.delete(k)),
+    delete: (...ids) => ids.forEach(map.delete.bind(map)),
     map (fn) {
       const output = []
       map.forEach((v, k) => output.push(fn(k, v)))
@@ -78,9 +74,10 @@ export default (
         output[k] = objectWithoutProps(v, jsonExclusions)
 
         if (output[k].response) {
-          delete output[k].response.url
+          output[k].response = objectWithoutProps(output[k].response, urlExclusion)
         }
       })
+
       return JSON.stringify(output, ...a)
     },
     fromJSON (json) {
@@ -96,7 +93,7 @@ export default (
   Object.defineProperty(cache, 'size', {get: () => map.size})
 
   if (initialQueries && typeof initialQueries === 'object') {
-    const textContent = initialQueries.textContent
+    const textContent = initialQueries.firstChild.data
 
     if (textContent) {
       cache.fromJSON(initialQueries.textContent)

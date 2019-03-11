@@ -1,4 +1,3 @@
-// import Immutable from 'seamless-immutable'
 import memoize from 'trie-memoize'
 import isPlainObject from '../../utils/isPlainObject'
 
