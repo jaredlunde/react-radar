@@ -90,7 +90,7 @@ export default class App extends React.PureComponent {
             }}
           </Query>
 
-          <Query parallel connect='viewer' run={[ViewerQuery({test: 'pollish'}), ViewerQuery()]}>
+          <Query parallel connect='viewer' run={[ViewerQuery({test: 'pollish'}), ViewerQuery()]} forceReload>
             {({viewer}, radar) => {
               // console.log(JSON.stringify(radar, null, 2))
               switch (radar.status) {

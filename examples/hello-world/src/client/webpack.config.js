@@ -57,5 +57,3 @@ module.exports = createConfig({
 
   optimization: productionOptimization
 })
-
-console.log(module.exports)

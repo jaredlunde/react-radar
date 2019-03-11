@@ -1,38 +1,18 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import {strictShallowEqual} from '@render-props/utils'
-import emptyArr from 'empty/array'
 import emptyObj from 'empty/object'
-import {invariant} from './utils'
+import emptyArr from 'empty/array'
 import Connect from './Connect'
+import {WAITING, LOADING, ERROR, DONE, getQueryID} from './Store/Endpoint/Endpoint'
 import {EndpointConsumer} from './Store'
 import {isNode} from './utils'
 
 
-const WAITING = 0, ERROR = 1, LOADING = 2, DONE = 3
-const statusText = ['waiting', 'error', 'loading', 'done']
-
-function getQueryID (query) {
-  const fn = `${query.name}(${JSON.stringify(query.props)}) =>`
-  let requires = {}
-
-  for (let key in query.requires) {
-    requires[key] = query.requires[key].requiresFields
-  }
-
-  if (__DEV__) {
-    invariant(
-      query.reducer.id,
-      `Query reducers need to define a unique 'id' property to avoid errors ` +
-      `in hydrating SSR applications. e.g. yourReducer.id = 'yourReducer'. ` +
-      `It is recommended, however, that you use the 'createReducer' function ` +
-      `to ensure backwards compatibility.`
-    )
-  }
-
-  requires = `${query.reducer.id}(${JSON.stringify(requires)})`
-  return `${fn} ${requires}`
-}
+const is = ['waiting', 'error', 'loading', 'done']
+const getAggregateStatus = queries => Math.min(...Object.values(queries).map(q => q.status))
+export const getID = queries =>
+  Array.isArray(queries) ? queries.map(getQueryID) : [getQueryID(queries)]
 
 const queryShape = PropTypes.shape({
   name: PropTypes.string.isRequired,
@@ -49,17 +29,9 @@ export function createQueryComponent (opt = emptyObj) {
 
   class Query extends React.Component {
     id = null
-    unmounted = false
-    mounted = false
-
-    static contextTypes = {
-      // for react-broker preloading
-      waitForPromises: PropTypes.object
-    }
 
     static propTypes = {
       endpoint: PropTypes.shape({
-        queryCache: PropTypes.object,
         commitLocal: PropTypes.func.isRequired,
         commit: PropTypes.func.isRequired
       }),
@@ -72,57 +44,89 @@ export function createQueryComponent (opt = emptyObj) {
       forceReload: PropTypes.bool
     }
 
-    constructor (props, context) {
+    constructor (props) {
       super(props)
-      this.isRadarQuery = true
-      this.pending = new Set()
-      this.queryContext = {
+      this.state = {
+        id: getID(props.run),
         status: LOADING,
         is: 'loading',
-        queries: [],
-        abort: this.abort,
         reload: this.reload,
+        queries: {}
       }
+      // binds the queries in run to this
+      this.setQueries()
       // this must be before the query loop because it defines 'isRadarQuery' in Updater
+      this.isRadarQuery = true
       this.setup && this.setup()
-
-      const {endpoint: {queryCache}} = this.props
-      this.queries = this.getQueries()
-      const response = {}, status = {}
+      const {endpoint} = props
 
       for (let id in this.queries) {
-        const query = queryCache.get(id)
-        status[id] = query === void 0 ? WAITING : query.status
+        const query = endpoint.getCached(id)
+        const status = query === void 0 ? WAITING : query.status
 
         if (query !== void 0) {
-          if (query.status === LOADING) {
-            this.handleCommit(query.commit, {[id]: this.queries[id]})
-          }
-
-          if (query.query === void 0) {
-            query.query = this.queries[id]
-          }
+          query.query = query.query || this.queries[id]
         }
         else if (
           // this checks to see if we're in a Node (SSR) environment
-          isNode
+          isNode === true
           // makes sure this is a Query, not an update
           && this.isRadarQuery
-          // doesn't load if there's no context waiting for it
-          && typeof context.waitForPromises === 'object'
+          && endpoint.promises !== void 0
         ) {
-          context.waitForPromises.chunkPromises.push(this.load())
+          endpoint.promises.push(this.load())
         }
 
-        response[id] = query ? query.response : null
+        this.state.queries[id] = {
+          status,
+          response: query ? query.response : null
+        }
       }
 
-      this.state = {status, response}
+      this.state.status = getAggregateStatus(this.state.queries)
+      this.state.is = is[this.state.status]
+    }
+
+    static getDerivedStateFromProps (props, state) {
+      let nextID = getID(props.run),
+          nextState = null
+
+      if (strictShallowEqual(nextID, state.id) === false) {
+        nextState = {id: nextID}
+      }
+
+      for (let id of nextID) {
+        const query = props.endpoint.queries[id]
+        const stateQuery = state.queries[id]
+
+        if (
+          query !== void 0
+          && (
+            stateQuery === void 0
+            || stateQuery.status !== query.status
+            || stateQuery.response !== query.response
+            || nextState !== null
+          )
+        ) {
+          nextState = nextState || {...state}
+          nextState.queries = nextState.queries || {}
+          nextState.queries[id] = {
+            status: query.status,
+            response: query.response
+          }
+        }
+      }
+
+      if (nextState !== null && nextState.queries !== void 0) {
+        nextState.status = getAggregateStatus(nextState.queries)
+        nextState.is = is[nextState.status]
+      }
+
+      return nextState
     }
 
     componentDidMount () {
-      this.mounted = true
-      const statuses = Object.values(this.state.status)
+      const statuses = Object.values(this.state.queries).map(q => q.status)
       const anyDone = statuses.some(s => s === DONE)
 
       if (anyDone === true && this.props.forceReload === true) {
@@ -133,200 +137,84 @@ export function createQueryComponent (opt = emptyObj) {
       }
     }
 
-    componentDidUpdate (prevProps) {
-      if (strictShallowEqual(this.getID(), this.id) === false) {
+    componentDidUpdate (_, {id}) {
+      if (strictShallowEqual(id || emptyArr, this.state.id) === false) {
         this.unsubscribeAll()
-        this.queries = this.getQueries()
+        this.setQueries()
         this.load()
       }
     }
 
     componentWillUnmount () {
       this.unsubscribeAll()
-      this.unmounted = true
     }
 
-    getID = () => {
-      const {run} = this.props
-      return Array.isArray(run) ? run.map(getQueryID) : [getQueryID(run)]
+    unsubscribeAll () {
+      this.state.id.forEach(id => this.props.endpoint.unsubscribe(id, this))
     }
 
-    getQueries () {
-      this.id = this.getID()
-      let {run} = this.props
+    setQueries () {
       const queries = {}
+      const run = this.props.run
 
       if (Array.isArray(run)) {
-        for (let i = 0; i < this.id.length; i++) {
-          queries[this.id[i]] = run[i]
+        for (let i = 0; i < this.state.id.length; i++) {
+          queries[this.state.id[i]] = run[i]
         }
       }
       else {
-        queries[this.id[0]] = run
+        queries[this.state.id[0]] = run
       }
 
-      return queries
+      this.queries = queries
     }
 
-    load = context => {
-      // this.queries = this.getQueries()
+    load = () => {
       let {endpoint} = this.props
-      const queries = {}, status = {}, response = {}
+      const queries = {}
 
       for (let id in this.queries) {
-        const query = endpoint.queryCache.get(id)
-        endpoint.queryCache.subscribe(id, this)
+        const query = endpoint.getCached(id)
+        endpoint.subscribe(id, this)
 
         if (query === void 0 || query.status === WAITING) {
           queries[id] = this.queries[id]
-          status[id] = LOADING
-          response[id] = null
-          endpoint.queryCache.set(
+          endpoint.setCached(
             id,
-            {query: queries[id], status: status[id], response: null}
+            {query: queries[id], status: LOADING, response: null}
           )
         }
       }
 
-      if (this.props.parallel === true) {
-        const commits = []
-
-        for (let id in queries) {
-          commits.push(this.commit({[id]: queries[id]}, context))
-        }
-
-        return Promise.all(commits)
-      }
-      else {
-        return this.commit(queries, context)
-      }
+      return this.props.parallel === true
+        ? Promise.all(Object.keys(queries).map(id => this.commit({[id]: queries[id]})))
+        : this.commit(queries)
     }
 
-    updateQuery = (id, query) => {
-      if (this.unmounted === true || this.mounted === false) {
-        return
-      }
-
-      this.setState(
-        ({status, response}) => {
-          const nextStatus = {}, nextResponse = {}
-
-          for (let id in status) {
-            if (this.id.indexOf(id) > -1) {
-              nextStatus[id] = status[id]
-              nextResponse[id] = response[id]
-            }
-          }
-
-          nextStatus[id] = query.status
-          nextResponse[id] = query.response
-
-          return {status: nextStatus, response: nextResponse}
-        }
-      )
-    }
-
-    unsubscribeAll () {
-      this.id.forEach(
-        i => this.props.endpoint.queryCache.unsubscribe(i, this, this.props.parallel)
-      )
-    }
-
-    commit (queriesObject, context) {
+    commit (queriesObject = emptyObj) {
       const queries = Object.values(queriesObject)
-
-      if (queries.length) {
-        const commit = this.props.endpoint.commit(
-          {queries, type: this.isRadarQuery ? 'QUERY' : 'UPDATE'},
-          context
-        )
-        return this.handleCommit(commit, queriesObject, context)
-      }
-
-      const commits = []
-
-      for (let id in this.queries) {
-        const query = this.props.endpoint.queryCache.get(id)
-        commits.push(query.commit)
-      }
-
-      return Promise.all(commits)
+      const {endpoint} = this.props
+      return queries.length > 0
+        ? endpoint.commit({queries, type: this.isRadarQuery ? 'QUERY' : 'UPDATE'})
+        : Promise.all(Object.keys(this.queries).map(id => endpoint.getCached(id).commit))
     }
 
-    handleCommit (commit, queries, context) {
-      const {endpoint: {queryCache}} = this.props
-      this.pending.add(commit)
-
-      for (let id in queries) {
-        queryCache.setCommit(id, commit)
-      }
-
-      const afterCommit = ({state, response}) => {
-        this.pending.delete(commit)
-        const STATUS =
-          response.ok === true ? DONE : ERROR
-
-        if (context && context.setHeaders) {
-          context.setHeaders(response.headers)
-        }
-
-        Object.keys(queries).forEach(
-          (id, i) => {
-            queryCache.set(
-              id,
-              {
-                status: STATUS,
-                response: {...response, json: response.json && response.json[i]}
-              }
-            )
-          }
-        )
-      }
-
-      return commit.then(afterCommit)
-    }
-
-    abort = () => this.pending.forEach(commit => commit.cancel())
-
-    setWaiting (ids = emptyArr) {
-      ids = ids.length > 0 && typeof ids[0] === 'string' ? ids : this.id
-      ids.forEach(id => this.props.endpoint.queryCache.setStatus(id, WAITING))
-    }
-
-    reload = (ids, context) => {
-      this.setWaiting(ids)
-      this.unsubscribeAll()
-      this.queries = this.getQueries()
-      return this.load(context)
+    reload = (ids = emptyArr) => {
+      ids = ids.length > 0 && typeof ids[0] === 'string' ? ids : this.state.id
+      ids.forEach(id => this.props.endpoint.setCached(id, {status: WAITING}))
+      this.setQueries()
+      return this.load()
     }
 
     render () {
-      const statusValues = Object.values(this.state.status)
-      const responseValues = Object.values(this.state.response)
-      const ids = this.id
-      this.queryContext.queries = []
-
-      for (let i = 0; i < ids.length; i++) {
-        this.queryContext.queries.push({
-          id: ids[i],
-          status: statusValues[i],
-          response: responseValues[i]
-        })
-      }
-
-      this.queryContext.status = Math.min(...statusValues)
-      this.queryContext.is = statusText[this.queryContext.status]
-
-      return (
-        this.props.connections === void 0
-          ? this.props.children(this.queryContext)
-          : this.props.children(this.props.connections, this.queryContext)
-      )
+      return this.props.connections === void 0
+        ? this.props.children(this.state)
+        : this.props.children(this.props.connections, this.state)
     }
   }
 
   if (__DEV__) {
-    Object.defineProperty(Query, 'name', {value: name})
+    Query.displayName = name
   }
 
   for (let key in prototype) {
@@ -334,20 +222,20 @@ export function createQueryComponent (opt = emptyObj) {
   }
 
   function withEndpoint (Component) {
-    function componentWithEndpoint (props) {
-      if (props.connect) {
-        return Connect({
-          to: props.connect,
-          children: (connections, endpoint) =>
-            <Component endpoint={endpoint} connections={connections} {...props}/>
-        })
-      }
-      else {
-        return <EndpointConsumer
-          children={endpoint => <Component endpoint={endpoint} {...props}/>}
-        />
-      }
-    }
+    const componentWithEndpoint = props => (
+      props.connect
+        ? Connect({
+            to: props.connect,
+            __internal: true,
+            __internal_observedKeys: getID(props.run),
+            children: (connections, endpoint) =>
+              <Component endpoint={endpoint} connections={connections} {...props}/>
+          })
+        : <EndpointConsumer
+            observedKeys={getID(props.run)}
+            children={endpoint => <Component endpoint={endpoint} {...props}/>}
+          />
+    )
 
     componentWithEndpoint.WAITING = WAITING
     componentWithEndpoint.ERROR = ERROR
@@ -355,11 +243,7 @@ export function createQueryComponent (opt = emptyObj) {
     componentWithEndpoint.DONE = DONE
 
     if (__DEV__) {
-      Object.defineProperty(
-        componentWithEndpoint,
-        'name',
-        {value: `withEndpoint(${Component.name})`}
-      )
+      componentWithEndpoint.displayName = `withEndpoint(${Component.name})`
     }
 
     return componentWithEndpoint
