@@ -47,24 +47,28 @@ export function createQueryComponent (opt = emptyObj) {
       super(props)
       this.state = {
         id: getID(props.run),
-        status: LOADING,
+        status: WAITING,
         is: 'loading',
         reload: this.reload,
         queries: {}
       }
-      // binds the queries in run to this
-      this.setQueries()
       // this must be before the query loop because it defines 'isRadarQuery' in Updater
       this.isRadarQuery = true
       this.setup && this.setup()
-      const {endpoint} = props
+      // Each query here will be checked against the current query cache to determine its
+      // initial state. If the query is not already cached AND this is a server-side render
+      // phase, it will load the query here since componentDidMount() does not get caleld
+      // on the server.
+      let {endpoint, run} = props
+      run = Array.isArray(props.run) ? props.run : [props.run]
 
-      for (let id in this.queries) {
+      for (let i = 0; i < this.state.id.length; i++) {
+        const id = this.state.id[i]
         const query = endpoint.getCached(id)
         const status = query === void 0 ? WAITING : query.status
 
         if (query !== void 0) {
-          query.query = query.query || this.queries[id]
+          query.query = query.query || run[i]
         }
         else if (
           // this checks to see if we're in a Node (SSR) environment
@@ -76,10 +80,7 @@ export function createQueryComponent (opt = emptyObj) {
           endpoint.promises.push(this.load())
         }
 
-        this.state.queries[id] = {
-          status,
-          response: query ? query.response : null
-        }
+        this.state.queries[id] = {status, response: query ? query.response : null}
       }
 
       this.state.status = getAggregateStatus(this.state.queries)
@@ -102,9 +103,9 @@ export function createQueryComponent (opt = emptyObj) {
           query !== void 0
           && (
             stateQuery === void 0
+            || nextState !== null
             || stateQuery.status !== query.status
             || stateQuery.response !== query.response
-            || nextState !== null
           )
         ) {
           nextState = nextState || {...state}
@@ -139,7 +140,6 @@ export function createQueryComponent (opt = emptyObj) {
     componentDidUpdate (_, {id}) {
       if (strictShallowEqual(id || emptyArr, this.state.id) === false) {
         this.unsubscribeAll()
-        this.setQueries()
         this.load()
       }
     }
@@ -152,36 +152,19 @@ export function createQueryComponent (opt = emptyObj) {
       this.state.id.forEach(id => this.props.endpoint.unsubscribe(id, this))
     }
 
-    setQueries () {
-      const queries = {}
-      const run = this.props.run
-
-      if (Array.isArray(run)) {
-        for (let i = 0; i < this.state.id.length; i++) {
-          queries[this.state.id[i]] = run[i]
-        }
-      }
-      else {
-        queries[this.state.id[0]] = run
-      }
-
-      this.queries = queries
-    }
-
     load = () => {
-      let {endpoint} = this.props
+      let {endpoint, run} = this.props
+      run = Array.isArray(run) === true ? run : [run]
       const queries = {}
 
-      for (let id in this.queries) {
-        const query = endpoint.getCached(id)
+      for (let i = 0; i < this.state.id.length; i++) {
+        let id = this.state.id[i]
         endpoint.subscribe(id, this)
+        const query = endpoint.getCached(id)
 
-        if (query === void 0 || query.status === WAITING) {
-          queries[id] = this.queries[id]
-          endpoint.setCached(
-            id,
-            {query: queries[id], status: LOADING, response: null}
-          )
+        if (query.status === void 0 || query.status === WAITING) {
+          queries[id] = run[i]
+          endpoint.setCached(id, {query: queries[id], status: LOADING, response: null})
         }
       }
 
@@ -195,13 +178,12 @@ export function createQueryComponent (opt = emptyObj) {
       const {endpoint} = this.props
       return queries.length > 0
         ? endpoint.commit({queries, type: this.isRadarQuery ? 'QUERY' : 'UPDATE'})
-        : Promise.all(Object.keys(this.queries).map(id => endpoint.getCached(id).commit))
+        : Promise.all(this.state.id.map(id => endpoint.getCached(id).commit))
     }
 
     reload = (ids = emptyArr) => {
       ids = ids.length > 0 && typeof ids[0] === 'string' ? ids : this.state.id
       ids.forEach(id => this.props.endpoint.setCached(id, {status: WAITING}))
-      this.setQueries()
       return this.load()
     }
 

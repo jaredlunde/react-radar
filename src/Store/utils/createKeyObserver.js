@@ -1,10 +1,11 @@
 export default () => {
-  const KeyObserver = {
-    buckets: [],
-    clear: () => KeyObserver.buckets = [],
+  let id = -1
+  const buckets = new Map()
+
+  return {
+    buckets,
 
     getBits (keys) {
-      const {buckets} = KeyObserver
       let bits = 0
 
       if (buckets === void 0) {
@@ -12,16 +13,16 @@ export default () => {
       }
 
       for (let i = 0; i < keys.length; i++) {
-        let idx = buckets.indexOf(keys[i])
+        let bucketId = buckets.get(keys[i])
 
-        if (idx === -1) {
+        if (bucketId === void 0) {
           // this is here in the situation that one connects to a prop that hasn't
           // been fetched yet
-          buckets.push(keys[i])
-          idx = buckets.length - 1
+          buckets.set(keys[i], ++id)
+          bucketId = id
         }
 
-        bits |= (1 << (idx % 31))
+        bits |= (1 << (bucketId % 30))
       }
 
       return bits
@@ -29,16 +30,13 @@ export default () => {
 
     setBuckets (data) {
       const dataKeys = Object.keys(data)
-      const {buckets} = KeyObserver
 
       for (let i = 0; i < dataKeys.length; i++) {
         const key = dataKeys[i]
-        if (buckets.indexOf(key) === -1) {
-          buckets.push(key)
+        if (buckets.has(key) === false) {
+          buckets.set(key, ++id)
         }
       }
     },
   }
-
-  return KeyObserver
 }

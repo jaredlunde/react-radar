@@ -6,12 +6,12 @@ export const toImmutable = memoize([WeakMap], obj => {
   const isArray = Array.isArray(obj)
 
   if (isArray || isPlainObject(obj)) {
-    const output = isArray ? [] : {}
-    const objKeys = Object.keys(obj)
+    const output = isArray ? [] : {},
+          objKeys = Object.keys(obj)
 
     for (let i = 0; i < objKeys.length; i++) {
-      const key = objKeys[i]
-      const val = obj[key]
+      const key = objKeys[i],
+            val = obj[key]
       // checks if the value is a store record. if so we want to avoid
       // memoizing it directly.
 

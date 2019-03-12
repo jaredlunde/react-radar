@@ -7,14 +7,11 @@ import {EndpointContext, EndpointInternalContext} from './EndpointContext'
 import createCache from './createCache'
 
 
+export const WAITING = 0
+export const ERROR = 1
+export const LOADING = 2
+export const DONE = 3
 export const getQueryID = memoize([WeakMap], query => {
-  const fn = `${query.name}(${JSON.stringify(query.props)}) =>`
-  let requires = {}
-
-  for (let key in query.requires) {
-    requires[key] = query.requires[key].requiresFields
-  }
-
   if (__DEV__) {
     invariant(
       query.reducer.id,
@@ -25,14 +22,14 @@ export const getQueryID = memoize([WeakMap], query => {
     )
   }
 
-  requires = `${query.reducer.id}(${JSON.stringify(requires)})`
-  return `${fn} ${requires}`
-})
+  const props = {}
+  Object.keys(query.props).sort().forEach(k => props[k] = query.props[k])
 
-export const WAITING = 0
-export const ERROR = 1
-export const LOADING = 2
-export const DONE = 3
+  let requires = {}
+  Object.keys(query.requires).sort().forEach(k => requires[k] = query.requires[k].requiresFields)
+
+  return `${query.name}(${JSON.stringify(props)}) => ${query.reducer.id}(${JSON.stringify(requires)})`
+})
 
 /**
  * The Endpoint component is the glue that binds together the Networking layer,
@@ -88,8 +85,15 @@ class Endpoint extends React.Component {
 
   subscribe = (id, component) => {
     if (this.listeners[id] === void 0) {
-      this.listeners[id] = new Set()
+      // adds this endpoint to the cache's listeners
       this.cache.subscribe(id, this)
+      // sets the query in state
+      this.listeners[id] = new Set()
+      this.setState(
+        ({queries}) => queries[id] === void 0
+          ? ({queries: {...queries, [id]: this.cache.get(id)}})
+          : null
+      )
       // used for calculating changed bits for context
       this.keyObserver.setBuckets(this.listeners)
     }
@@ -99,12 +103,26 @@ class Endpoint extends React.Component {
 
   unsubscribe = (id, component) => {
     const listeners = this.listeners[id]
-    const el = listeners && listeners.has(component)
 
-    if (el === true) {
-      listeners.delete(el)
-      // TODO: Figure out a way to unsubscribe the endpoint from the query when
-      //       there are FOR SURE no child listeners
+    if (listeners !== void 0) {
+      listeners.delete(component)
+
+      if (listeners.size === 0) {
+        this.setState(({queries}) => {
+          let nextQueries = {},
+              keys = Object.keys(queries),
+              i = 0,
+              qid
+
+          for (; i < keys.length; i++) {
+            qid = keys[i]
+            if (qid === id) continue
+            nextQueries[qid] = queries[qid]
+          }
+
+          return {queries: nextQueries}
+        })
+      }
     }
   }
 
@@ -115,14 +133,16 @@ class Endpoint extends React.Component {
 
   commit = async (opt, context) => {
     if (isNode === false) {
+      // commits an optimistic updates first but not on the server
       this.commitLocal(opt)
     }
-
-    let {type, queries} = opt
+    // creates query payloads for the network
+    let {type = 'update', queries} = opt
     const payload = []
 
-    for (let query of queries) {
-      const requires = {}
+    for (let i = 0; i < queries.length; i++) {
+      const requires = {},
+            query = queries[i]
 
       for (let key in query.requires) {
         requires[key] = query.requires[key].requiresFields
@@ -130,13 +150,13 @@ class Endpoint extends React.Component {
 
       payload.push({name: query.name, props: query.props, requires})
     }
-
-    const commit = await this.commitPayload(payload, context)
-
-    for (let query of queries) {
-      this.cache.setCommit(getQueryID(query), commit)
+    // commits the payloads to the network
+    const commit = this.commitPayload(payload, context)
+    // sets the commit promise in the cache
+    for (let i = 0; i < queries.length; i++) {
+      this.cache.setCommit(getQueryID(queries[i]), commit)
     }
-
+    // resolves the commit promise
     let {response, nextState} = await commit
     // We only want to perform state updates with setState in the browser.
     // On the server side we use the query cache and multiple iterations to populate the
@@ -148,10 +168,11 @@ class Endpoint extends React.Component {
           case 200:
             break;
           default:
-            // execute rollbacks on the failed mutations
+            // executes rollbacks on the failed mutations
             const rollbackQueries = [], rollbacks = []
 
-            for (let query of queries) {
+            for (let i = 0; i < queries.length; i++) {
+              const query = queries[i]
               if (typeof query.rollback === 'function') {
                 // optimistic updates can rollback on errors
                 rollbackQueries.push(query)
@@ -169,9 +190,9 @@ class Endpoint extends React.Component {
         return {nextState, queries, response, type}
       }
     )
-
+    // if the response was not a 200 response it is considered an error status
     const status = response.ok === true ? DONE : ERROR
-
+    // updates the cache for each query
     for (let i = 0; i < queries.length; i++) {
       this.cache.set(
         getQueryID(queries[i]),
@@ -194,7 +215,8 @@ class Endpoint extends React.Component {
     //       require knowing its key, which would be an api change
     const optimisticQueries = []
 
-    for (let query of opt.queries) {
+    for (let i = 0; i < opt.queries.length; i++) {
+      const query = opt.queries[i]
       if (typeof query.optimistic === 'function') {
         optimisticQueries.push(query)
       }
@@ -205,7 +227,8 @@ class Endpoint extends React.Component {
         state => {
           const optimisticUpdates = []
 
-          for (let query of optimisticQueries) {
+          for (let i = 0; i < optimisticQueries.length; i++) {
+            const query = optimisticQueries[i]
             optimisticUpdates.push(
               query.optimistic(query.props, state, query.requires)
             )
@@ -214,7 +237,7 @@ class Endpoint extends React.Component {
           return {
             nextState: optimisticUpdates,
             queries: optimisticQueries,
-            type: `OPTIMISTIC_${opt.type.toUpperCase()}`
+            type: `OPTIMISTIC_${(opt.type || 'update').toUpperCase()}`
           }
         }
       )

@@ -2,63 +2,58 @@ import React from 'react'
 
 
 export const calculateChangedBits = stateKey => (prev, next) => {
-  let valA, valB, keysA, keysB
-  const prevKeys =  Object.keys(prev[stateKey]),
-        nextKeys =  Object.keys(next[stateKey])
-
-  if (prevKeys.length > nextKeys.length) {
-    keysA = prevKeys
-    valA = prev[stateKey]
-    keysB = nextKeys
-    valB = next[stateKey]
-  }
-  else {
-    keysA = nextKeys
-    valA = next[stateKey]
-    keysB = prevKeys
-    valB = prev[stateKey]
-  }
-
-  let i = 0,
+  let prevState = prev[stateKey],
+      nextState = next[stateKey],
+      prevKeys =  Object.keys(prevState),
+      nextKeys =  Object.keys(nextState),
+      i = 0,
       changedKeys = []
 
-  for (i; i < keysA.length; i++) {
-    const keyA = keysA[i]
-    const keyB = keysB[i]
-
-    if (keyB === void 0 || valA[keyA] !== valB[keyB]) {
-      changedKeys.push(keyA)
+  if (prevKeys.length === 0) {
+    changedKeys = nextKeys
+  }
+  else {
+    for (i; i < prevKeys.length; i++) {
+      const k = prevKeys[i]
+      // the previous key isn't in the current state
+      if (nextState[k] === void 0) {
+        changedKeys.push(k)
+      }
     }
-    else if (keysB.indexOf(keyA) === -1 && changedKeys.indexOf(keyA) === -1) {
-      changedKeys.push(keyA)
+
+    for (i = 0; i < nextKeys.length; i++) {
+      const k = nextKeys[i]
+
+      if (// this key wasn't in the previous state
+        prevState[k] === void 0
+        // the previous state for this key was different than the current state
+        || prevState[k] !== nextState[k]
+      ) {
+        changedKeys.push(k)
+      }
     }
   }
-
+  // returns the changed bits
   return next.getBits(changedKeys)
 }
 
-export const InternalContext = React.createContext(null)
-const StoreContext = React.createContext({}, calculateChangedBits('state'))
-export default StoreContext
-
+export const StoreInternalContext = React.createContext(null)
+export const StoreContext = React.createContext({}, calculateChangedBits('data'))
 export const StoreConsumer = ({children, observedKeys}) => {
-  const Renderer = ({state}) => children(state)
+  const Renderer = state => children(state.data)
 
-  return (
-    <InternalContext.Consumer>
-      {getBits => (
-        <StoreContext.Consumer
-          unstable_observedBits={
-            typeof getBits !== 'function'
-            || observedKeys === void 0
-            || observedKeys.length === 0
-              ? 2147483647 // 0b1111111111111111111111111111111
-              : getBits(observedKeys)
-          }
-        >
-          {Renderer}
-        </StoreContext.Consumer>
-      )}
-    </InternalContext.Consumer>
-  )
+  return <StoreInternalContext.Consumer
+    children={
+      getBits => <StoreContext.Consumer
+        unstable_observedBits={
+          typeof getBits !== 'function'
+          || observedKeys === void 0
+          || observedKeys.length === 0
+            ? 1073741823 // 0b111111111111111111111111111111
+            : getBits(observedKeys)
+        }
+        children={Renderer}
+      />
+    }
+  />
 }

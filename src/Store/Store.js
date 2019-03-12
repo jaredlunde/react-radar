@@ -9,7 +9,7 @@ import {
   collectStaleRecords, 
   createKeyObserver
 } from './utils'
-import StoreContext, {InternalContext} from './StoreContext'
+import {StoreContext, StoreInternalContext} from './StoreContext'
 import Endpoint from './Endpoint'
 import createNetwork from '../createNetwork'
 
@@ -19,7 +19,7 @@ if (__DEV__) {
 }
 
 
-const defaultState = {data: emptyObj}
+const defaultState = {_data: emptyObj, data: emptyObj}
 const formatHydrateQuery = query => ({
   nextState: [query.response.json],
   response: query.response,
@@ -50,7 +50,7 @@ export default class Store extends React.Component {
       this.state = defaultState
     }
 
-    this.storeContext = {state: this.getState(), getBits: this.keyObserver.getBits}
+    this.state.getBits = this.keyObserver.getBits
   }
 
   async componentDidMount () {
@@ -79,10 +79,6 @@ export default class Store extends React.Component {
     return state
   }
 
-  componentWillUnmount () {
-    this.keyObserver.clear()
-  }
-
   getNextState = (state = emptyObj, updates)=> {
     let start
 
@@ -90,10 +86,10 @@ export default class Store extends React.Component {
       start = now()
     }
 
-    let nextState = toRecords(Object.assign({state: state.data}, updates))
+    let nextState = toRecords(Object.assign({state: state._data}, updates))
     // do a shallow comparison of the previous state to this one to avoid
     // unnecessary re-renders
-    if (nextState === null || stateDidChange(state.data, nextState) === false) {
+    if (nextState === null || stateDidChange(state._data, nextState) === false) {
       if (__DEV__) {
         console.log('[Radar] state profiler:', now() - start)
       }
@@ -110,29 +106,23 @@ export default class Store extends React.Component {
     if (__DEV__) {
       console.log('[Radar] state profiler:', now() - start)
     }
-    return {data: __DEV__ ? Object.freeze(nextState) : nextState}
+
+    return {
+      _data: __DEV__ ? Object.freeze(nextState) : nextState,
+      data: toImmutable(nextState)
+    }
   }
 
-  updateState = updates/*(state) => ({nextState, queries, [<context> response, type]})*/ => {
-    this.setState(state => this.getNextState(state, updates(state)))
+  updateState = updates/*state => ({nextState, queries, [<context> response, type]})*/ => {
+    this.setState(state => this.getNextState(state, updates(state.data)))
   }
-
-  getState = () => toImmutable(this.state.data)
 
   render () {
-    if (__DEV__) console.log('[Radux] state:\n', this.state.data)
-    const nextState = this.getState()
-
-    if (this.storeContext.state !== nextState) {
-      // enforces immutability preventing useless updates and ensuring
-      // necessary ones
-      this.storeContext = Object.assign({}, this.storeContext)
-      this.storeContext.state = nextState
-    }
-
+    if (__DEV__) console.log('[Radar] state:\n', this.state._data)
+    
     return (
-      <InternalContext.Provider value={this.storeContext.getBits}>
-        <StoreContext.Provider value={this.storeContext}>
+      <StoreInternalContext.Provider value={this.state.getBits}>
+        <StoreContext.Provider value={this.state}>
           <Endpoint
             updateState={this.updateState}
             cache={this.props.cache}
@@ -140,7 +130,7 @@ export default class Store extends React.Component {
             children={this.props.children}
           />
         </StoreContext.Provider>
-      </InternalContext.Provider>
+      </StoreInternalContext.Provider>
     )
   }
 }

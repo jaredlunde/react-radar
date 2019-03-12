@@ -34,10 +34,7 @@ export default (
       }
 
       q.listeners = q.listeners || new Set()
-
-      if (q.listeners.has(c) === false) {
-        q.listeners.add(c)
-      }
+      q.listeners.add(c)
     },
     unsubscribe (id, c, parallel = false) {
       const query = map.get(id)
@@ -45,15 +42,10 @@ export default (
       const listeners = query.listeners
 
       if (listeners) {
-        const el = listeners.has(c)
-
-        if (el === true) {
-          listeners.delete(el)
-        }
-
-        if (listeners.size === 0) {
-          map.delete(id)
-        }
+        // The query is not deleted because we can't be sure whether or not the component
+        // responsible for this is completely 'dead' or not, that is, a nested query
+        // could possibly remount in the middle of its loading.
+        listeners.delete(c)
       }
     },
     setStatus: (id, v) => cache.set(id, {status: v}),
@@ -82,8 +74,9 @@ export default (
     },
     fromJSON (json) {
       const obj = JSON.parse(json)
-
-      for (let k in obj) {
+      const keys = Object.keys(obj)
+      for (let i = 0; i < keys.length; i++) {
+        const k = keys[i]
         map.set(k, obj[k])
       }
     }

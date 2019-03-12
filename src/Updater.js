@@ -1,6 +1,7 @@
 import React from 'react'
 import {objectWithoutProps, strictShallowEqual} from './utils'
 import {createQueryComponent, getID} from './Query'
+import {WAITING} from './Store/Endpoint/Endpoint'
 
 
 const withoutReload = [{reload: 0}]
@@ -10,34 +11,34 @@ export default createQueryComponent({
   prototype: {
     setup () {
       this.isRadarQuery = false
-      this.state.update = this.reload
       this.state = objectWithoutProps(this.state, withoutReload)
+      this.state.update = this.update.bind(this)
     },
 
-    componentDidMount () {
-      this.mounted = true
-    },
+    componentDidMount () {},
 
     componentDidUpdate (_, {id}) {
       if (strictShallowEqual(id, this.state.id) === false) {
-        this.unsubscribeAll()
-        this.setQueries()
-        // TODO: abstract this here and in Query. Something like this.subscribeAll()
-        const queries = {}
-
-        for (let id in this.queries) {
-          const query = this.props.endpoint.getCached(id)
-          this.props.endpoint.subscribe(id, this)
-          if (query !== void 0) {
-            queries[id] = {
-              status: query.status,
-              response: query.response
-            }
-          }
-        }
-
-        this.setState({queries})
+        id.forEach(
+          pid => this.state.id.indexOf(pid) === -1
+            && this.props.endpoint.unsubscribe(pid, this)
+        )
       }
+    },
+
+    update () {
+      const queries = {}
+      const {endpoint} = this.props
+
+      for (let id of this.state.id) {
+        endpoint.subscribe(id, this)
+        endpoint.setCached(id, {status: WAITING})
+        const query = endpoint.getCached(id)
+        queries[id] = {status: query.status, response: query.response}
+      }
+
+      this.setState({queries})
+      return this.load()
     }
   }
 })
