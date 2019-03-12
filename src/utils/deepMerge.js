@@ -2,50 +2,40 @@ import isMergeableObject from 'is-mergeable-object'
 import {isStoreRecord} from '../Store'
 
 
-export const mergeIfMergeable = (value, optionsArgument) => {
-  return isMergeableObject(value)
+export const mergeIfMergeable = (value, optionsArgument) =>
+  isMergeableObject(value)
     ? deepMerge(Array.isArray(value) ? [] : {}, value, optionsArgument)
     : value
-}
 
 export const arrayMergeOverwrite = (target, source, optionsArgument) => {
-  if (target === source) {
-    return target
-  }
+  if (target === source) return target
 
   const output = [...target]
 
-  for (let x = 0; x < source.length; x++) {
-    output[x] = mergeIfMergeable(source[x], optionsArgument)
-  }
+  for (let i = 0; i < source.length; i++)
+    output[i] = mergeIfMergeable(source[i], optionsArgument);
 
   return output
 }
 
 export const arrayMergeConcat = (target, source, optionsArgument) => {
-  if (target === source) {
-    return target
-  }
+  if (target === source) return target
 
   const output = [...target]
 
-  for (let x = 0; x < source.length; x++) {
-    output.push(mergeIfMergeable(source[x], optionsArgument))
-  }
+  for (let i = 0; i < source.length; i++)
+    output.push(mergeIfMergeable(source[i], optionsArgument));
 
   return output
 }
 
 export const arrayMergeReplace = (target, source, optionsArgument) => {
-  if (target === source) {
-    return target
-  }
+  if (target === source) return target
 
   const output = []
 
-  for (let x = 0; x < source.length; x++) {
-    output.push(mergeIfMergeable(source[x], optionsArgument))
-  }
+  for (let i = 0; i < source.length; i++)
+    output.push(mergeIfMergeable(source[i], optionsArgument));
 
   return output
 }
@@ -60,20 +50,10 @@ const mergeObject = (target, source, optionsArgument) => {
   }
 
 	const destination = {...target}
-  /**
-	if (isMergeableObject(target)) {
-    const targetKeys = Object.keys(target)
-
-    for (let x = 0; x < targetKeys.length; x++) {
-      const key = targetKeys[x]
-      destination[key] = mergeIfMergeable(target[key], optionsArgument)
-    }
-	}
-  */
   const sourceKeys = Object.keys(source)
 
-  for (let x = 0; x < sourceKeys.length; x++) {
-    const key = sourceKeys[x]
+  for (let i = 0; i < sourceKeys.length; i++) {
+    const key = sourceKeys[i]
 
     if (!isMergeableObject(source[key]) || target[key] === void 0) {
 			destination[key] = mergeIfMergeable(source[key], optionsArgument)

@@ -16,8 +16,8 @@ const isSubset = (superset, subset) => {
     }
 
     const subsetKeys = Object.keys(subset)
-    for (let x = 0; x < subsetKeys.length; x++) {
-      const key = subsetKeys[x]
+    for (let i = 0; i < subsetKeys.length; i++) {
+      const key = subsetKeys[i]
       const supersetItem = superset[key]
 
       //if (superset.hasOwnProperty(key) === false) {

@@ -11,8 +11,8 @@ export const pickShape = (from, shape) => {
   shape = shape.isRadarRecord || shape.isRadarUnion ? shape.fields : shape
   const shapeKeys = Object.keys(shape)
 
-  for (let x = 0; x < shapeKeys.length; x++) {
-    const key = shapeKeys[x]
+  for (let i = 0; i < shapeKeys.length; i++) {
+    const key = shapeKeys[i]
     const fromVal = from[key]
 
     if (fromVal !== void 0) {
@@ -37,12 +37,7 @@ export const pickShape = (from, shape) => {
 export const pick = memoize([WeakMap, WeakMap], (from, shape) => {
   if (Array.isArray(from)) {
     const output = []
-
-    for (let x = 0; x < from.length; x++) {
-      output.push(pickShape(from[x], shape))
-    }
-
-    // return Immutable(output)
+    for (let i = 0; i < from.length; i++) output.push(pickShape(from[i], shape));
     return __DEV__ ? Object.freeze(output) : output
   }
   else if (isPlainObject(from)) {

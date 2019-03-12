@@ -2,10 +2,10 @@ import isPlainObject from './isPlainObject'
 
 
 const deepIntersection = (...objects) => {
-  let keys = []
+  let keys = [], i = 0, j = 0
 
-  for (let x = 0; x < objects.length; x++) {
-    const object = objects[x]
+  for (; i < objects.length; i++) {
+    const object = objects[i]
 
     if (keys.length === 0) {
       keys = Object.keys(object)
@@ -14,32 +14,28 @@ const deepIntersection = (...objects) => {
 
     const objKeys = Object.keys(object)
     const newKeys = []
-    for (let y = 0; y < objKeys.length; y++) {
-      const key = keys[y]
-      if (objKeys.indexOf(key) > -1) {
-        newKeys.push(keys[y])
-      }
+    for (j = 0; j < objKeys.length; j++) {
+      const key = keys[j]
+      if (objKeys.indexOf(key) > -1)
+        newKeys.push(key)
     }
+
     keys = newKeys
-    // keys = keys.filter(key => objKeys.includes(key))
   }
 
   const output = {}
 
-  for (let x = 0; x < keys.length; x++) {
-    const key = keys[x]
+  for (i = 0; i < keys.length; i++) {
+    const key = keys[i]
     const deepObjects = []
 
-    for (let y = 0; y < objects.length; y++) {
-      const object = objects[y]
+    for (j = 0; j < objects.length; j++) {
+      const object = objects[j]
       const deep = object[key]
 
       if (isPlainObject(deep)) {
         deepObjects.push(deep)
-      } else if (
-        typeof deep === 'function'
-        && (deep.isRadarRecord || deep.isRadarUnion)
-      ) {
+      } else if (typeof deep === 'function' && (deep.isRadarRecord || deep.isRadarUnion)) {
         deepObjects.push(deep.fields)
       }
     }

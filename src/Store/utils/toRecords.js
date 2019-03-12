@@ -87,9 +87,9 @@ const withoutError = ['isRadarError']
 const withoutContext = ['recordType', 'state']
 
 export default ({state, nextState, queries, ...context}) => {
-  let hasRecordUpdates = false
+  let hasRecordUpdates = false, i = 0, j = 0
 
-  for (let i = 0; i < queries.length; i++) {
+  for (; i < queries.length; i++) {
     let records = {}
     let queryState = nextState[i]
     const query = queries[i]
@@ -112,7 +112,7 @@ export default ({state, nextState, queries, ...context}) => {
     const stateKeys = Object.keys(queryState)
     context.hasErrors = false
 
-    for (let j = 0; j < stateKeys.length; j++) {
+    for (j = 0; j < stateKeys.length; j++) {
       const key = stateKeys[j]
       context.recordType = query.requires[key]
       context.state = queryState[key]

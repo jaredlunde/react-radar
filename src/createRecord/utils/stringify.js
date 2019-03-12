@@ -6,10 +6,10 @@ import {isPlainObject} from '../../utils'
 const stringify = memoize(
   [Map],
   fields => {
-    let out = ''
+    let out = '', i = 0
     const keys = Object.keys(fields).sort()
 
-    for (let i = 0; i < keys.length; i++) {
+    for (; i < keys.length; i++) {
       const key = keys[i]
       const val = fields[key]
 

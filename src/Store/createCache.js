@@ -1,4 +1,4 @@
-import {objectWithoutProps} from '../../utils'
+import {objectWithoutProps} from '../utils'
 
 
 const jsonExclusions = {commit: 0, listeners: 0, query: 0}

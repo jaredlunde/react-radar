@@ -1,8 +1,9 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import memoize from 'trie-memoize'
-import {invariant, isNode} from '../../utils'
-import {createKeyObserver} from '../utils'
+import {stringify} from '../createRecord'
+import {invariant, isNode} from '../utils'
+import {createKeyObserver} from './utils'
 import {EndpointContext, EndpointInternalContext} from './EndpointContext'
 import createCache from './createCache'
 
@@ -22,13 +23,13 @@ export const getQueryID = memoize([WeakMap], query => {
     )
   }
 
-  const props = {}
+  let props = {}, requires = {}
   Object.keys(query.props).sort().forEach(k => props[k] = query.props[k])
+  Object.keys(query.requires).sort().forEach(
+    k => requires[k] = query.requires[k].requiresFields
+  )
 
-  let requires = {}
-  Object.keys(query.requires).sort().forEach(k => requires[k] = query.requires[k].requiresFields)
-
-  return `${query.name}(${JSON.stringify(props)}) => ${query.reducer.id}(${JSON.stringify(requires)})`
+  return `${query.name}(${JSON.stringify(props)}) => ${query.reducer.id}(${stringify(requires)})`
 })
 
 /**
@@ -253,9 +254,7 @@ class Endpoint extends React.Component {
   }
 }
 
-export default ({children, ...props}) => props.network(context => <Endpoint
-  network={context}
-  store={props}
-  children={children}
-/>)
+export default ({children, network, ...props}) => network(
+  context => <Endpoint network={context} store={props} children={children}/>
+)
 

@@ -1,5 +1,5 @@
 export default o => {
-  if (o !== null && typeof o === 'object') {
+  if (typeof o === 'object' && o !== null) {
     const proto = Object.getPrototypeOf(o)
     return proto === Object.prototype || proto === null
   }

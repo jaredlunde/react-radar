@@ -26,7 +26,8 @@ const getRecordKeys = memoize([WeakMap], obj => {
         const nestedValues = getRecordKeys(value)
 
         if (nestedValues !== void 0 && nestedValues.size) {
-          for (let k of nestedValues) output.add(k)
+          for (let k of nestedValues)
+            output.add(k)
         }
       }
     }

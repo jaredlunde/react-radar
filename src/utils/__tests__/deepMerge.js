@@ -28,27 +28,14 @@ const bench = (fn, time = 1000, opt = {}) => {
   )
 }
 
-
-const {CDLL} = require('cdll-memoize')
-let initial = []
-for (let i = 0; i < 1000; i++) {
-  initial.push(i)
-}
-let cdll = new CDLL(initial)
-let set = new Set(initial)
-let noop = v => v
-
-bench(() => new CDLL(initial), 3000)
-bench(() => new Set(initial), 3000)
-bench(() => cdll.forEach(noop), 3000)
-bench(() => set.forEach(noop), 3000)
-bench(() => cdll.find(500), 3000)
-bench(() => set.has(500), 3000)
-bench(() => {
-  for (let v of set) {
-    noop(v)
-  }
-}, 3000)
+let map = new Map()
+let obj = {}
+bench(() => obj[Math.random()] = Math.random(), 3000)
+bench(() => map.set(Math.random(), Math.random()), 3000)
+bench(() => obj[Math.random()], 3000)
+bench(() => map.get(Math.random()), 3000)
+bench(() => delete obj[Math.random()], 3000)
+bench(() => map.delete(Math.random()), 3000)
 
 const objA = {
   foo: { bar: 3 },

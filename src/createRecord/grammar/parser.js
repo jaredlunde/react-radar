@@ -1,11 +1,11 @@
 if (__DEV__) {
-  function p$subclass(child, parent) {
-    function ctor() { this.constructor = child; }
+  function p$subclass (child, parent) {
+    function ctor () { this.constructor = child; }
     ctor.prototype = parent.prototype;
     child.prototype = new ctor();
   }
 
-  function p$SE(message, expected, found, location) {
+  function p$SE (message, expected, found, location) {
     this.message  = message;
     this.expected = expected;
     this.found    = found;
@@ -17,16 +17,29 @@ if (__DEV__) {
     }
   }
 
+  function p$buildSimpleError (message, location) {
+    return new p$SE(message, null, null, location);
+  }
+
+  function p$bSE (expected, found, location) {
+    return new p$SE(
+      p$SE.buildMessage(expected, found),
+      expected,
+      found,
+      location
+    );
+  }
+
   p$subclass(p$SE, Error);
 
-  p$SE.buildMessage = function(expected, found) {
-    var DESCRIBE_E_FNS = {
+  p$SE.buildMessage = (expected, found) => {
+    let DESCRIBE_E_FNS = {
       literal: function(E) {
         return "\"" + literalEscape(E.text) + "\"";
       },
 
       "class": function(E) {
-        var escapedParts = "",
+        let escapedParts = "",
           i;
 
         for (i = 0; i < E.parts.length; i++) {
@@ -51,11 +64,11 @@ if (__DEV__) {
       }
     };
 
-    function hex(ch) {
+    const hex = (ch) => {
       return ch.charCodeAt(0).toString(16).toUpperCase();
     }
 
-    function literalEscape(s) {
+    const literalEscape = (s) => {
       return s
         .replace(/\\/g, '\\\\')
         .replace(/"/g,  '\\"')
@@ -67,7 +80,7 @@ if (__DEV__) {
         .replace(/[\x10-\x1F\x7F-\x9F]/g, function(ch) { return '\\x'  + hex(ch); });
     }
 
-    function classEscape(s) {
+    const classEscape = (s) => {
       return s
         .replace(/\\/g, '\\\\')
         .replace(/\]/g, '\\]')
@@ -81,12 +94,12 @@ if (__DEV__) {
         .replace(/[\x10-\x1F\x7F-\x9F]/g, function(ch) { return '\\x'  + hex(ch); });
     }
 
-    function describeE(E) {
+    const describeE = (E) => {
       return DESCRIBE_E_FNS[E.type](E);
     }
 
-    function describeExpected(expected) {
-      var descriptions = new Array(expected.length),
+    const describeExpected = (expected) => {
+      let descriptions = new Array(expected.length),
         i, j;
 
       for (i = 0; i < expected.length; i++) {
@@ -119,7 +132,7 @@ if (__DEV__) {
       }
     }
 
-    function describeFound(found) {
+    const describeFound = (found) => {
       return found ? "\"" + literalEscape(found) + "\"" : "end of input";
     }
 
@@ -133,144 +146,31 @@ const alpha = /^[a-z]/i
 const under = /^[_]/
 const newline = /^[ \n]/
 
-function p$parse(input, options) {
+const p$parse = (input, options) => {
   options = options !== void 0 ? options : {};
 
-  var p$FAILED = {},
-
-    p$startRuleIndices = { start: 0 },
-    p$startRuleIndex   = 0,
-
-    p$consts = [
-      p$otherE("whitespace"),
-      whitespace,
-      p$classE([" ", "\t", "\r", "\n"], false, false),
-      p$otherE("number"),
-      number,
-      p$classE([["0", "9"]], false, false),
-      p$otherE("alpha or underscore character"),
-      alpha,
-      p$classE([["a", "z"]], false, true),
-      under,
-      p$classE(["_"], false, false),
-      p$otherE("word character"),
-      function(word) {
-        return word
-      },
-      p$otherE("shape block"),
-      "{",
-      p$literalE("{", false),
-      p$otherE("shape end block"),
-      "}",
-      p$literalE("}", false),
-      p$otherE("field separator"),
-      ",",
-      p$literalE(",", false),
-      newline,
-      p$classE([" ", "\n"], false, false),
-      function(fields) {
-        return fields
-      },
-      p$otherE("fields"),
-      function(field_, field) {return field},
-      function(field_, fields) {
-        return [field_].concat(fields)
-      },
-      p$otherE("field"),
-      function(name, shape) {
-        return {name, shape}
-      },
-      p$otherE("field name"),
-      function(first, rest) {
-        return `${first}${rest.join('')}`
-      },
-      p$otherE("shape"),
-      function(fields) {
-        return fields || []
-      }
-    ],
-
-    p$bytecode = [
-      p$d(";("),
-      p$d("<$4!\"\"5!7\"0)*4!\"\"5!7\"&=.\" 7 "),
-      p$d("<4$\"\"5!7%=.\" 7#"),
-      p$d("<4'\"\"5!7(.) &4)\"\"5!7*=.\" 7&"),
-      p$d("<%;#.# &;\"/' 8!:,!! )=.\" 7+"),
-      p$d("<%;!/;#2.\"\"6.7//,$;!/#$+#)(#'#(\"'#&'#=.\" 7-"),
-      p$d("<%$;'0#*;'&/;#;!/2$21\"\"6172/#$+#)(#'#(\"'#&'#=.\" 70"),
-      p$d("<%;!/;#24\"\"6475/,$;!/#$+#)(#'#(\"'#&'#.< &%46\"\"5!77/,#;!/#$+\")(\"'#&'#=.\" 73"),
-      p$d("%;!/:#;)/1$;!/($8#:8#!!)(#'#(\"'#&'#"),
-      p$d("<%;*/k#$%;'/2#;*/)$8\"::\"\"$ )(\"'#&'#0<*%;'/2#;*/)$8\"::\"\"$ )(\"'#&'#&/)$8\":;\"\"! )(\"'#&'#=.\" 79"),
-      p$d("<%;+/7#;,.\" &\"/)$8\":=\"\"! )(\"'#&'#=.\" 7<"),
-      p$d("<%;#/9#$;$0#*;$&/)$8\":?\"\"! )(\"'#&'#=.\" 7>"),
-      p$d("<%;%/?#;).\" &\"/1$;&/($8#:A#!!)(#'#(\"'#&'#=.\" 7@")
-    ],
-
-    p$currPos          = 0,
-    p$savedPos         = 0,
-    p$pDC  = [{ line: 1, column: 1 }],
-    p$maxFPos       = 0,
-    p$mFE  = [],
-    p$silentFs      = 0,
-
-    p$resultsCache = {},
-
-    p$result;
-
-  if ("startRule" in options) {
-    if (!(options.startRule in p$startRuleIndices)) {
-      throw new Error("Can't start parsing from rule \"" + options.startRule + "\".");
-    }
-
-    p$startRuleIndex = p$startRuleIndices[options.startRule];
-  }
-
-  function text() {
-    return input.substring(p$savedPos, p$currPos);
-  }
-
-  function location() {
-    return cL(p$savedPos, p$currPos);
-  }
-
-  function expected(description, location) {
-    location = location !== void 0 ? location : cL(p$savedPos, p$currPos)
-
-    throw p$bSE(
-      [p$otherE(description)],
-      input.substring(p$savedPos, p$currPos),
-      location
-    );
-  }
-
-  function error(message, location) {
-    location = location !== void 0 ? location : cL(p$savedPos, p$currPos)
-
-    throw p$buildSimpleError(message, location);
-  }
-
-  function p$literalE(text, ignoreCase) {
+  const p$literalE = (text, ignoreCase) => {
     return { type: "literal", text: text, ignoreCase: ignoreCase };
   }
 
-  function p$classE(parts, inverted, ignoreCase) {
+  const p$classE = (parts, inverted, ignoreCase) => {
     return { type: "class", parts: parts, inverted: inverted, ignoreCase: ignoreCase };
   }
 
-  function p$anyE() {
+  const p$anyE = () => {
     return { type: "any" };
   }
 
-  function p$endE() {
+  const p$endE = () => {
     return { type: "end" };
   }
 
-  function p$otherE(description) {
+  const p$otherE = (description) => {
     return { type: "other", description: description };
   }
 
-  function cPD(pos) {
-    var details = p$pDC[pos], p;
+  const cPD = (pos) => {
+    let details = p$pDC[pos], p;
 
     if (details) {
       return details;
@@ -302,8 +202,8 @@ function p$parse(input, options) {
     }
   }
 
-  function cL(startPos, endPos) {
-    var startPosDetails = cPD(startPos),
+  const cL = (startPos, endPos) => {
+    let startPosDetails = cPD(startPos),
       endPosDetails   = cPD(endPos);
 
     return {
@@ -320,7 +220,7 @@ function p$parse(input, options) {
     };
   }
 
-  function p$fail(expected) {
+  const p$fail = (expected) => {
     if (p$currPos < p$maxFPos) { return; }
 
     if (p$currPos > p$maxFPos) {
@@ -330,24 +230,8 @@ function p$parse(input, options) {
 
     p$mFE.push(expected);
   }
-
-  if (__DEV__) {
-    function p$buildSimpleError(message, location) {
-      return new p$SE(message, null, null, location);
-    }
-
-    function p$bSE(expected, found, location) {
-      return new p$SE(
-        p$SE.buildMessage(expected, found),
-        expected,
-        found,
-        location
-      );
-    }
-  }
-
-  function p$d(s) {
-    var bc = new Array(s.length), i;
+  const p$d = (s) => {
+    let bc = new Array(s.length), i;
 
     for (i = 0; i < s.length; i++) {
       bc[i] = s.charCodeAt(i) - 32;
@@ -356,8 +240,8 @@ function p$parse(input, options) {
     return bc;
   }
 
-  function p$parseRule(index) {
-    var bc    = p$bytecode[index],
+  const p$parseRule = (index) => {
+    let bc    = p$bytecode[index],
       ip    = 0,
       ips   = [],
       end   = bc.length,
@@ -365,7 +249,7 @@ function p$parse(input, options) {
       stack = [],
       params, i;
 
-    var key    = p$currPos * 13 + index,
+    let key    = p$currPos * 13 + index,
       cached = p$resultsCache[key];
 
     if (cached) {
@@ -631,6 +515,95 @@ function p$parse(input, options) {
     return stack[0];
   }
 
+  let p$FAILED = {},
+
+    p$startRuleIndices = { start: 0 },
+    p$startRuleIndex   = 0,
+
+    p$consts = [
+      p$otherE("whitespace"),
+      whitespace,
+      p$classE([" ", "\t", "\r", "\n"], false, false),
+      p$otherE("number"),
+      number,
+      p$classE([["0", "9"]], false, false),
+      p$otherE("alpha or underscore character"),
+      alpha,
+      p$classE([["a", "z"]], false, true),
+      under,
+      p$classE(["_"], false, false),
+      p$otherE("word character"),
+      function(word) {
+        return word
+      },
+      p$otherE("shape block"),
+      "{",
+      p$literalE("{", false),
+      p$otherE("shape end block"),
+      "}",
+      p$literalE("}", false),
+      p$otherE("field separator"),
+      ",",
+      p$literalE(",", false),
+      newline,
+      p$classE([" ", "\n"], false, false),
+      function(fields) {
+        return fields
+      },
+      p$otherE("fields"),
+      function(field_, field) {return field},
+      function(field_, fields) {
+        return [field_].concat(fields)
+      },
+      p$otherE("field"),
+      function(name, shape) {
+        return {name, shape}
+      },
+      p$otherE("field name"),
+      function(first, rest) {
+        return `${first}${rest.join('')}`
+      },
+      p$otherE("shape"),
+      function(fields) {
+        return fields || []
+      }
+    ],
+
+    p$bytecode = [
+      p$d(";("),
+      p$d("<$4!\"\"5!7\"0)*4!\"\"5!7\"&=.\" 7 "),
+      p$d("<4$\"\"5!7%=.\" 7#"),
+      p$d("<4'\"\"5!7(.) &4)\"\"5!7*=.\" 7&"),
+      p$d("<%;#.# &;\"/' 8!:,!! )=.\" 7+"),
+      p$d("<%;!/;#2.\"\"6.7//,$;!/#$+#)(#'#(\"'#&'#=.\" 7-"),
+      p$d("<%$;'0#*;'&/;#;!/2$21\"\"6172/#$+#)(#'#(\"'#&'#=.\" 70"),
+      p$d("<%;!/;#24\"\"6475/,$;!/#$+#)(#'#(\"'#&'#.< &%46\"\"5!77/,#;!/#$+\")(\"'#&'#=.\" 73"),
+      p$d("%;!/:#;)/1$;!/($8#:8#!!)(#'#(\"'#&'#"),
+      p$d("<%;*/k#$%;'/2#;*/)$8\"::\"\"$ )(\"'#&'#0<*%;'/2#;*/)$8\"::\"\"$ )(\"'#&'#&/)$8\":;\"\"! )(\"'#&'#=.\" 79"),
+      p$d("<%;+/7#;,.\" &\"/)$8\":=\"\"! )(\"'#&'#=.\" 7<"),
+      p$d("<%;#/9#$;$0#*;$&/)$8\":?\"\"! )(\"'#&'#=.\" 7>"),
+      p$d("<%;%/?#;).\" &\"/1$;&/($8#:A#!!)(#'#(\"'#&'#=.\" 7@")
+    ],
+
+    p$currPos          = 0,
+    p$savedPos         = 0,
+    p$pDC  = [{ line: 1, column: 1 }],
+    p$maxFPos       = 0,
+    p$mFE  = [],
+    p$silentFs      = 0,
+
+    p$resultsCache = {},
+
+    p$result;
+
+  if ("startRule" in options) {
+    if (!(options.startRule in p$startRuleIndices)) {
+      throw new Error("Can't start parsing from rule \"" + options.startRule + "\".");
+    }
+
+    p$startRuleIndex = p$startRuleIndices[options.startRule];
+  }
+  
   p$result = p$parseRule(p$startRuleIndex);
 
   if (p$result !== p$FAILED && p$currPos === input.length) {

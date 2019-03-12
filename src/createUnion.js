@@ -1,12 +1,12 @@
-import {getFields} from '../createRecord/utils'
-import {invariant, tag, deepIntersection} from '../utils'
+import {getFields} from './createRecord/utils'
+import {invariant, tag, deepIntersection} from './utils'
 
 
 const getSharedFields = records => {
   const recs = []
 
-  for (let name in records) {
-    recs.push(records[name].fields)
+  for (let record of Object.values(records)) {
+    recs.push(record.fields)
   }
 
   return deepIntersection(...recs)

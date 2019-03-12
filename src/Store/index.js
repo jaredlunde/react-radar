@@ -1,4 +1,5 @@
 export default from './Store'
+export createCache from './createCache'
 export {isStoreRecord} from './utils'
 export {StoreConsumer} from './StoreContext'
-export {RadarConsumer, EndpointConsumer, createCache} from './Endpoint'
+export {RadarConsumer, EndpointConsumer} from './EndpointContext'

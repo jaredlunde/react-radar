@@ -1,8 +1,8 @@
 import memoize from 'trie-memoize'
-import isStoreRecord from './isStoreRecord'
-import {isPlainObject} from '../../utils'
-import {RADAR_ID_KEY} from './invalidateID'
 import emptyObj from 'empty/object'
+import {isPlainObject} from '../../utils'
+import isStoreRecord from './isStoreRecord'
+import {RADAR_ID_KEY} from './invalidateID'
 
 
 export const RADAR_CHILDREN_KEY = '__@@RADAR_CHILDREN@@__'

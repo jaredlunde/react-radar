@@ -1,18 +1,19 @@
 export default () => {
-  let id = -1
+  let id = -1, i = 0
   const buckets = new Map()
 
   return {
     buckets,
 
     getBits (keys) {
+      // determines which context shard given keys reside in
       let bits = 0
 
       if (buckets === void 0) {
         return bits
       }
 
-      for (let i = 0; i < keys.length; i++) {
+      for (i = 0; i < keys.length; i++) {
         let bucketId = buckets.get(keys[i])
 
         if (bucketId === void 0) {
@@ -21,18 +22,22 @@ export default () => {
           buckets.set(keys[i], ++id)
           bucketId = id
         }
-
+        // flips the bit in the bucketId position to 1
         bits |= (1 << (bucketId % 30))
+        // bails out if all of the bits are switched to 1
+        if (bits === 1073741823) break
       }
 
       return bits
     },
 
     setBuckets (data) {
+      // assigns a unique id to each key name for context sharding
       const dataKeys = Object.keys(data)
 
-      for (let i = 0; i < dataKeys.length; i++) {
+      for (i = 0; i < dataKeys.length; i++) {
         const key = dataKeys[i]
+
         if (buckets.has(key) === false) {
           buckets.set(key, ++id)
         }

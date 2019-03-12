@@ -10,8 +10,7 @@ export default (objA, objB) => {
     return false
   }
 
-  let i = 0
-  for (; i < keyLen; i++) {
+  for (let i = 0; i < keyLen; i++) {
     if (objA[aKeys[i]] !== objB[aKeys[i]]) {
       return false
     }

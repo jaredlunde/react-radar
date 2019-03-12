@@ -1,8 +1,9 @@
 export default (obj, props) => {
-  const next = {}
-  const keys = Object.keys(obj)
+  let next = {},
+      keys = Object.keys(obj),
+      i = 0
 
-  for (let i = 0; i < keys.length; i++) {
+  for (; i < keys.length; i++) {
     if (props[keys[i]] === void 0) {
       next[keys[i]] = obj[keys[i]]
     }

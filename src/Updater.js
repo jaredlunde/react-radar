@@ -1,7 +1,7 @@
 import React from 'react'
 import {objectWithoutProps, strictShallowEqual} from './utils'
-import {createQueryComponent, getID} from './Query'
-import {WAITING} from './Store/Endpoint/Endpoint'
+import {createQueryComponent} from './Query'
+import {WAITING} from './Store/Endpoint'
 
 
 const withoutReload = [{reload: 0}]

@@ -9,9 +9,7 @@ if (__DEV__) {
                   `documentation and examples.`
 
       if (warning === true) {
-        if (!truthyFalsey) {
-          console.warn(msg)
-        }
+        if (!truthyFalsey) console.warn(msg)
       } else {
         invariant(truthyFalsey, msg)
       }

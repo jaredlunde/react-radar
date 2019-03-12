@@ -6,10 +6,10 @@ import recursivelyRequire from './recursivelyRequire'
 const requires = memoize(
   [Map, Map],
   (fields, requestedFields) => {
-    let shape = {}
+    let shape = {}, i = 0
     const parsedFields = parser.parse(requestedFields)
 
-    for (let i = 0; i < parsedFields.length; i++) {
+    for (; i < parsedFields.length; i++) {
       const field = parsedFields[i]
       shape = recursivelyRequire(shape, fields, field)
     }

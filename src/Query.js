@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import emptyObj from 'empty/object'
 import emptyArr from 'empty/array'
 import Connect from './Connect'
-import {WAITING, LOADING, ERROR, DONE, getQueryID} from './Store/Endpoint/Endpoint'
+import {WAITING, LOADING, ERROR, DONE, getQueryID} from './Store/Endpoint'
 import {EndpointConsumer} from './Store'
 import {isNode, strictShallowEqual} from './utils'
 
@@ -161,13 +161,14 @@ export function createQueryComponent (opt = emptyObj) {
         let id = this.state.id[i]
         endpoint.subscribe(id, this)
         const query = endpoint.getCached(id)
-
+        // this will only run queries that aren't currently in a loading, done, or error state
         if (query.status === void 0 || query.status === WAITING) {
           queries[id] = run[i]
           endpoint.setCached(id, {query: queries[id], status: LOADING, response: null})
         }
       }
-
+      // parallel means that the queries are sent separately *over the network*, but they will
+      // still be added to the store synchronously
       return this.props.parallel === true
         ? Promise.all(Object.keys(queries).map(id => this.commit({[id]: queries[id]})))
         : this.commit(queries)

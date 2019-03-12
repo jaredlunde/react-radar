@@ -1,6 +1,6 @@
 import React from 'react'
 import emptyObj from 'empty/object'
-import {calculateChangedBits} from '../StoreContext'
+import {calculateChangedBits} from './StoreContext'
 
 
 export const EndpointInternalContext = React.createContext(null)
@@ -12,7 +12,7 @@ export const EndpointConsumer = ({children, observedKeys}) =>
         typeof getBits !== 'function'
         || observedKeys === void 0
         || observedKeys.length === 0
-          ? 2147483647 // 0b1111111111111111111111111111111
+          ? 1073741823 // 0b111111111111111111111111111111
           : getBits(observedKeys)
       }
       children={children}
