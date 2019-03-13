@@ -1,6 +1,7 @@
 export default () => {
   let id = -1, i = 0
   const buckets = new Map()
+  const setBucket = key => buckets.has(key) === false && buckets.set(key, ++id)
 
   return {
     buckets,
@@ -35,13 +36,10 @@ export default () => {
       // assigns a unique id to each key name for context sharding
       const dataKeys = Object.keys(data)
 
-      for (i = 0; i < dataKeys.length; i++) {
-        const key = dataKeys[i]
-
-        if (buckets.has(key) === false) {
-          buckets.set(key, ++id)
-        }
-      }
+      for (i = 0; i < dataKeys.length; i++)
+        setBucket(dataKeys[i])
     },
+
+    setBucket
   }
 }

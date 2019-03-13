@@ -96,7 +96,7 @@ class Endpoint extends React.Component {
           : null
       )
       // used for calculating changed bits for context
-      this.keyObserver.setBuckets(this.listeners)
+      this.keyObserver.setBucket(id)
     }
 
     this.listeners[id].add(component)
