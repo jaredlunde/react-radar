@@ -1,13 +1,14 @@
-import React from 'react'
+import React, {useContext} from 'react'
 import PropTypes from 'prop-types'
+import emptyObj from 'empty/object'
 import memoize from 'trie-memoize'
-import {StoreConsumer, RadarConsumer, EndpointConsumer} from './Store'
+import {StoreContext, StoreConsumer, RadarConsumer, EndpointConsumer} from './Store'
 import {pick} from './utils'
 
 
 const Connect = ({to, __internal, __internal_observedKeys, children}) => {
-  const shape = toShape(to.replace(whitespace, ''))
-  const observedKeys = toBaseKeys(shape)
+  const shape = to && toShape(to.replace(whitespace, ''))
+  const observedKeys = toBaseKeys(shape || emptyObj)
   const connectChildren = radar => StoreConsumer({
     observedKeys,
     children: state => children(shape ? pick(state, shape) : state, radar)
@@ -19,7 +20,7 @@ const Connect = ({to, __internal, __internal_observedKeys, children}) => {
 }
 
 Connect.propTypes = /* remove-proptypes */ {
-  to: PropTypes.string.isRequired,
+  to: PropTypes.string,
   children: PropTypes.func.isRequired
 }
 
@@ -59,5 +60,14 @@ const toShape = memoize([Map], strings => {
 
   return out
 })
+
+export const useConnect = (...to) => {
+  const shape = to.length && toShape(to.join(','))
+  // const observedKeys = toBaseKeys(shape)
+  // const getBits = useContext(StoreInternalContext)
+  // if (getBits === null) return emptyObj
+  const {data} = useContext(StoreContext/*, getBits(observedKeys)*/)
+  return shape ? pick(data, shape) : data
+}
 
 export default Connect

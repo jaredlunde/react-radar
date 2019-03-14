@@ -26,6 +26,8 @@ module.exports = createConfig({
     alias: {
       'node-fetch$': 'node-fetch/lib/index.js',
       webpack: path.join(__dirname, '../../node_modules/webpack'),
+      react: path.join(__dirname, '../../node_modules/react'),
+      'react-dom': path.join(__dirname, '../../node_modules/react-dom')
     },
   },
 

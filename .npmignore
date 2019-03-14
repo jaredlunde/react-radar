@@ -3,3 +3,4 @@
 .babelrc
 *.log
 .idea
+examples/

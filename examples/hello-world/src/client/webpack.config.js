@@ -47,6 +47,13 @@ module.exports = createConfig({
     ...productionOutput
   },
 
+  resolve: {
+    alias: {
+      react: path.join(__dirname, '../../node_modules/react'),
+      'react-dom': path.join(__dirname, '../../node_modules/react-dom')
+    }
+  },
+
   plugins: [
     new webpack.DefinePlugin({
       __PLATFORM__: JSON.stringify('client'),

@@ -1,18 +1,18 @@
-import Connect from './Connect'
-import createNetwork from './createNetwork'
-import createQuery, {createReducer, defaultReducer, noop} from './createQuery'
-import createRecord from './createRecord'
-import createRecordUpdate from './createRecordUpdate'
-import createUnion from './createUnion'
-import load from './load'
-import Key from './Key'
-import Query from './Query'
-import Store, {createCache, RadarConsumer} from './Store'
-import Updater from './Updater'
-import withRadar from './withRadar'
+export Connect, {useConnect} from './Connect'
+export createNetwork from './createNetwork'
+export createQuery, {createReducer, defaultReducer, noop} from './createQuery'
+export createRecord from './createRecord'
+export createRecordUpdate from './createRecordUpdate'
+export createUnion from './createUnion'
+export load from './load'
+export Key from './Key'
+export Query from './Query'
+export Store, {createCache, RadarConsumer, useRadar} from './Store'
+export Updater from './Updater'
+export withRadar from './withRadar'
 
 // reducer utils
-import {
+export {
   isSubset,
   deepMerge,
   mergeIfMergeable,
@@ -20,57 +20,3 @@ import {
   arrayMergeConcat,
   arrayMergeReplace
 } from './utils'
-
-export {
-  Connect,
-  createNetwork,
-  createQuery,
-  createReducer,
-  defaultReducer,
-  noop,
-  createRecord,
-  createRecordUpdate,
-  createUnion,
-  load,
-  Key,
-  Query,
-  Store,
-  createCache,
-  RadarConsumer,
-  Updater,
-  withRadar,
-  // reducer utils
-  isSubset,
-  deepMerge,
-  mergeIfMergeable,
-  arrayMergeOverwrite,
-  arrayMergeConcat,
-  arrayMergeReplace
-}
-
-export default {
-  Connect,
-  createNetwork,
-  createQuery,
-  createReducer,
-  defaultReducer,
-  noop,
-  createRecord,
-  createRecordUpdate,
-  createUnion,
-  load,
-  Key,
-  Query,
-  Store,
-  createCache,
-  RadarConsumer,
-  Updater,
-  withRadar,
-  // reducer utils
-  isSubset,
-  deepMerge,
-  mergeIfMergeable,
-  arrayMergeOverwrite,
-  arrayMergeConcat,
-  arrayMergeReplace
-}

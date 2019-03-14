@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOMServer from 'react-dom/server'
-import Radar from 'react-radar'
+import {createCache, load} from 'react-radar'
 import createRenderer, {getScripts} from '@jaredlunde/example-server/react/createRenderer'
 import App from '../App'
 
@@ -9,9 +9,9 @@ export default createRenderer({
   render: ({clientStats}) => async (req, res, next) => {
     try {
       // renders the app to a string
-      const cache = Radar.createCache()
+      const cache = createCache()
       const app = <App cache={cache} location={req.url}/>
-      const page = await Radar.load(app, ReactDOMServer.renderToString)
+      const page = await load(app, ReactDOMServer.renderToString)
       // sends the request
       res.set('Content-Type', 'text/html')
       res.send(`

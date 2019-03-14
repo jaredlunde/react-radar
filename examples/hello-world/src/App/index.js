@@ -4,6 +4,8 @@ import {
   Query,
   Updater,
   Connect,
+  useConnect,
+  useRadar,
   createQuery,
   createNetwork
 } from 'react-radar'
@@ -22,6 +24,10 @@ const ViewerQuery2 = createQuery({
   requires: () => ({viewer: Viewer``})
 })
 
+const Connection = props => {
+  const {viewer} = useConnect()
+  return <div>Connection: {JSON.stringify(viewer)}</div>
+}
 
 export default class App extends React.PureComponent {
   state = {name: null}
@@ -118,6 +124,8 @@ export default class App extends React.PureComponent {
               <pre>{JSON.stringify(viewer, null, 2)}</pre>
             )}
           </Connect>
+
+          <Connection/>
         </div>
       </Store>
     )
