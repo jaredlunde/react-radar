@@ -21,7 +21,7 @@ export const toImmutable = memoize([WeakMap], obj => {
           : val.toImmutable !== void 0
             ? val.toImmutable()
             : typeof val === 'object'
-              ? (__DEV__ ? Object.freeze(val) : val)
+              ? toImmutable(val)
               : val
       )
     }

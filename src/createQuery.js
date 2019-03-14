@@ -2,17 +2,7 @@ import emptyObj from 'empty/object'
 import {invariant, objectWithoutProps} from './utils'
 
 
-const REDUCER_NAMES = new Set()
 export const createReducer = (name, reducer) => {
-  if (__DEV__) {
-    invariant(
-      REDUCER_NAMES.has(name) === false,
-      'Query reducers must have unique names in order to prevent errors in ' +
-      `SSR hydration. '${name}' has already been used in this application.`
-    )
-  }
-
-  REDUCER_NAMES.add(name)
   reducer.id = name
   return reducer
 }
