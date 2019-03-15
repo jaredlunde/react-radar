@@ -12,7 +12,7 @@ const deepInvalidate = obj => {
     for (let i = 0; i < objKeys.length; i++)
       output[objKeys[i]] = deepInvalidate(obj[objKeys[i]]);
 
-    return __DEV__ ? Object.freeze(output) : output
+    return output
   }
 
   return obj

@@ -46,7 +46,7 @@ export class StoreRecord {
     // the state has been successfully invalidated so we can reset the keys
     // in order to not re-invalidate unnecessary
     this[RADAR_PREV_ID_KEY] = this[RADAR_ID_KEY]
-    return this.state
+    return toImmutable(this.state)
   }
 
   setState (reducer) {
@@ -54,14 +54,14 @@ export class StoreRecord {
     const nextState = reducer(this.state)
 
     if (nextState !== null && nextState !== this.state) {
-      this.state = toImmutable(nextState)
+      this.state = nextState
       this[RADAR_CHILDREN_KEY] = getChildRecords(this.state)
       invalidateID(this)
     }
   }
 
   replaceState (state) {
-    this.state = toImmutable(state)
+    this.state = state
     invalidateID(this)
   }
 }
