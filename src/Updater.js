@@ -15,7 +15,9 @@ export default createQueryComponent({
       this.state.update = this.update.bind(this)
     },
 
-    componentDidMount () {},
+    componentDidMount () {
+      this.subscribeAll()
+    },
 
     componentDidUpdate (_, {id}) {
       if (strictShallowEqual(id, this.state.id) === false) {

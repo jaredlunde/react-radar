@@ -36,16 +36,24 @@ export default (
       q.listeners = q.listeners || new Set()
       q.listeners.add(c)
     },
-    unsubscribe (id, c, parallel = false) {
+    unsubscribe (id, c) {
       const query = map.get(id)
       if (query === void 0) return;
       const listeners = query.listeners
 
       if (listeners) {
-        // The query is not deleted because we can't be sure whether or not the component
-        // responsible for this is completely 'dead' or not, that is, a nested query
-        // could possibly remount in the middle of its loading.
         listeners.delete(c)
+
+        if (listeners.size === 0) {
+          map.delete(id)
+        }
+      }
+    },
+    collect: () => {
+      for (let [id, query] of map.entries()) {
+        if (query.listeners !== void 0 && query.listeners.size === 0 && query.status === 3) {
+          map.delete(id)
+        }
       }
     },
     setStatus: (id, v) => cache.set(id, {status: v}),

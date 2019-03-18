@@ -74,6 +74,10 @@ class Endpoint extends React.Component {
     }
   }
 
+  componentDidUpdate () {
+    this.cache.collect()
+  }
+
   componentWillUnmount () {
     this.props.network.abort()
 
@@ -109,20 +113,25 @@ class Endpoint extends React.Component {
       listeners.delete(component)
 
       if (listeners.size === 0) {
-        this.setState(({queries}) => {
-          let nextQueries = {},
+        this.cache.unsubscribe(id, this)
+        delete this.listeners[id]
+
+        this.setState(
+          ({queries}) => {
+            let nextQueries = {},
               keys = Object.keys(queries),
               i = 0,
               qid
 
-          for (; i < keys.length; i++) {
-            qid = keys[i]
-            if (qid === id) continue
-            nextQueries[qid] = queries[qid]
-          }
+            for (; i < keys.length; i++) {
+              qid = keys[i]
+              if (qid === id) continue
+              nextQueries[qid] = queries[qid]
+            }
 
-          return {queries: nextQueries}
-        })
+            return {queries: nextQueries}
+          }
+        )
       }
     }
   }

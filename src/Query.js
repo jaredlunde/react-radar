@@ -135,6 +135,9 @@ export function createQueryComponent (opt = emptyObj) {
       else if (anyDone === false || statuses.some(s => s !== DONE && s !== LOADING) === true) {
         this.load()
       }
+      else {
+        this.subscribeAll()
+      }
     }
 
     componentDidUpdate (_, {id}) {
@@ -146,6 +149,13 @@ export function createQueryComponent (opt = emptyObj) {
 
     componentWillUnmount () {
       this.unsubscribeAll()
+    }
+
+    subscribeAll () {
+      for (let i = 0; i < this.state.id.length; i++) {
+        let id = this.state.id[i]
+        this.props.endpoint.subscribe(id, this)
+      }
     }
 
     unsubscribeAll () {
