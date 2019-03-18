@@ -112,11 +112,16 @@ export default ({state, nextState, queries, ...context}) => {
     const stateKeys = Object.keys(queryState)
     context.hasErrors = false
 
-    for (j = 0; j < stateKeys.length; j++) {
-      const key = stateKeys[j]
-      context.recordType = query.requires[key]
-      context.state = queryState[key]
-      records[key] = routeToRecords(context)
+    if (query.requires !== void 0) {
+      for (j = 0; j < stateKeys.length; j++) {
+        const key = stateKeys[j]
+        context.recordType = query.requires[key]
+        context.state = queryState[key]
+        records[key] = routeToRecords(context)
+      }
+    }
+    else {
+      records = queryState
     }
 
     state = query.reducer(state, records, objectWithoutProps(context, withoutContext))

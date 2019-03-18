@@ -42,6 +42,7 @@ export const defaultReducer = createReducer(
 )
 
 export const noop = createReducer('noop', prevState => prevState)
+const noRequires = () => {}
 
 export default ({
   name,
@@ -49,6 +50,7 @@ export default ({
   defaultProps,
   getOptimistic,
   getRollback,
+  local = false,
   reducer = defaultReducer
 }) => {
   if (__DEV__) {
@@ -65,7 +67,7 @@ export default ({
       props = Object.assign({}, defaultProps, props)
     }
 
-    const queryRequires = (requires_ || requires)(props)
+    const queryRequires = (requires_ || requires || noRequires)(props)
 
     return {
       // network props
@@ -73,6 +75,7 @@ export default ({
       props,
       requires: queryRequires,
       // local props
+      local,
       optimistic: getOptimistic,
       rollback: getRollback,
       reducer: reducer_ || reducer,

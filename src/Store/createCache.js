@@ -43,7 +43,7 @@ export default (
 
       if (listeners) {
         listeners.delete(c)
-
+        // deletes this query from the cache if there are no more listeners
         if (listeners.size === 0) {
           map.delete(id)
         }
@@ -51,6 +51,7 @@ export default (
     },
     collect: () => {
       for (let [id, query] of map.entries()) {
+        // only deletes queries that aren't in loading states
         if (query.listeners !== void 0 && query.listeners.size === 0 && query.status === 3) {
           map.delete(id)
         }
@@ -94,7 +95,7 @@ export default (
   Object.defineProperty(cache, 'size', {get: () => map.size})
 
   if (initialQueries && typeof initialQueries === 'object') {
-    const textContent = initialQueries.firstChild.data
+    const textContent = initialQueries?.firstChild?.data
 
     if (textContent) {
       cache.fromJSON(initialQueries.textContent)

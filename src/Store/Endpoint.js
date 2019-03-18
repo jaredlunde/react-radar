@@ -1,6 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import memoize from 'trie-memoize'
+import emptyObj from 'empty/object'
 import {stringify} from '../createRecord'
 import {invariant, isNode} from '../utils'
 import {createKeyObserver} from './utils'
@@ -25,7 +26,7 @@ export const getQueryID = memoize([WeakMap], query => {
 
   let props = {}, requires = {}
   Object.keys(query.props).sort().forEach(k => props[k] = query.props[k])
-  Object.keys(query.requires).sort().forEach(
+  Object.keys(query.requires || emptyObj).sort().forEach(
     k => requires[k] = query.requires[k].requiresFields
   )
 
@@ -143,74 +144,91 @@ class Endpoint extends React.Component {
 
   commit = async (opt, context) => {
     if (isNode === false) {
+      const optimisticQueries = []
+
+      for (let i = 0; i < opt.queries.length; i++) {
+        const query = opt.queries[i]
+
+        if (typeof query.optimistic === 'function' || query.local !== void 0) {
+          optimisticQueries.push(query)
+        }
+      }
+
       // commits an optimistic updates first but not on the server
-      this.commitLocal(opt)
+      this.commitLocal({...opt, queries: optimisticQueries})
     }
     // creates query payloads for the network
     let {type = 'update', queries} = opt
     const payload = []
 
     for (let i = 0; i < queries.length; i++) {
-      const requires = {},
-            query = queries[i]
+      const query = queries[i]
 
-      for (let key in query.requires) {
-        requires[key] = query.requires[key].requiresFields
-      }
+      if (query.local === false) {
+        // attaches payload object for network queries
+        const requires = {}
 
-      payload.push({name: query.name, props: query.props, requires})
-    }
-    // commits the payloads to the network
-    const commit = this.commitPayload(payload, context)
-    // sets the commit promise in the cache
-    for (let i = 0; i < queries.length; i++) {
-      this.cache.setCommit(getQueryID(queries[i]), commit)
-    }
-    // resolves the commit promise
-    let {response, nextState} = await commit
-    // We only want to perform state updates with setState in the browser.
-    // On the server side we use the query cache and multiple iterations to populate the
-    // data in the tree.
-    isNode === false && this.props.store.updateState(
-      state => {
-        switch (response.status) {
-          case   0:
-          case 200:
-            break;
-          default:
-            // executes rollbacks on the failed mutations
-            const rollbackQueries = [], rollbacks = []
-
-            for (let i = 0; i < queries.length; i++) {
-              const query = queries[i]
-              if (typeof query.rollback === 'function') {
-                // optimistic updates can rollback on errors
-                rollbackQueries.push(query)
-                rollbacks.push(query.rollback(query.props, state, query.requires))
-              }
-            }
-
-            if (rollbacks.length > 0) {
-              nextState = rollbacks
-              queries = rollbackQueries
-              type = `ROLLBACK_${type.toUpperCase()}`
-            }
+        for (let key in query.requires) {
+          requires[key] = query.requires[key].requiresFields
         }
 
-        return {nextState, queries, response, type}
+        payload.push({name: query.name, props: query.props, requires})
       }
-    )
-    // if the response was not a 200 response it is considered an error status
-    const status = response.ok === true ? DONE : ERROR
-    // updates the cache for each query
-    for (let i = 0; i < queries.length; i++) {
-      this.cache.set(
-        getQueryID(queries[i]),
-        {status, response: {...response, json: response.json && response.json[i]}}
-      )
     }
 
-    return response
+    if (payload.length > 0) {
+      // commits the payloads to the network
+      const commit = this.commitPayload(payload, context)
+      // sets the commit promise in the cache
+      for (let i = 0; i < queries.length; i++) {
+        this.cache.setCommit(getQueryID(queries[i]), commit)
+      }
+      // resolves the commit promise
+      let {response, nextState} = await commit
+      // We only want to perform state updates with setState in the browser.
+      // On the server side we use the query cache and multiple iterations to populate the
+      // data in the tree.
+      isNode === false && this.props.store.updateState(
+        state => {
+          switch (response.status) {
+            case   0:
+            case 200:
+              break;
+            default:
+              // executes rollbacks on the failed mutations
+              const rollbackQueries = [], rollbacks = []
+
+              for (let i = 0; i < queries.length; i++) {
+                const query = queries[i]
+                if (typeof query.rollback === 'function') {
+                  // optimistic updates can rollback on errors
+                  rollbackQueries.push(query)
+                  rollbacks.push(query.rollback(query.props, state, query.requires))
+                }
+              }
+
+              if (rollbacks.length > 0) {
+                nextState = rollbacks
+                queries = rollbackQueries
+                type = `ROLLBACK_${type.toUpperCase()}`
+              }
+          }
+
+          return {nextState, queries, response, type}
+        }
+      )
+      // if the response was not a 200 response it is considered an error status
+      const status = response.ok === true ? DONE : ERROR
+      // updates the cache for each query
+      for (let i = 0; i < queries.length; i++) {
+        this.cache.set(
+          getQueryID(queries[i]),
+          {status, response: {...response, json: response.json && response.json[i]}}
+        )
+      }
+
+      return response
+    }
   }
 
   async commitPayload (payload, context) {
@@ -223,30 +241,25 @@ class Endpoint extends React.Component {
     // TODO: pass record state than the application state to optimistic and rollback
     //       when performing record updates. getting the state of the record will
     //       require knowing its key, which would be an api change
-    const optimisticQueries = []
-
-    for (let i = 0; i < opt.queries.length; i++) {
-      const query = opt.queries[i]
-      if (typeof query.optimistic === 'function') {
-        optimisticQueries.push(query)
-      }
-    }
-
-    if (optimisticQueries.length > 0) {
+    if (opt.queries.length > 0) {
       this.props.store.updateState(
         state => {
-          const optimisticUpdates = []
+          const updates = []
 
-          for (let i = 0; i < optimisticQueries.length; i++) {
-            const query = optimisticQueries[i]
-            optimisticUpdates.push(
-              query.optimistic(query.props, state, query.requires)
-            )
+          for (let i = 0; i < opt.queries.length; i++) {
+            const query = opt.queries[i]
+
+            if (typeof query.optimistic === 'function') {
+              updates.push(query.optimistic(query.props, state, query.requires))
+            }
+            else {
+              updates.push(emptyObj)
+            }
           }
 
           return {
-            nextState: optimisticUpdates,
-            queries: optimisticQueries,
+            nextState: updates,
+            queries: opt.queries,
             type: `OPTIMISTIC_${(opt.type || 'update').toUpperCase()}`
           }
         }

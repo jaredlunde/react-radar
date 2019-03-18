@@ -15,7 +15,7 @@ export const getID = queries =>
 
 const queryShape = PropTypes.shape({
   name: PropTypes.string.isRequired,
-  requires: PropTypes.oneOfType([PropTypes.object, PropTypes.func]).isRequired,
+  requires: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
   optimistic: PropTypes.func,
   rollback: PropTypes.func,
   props: PropTypes.object.isRequired,

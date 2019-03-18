@@ -5,7 +5,7 @@ import {
   Updater,
   Connect,
   useConnect,
-  useRadar,
+  createReducer,
   createQuery,
   createNetwork
 } from 'react-radar'
@@ -15,6 +15,15 @@ import {Viewer} from './state/records'
 const ViewerQuery = createQuery({
   name: 'ViewerQuery',
   requires: () => ({viewer: Viewer``})
+})
+
+const LocalQuery = createQuery({
+  name: 'LocalQuery',
+  local: true,
+  reducer: createReducer('localReducer', (state, nextState, context) => {
+    console.log(state, nextState, context)
+    return {...state, localStuff: {foo: Math.random()}, viewer: null}
+  })
 })
 
 const ViewerQuery2 = createQuery({
@@ -39,10 +48,20 @@ export default class App extends React.PureComponent {
         network={createNetwork({url: 'http://127.0.0.1:4000/1.0/radar'})}
       >
         <div style={{width: '100%'}}>
+          <Updater connect='localStuff' run={LocalQuery()}>
+            {({localStuff}, radar) => (
+              <div style={{marginBottom: 32}}>
+                <button onClick={radar.update}>
+                  Update local
+                </button>
+              </div>
+            )}
+          </Updater>
+
           <Updater connect='viewer' run={ViewerQuery2()}>
             {({viewer, errors}, radar) => viewer === null && (
               <div style={{marginBottom: 32}}>
-                <button onClick={radar.commit}>
+                <button onClick={radar.reload}>
                   {radar.status === Updater.LOADING ? 'Loading...' : radar.status === Updater.ERROR ? 'Try again?' : 'Load viewer'}
                 </button>
               </div>
@@ -122,6 +141,12 @@ export default class App extends React.PureComponent {
           <Connect to='viewer'>
             {({viewer}) => (
               <pre>{JSON.stringify(viewer, null, 2)}</pre>
+            )}
+          </Connect>
+
+          <Connect to='localStuff'>
+            {({localStuff}) => (
+              <pre>Local: {JSON.stringify(localStuff, null, 2)}</pre>
             )}
           </Connect>
 
