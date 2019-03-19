@@ -13,15 +13,6 @@ const getAggregateStatus = queries => Math.min(...Object.values(queries).map(q =
 export const getID = queries =>
   Array.isArray(queries) ? queries.map(getQueryID) : [getQueryID(queries)]
 
-const queryShape = PropTypes.shape({
-  name: PropTypes.string.isRequired,
-  requires: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
-  optimistic: PropTypes.func,
-  rollback: PropTypes.func,
-  props: PropTypes.object.isRequired,
-  reducer: PropTypes.func.isRequired,
-  isRecordUpdate: PropTypes.bool.isRequired
-})
 
 export function createQueryComponent (opt = emptyObj) {
   let {name = 'Query', prototype = emptyObj} = opt
@@ -36,8 +27,28 @@ export function createQueryComponent (opt = emptyObj) {
       }),
       connect: PropTypes.string,
       run: PropTypes.oneOfType([
-        PropTypes.arrayOf(queryShape),
-        queryShape
+        PropTypes.arrayOf(
+          PropTypes.shape({
+            name: PropTypes.string.isRequired,
+            local: PropTypes.bool,
+            requires: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
+            optimistic: PropTypes.func,
+            rollback: PropTypes.func,
+            props: PropTypes.object.isRequired,
+            reducer: PropTypes.func.isRequired,
+            isRecordUpdate: PropTypes.bool.isRequired
+          })
+        ),
+        PropTypes.shape({
+          name: PropTypes.string.isRequired,
+          local: PropTypes.bool,
+          requires: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
+          optimistic: PropTypes.func,
+          rollback: PropTypes.func,
+          props: PropTypes.object.isRequired,
+          reducer: PropTypes.func.isRequired,
+          isRecordUpdate: PropTypes.bool.isRequired
+        })
       ]).isRequired,
       parallel: PropTypes.bool,
       forceReload: PropTypes.bool
@@ -213,35 +224,27 @@ export function createQueryComponent (opt = emptyObj) {
     Query.prototype[key] = prototype[key]
   }
 
-  function withEndpoint (Component) {
-    const componentWithEndpoint = props => (
-      props.connect
-        ? Connect({
-            to: props.connect,
-            __internal: true,
-            __internal_observedKeys: getID(props.run),
-            children: (connections, endpoint) =>
-              <Component endpoint={endpoint} connections={connections} {...props}/>
-          })
-        : <EndpointConsumer
-            observedKeys={getID(props.run)}
-            children={endpoint => <Component endpoint={endpoint} {...props}/>}
-          />
-    )
+  const componentWithEndpoint = props => (
+    props.connect
+      ? Connect({
+          to: props.connect,
+          __internal: true,
+          __internal_observedKeys: getID(props.run),
+          children: (connections, endpoint) =>
+            <Query endpoint={endpoint} connections={connections} {...props}/>
+        })
+      : <EndpointConsumer
+          observedKeys={getID(props.run)}
+          children={endpoint => <Query endpoint={endpoint} {...props}/>}
+        />
+  )
 
-    componentWithEndpoint.WAITING = WAITING
-    componentWithEndpoint.ERROR = ERROR
-    componentWithEndpoint.LOADING = LOADING
-    componentWithEndpoint.DONE = DONE
+  componentWithEndpoint.WAITING = WAITING
+  componentWithEndpoint.ERROR = ERROR
+  componentWithEndpoint.LOADING = LOADING
+  componentWithEndpoint.DONE = DONE
 
-    if (__DEV__) {
-      componentWithEndpoint.displayName = `withEndpoint(${Component.name})`
-    }
-
-    return componentWithEndpoint
-  }
-
-  return withEndpoint(Query)
+  return componentWithEndpoint
 }
 
 export default createQueryComponent()

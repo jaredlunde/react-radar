@@ -149,7 +149,7 @@ class Endpoint extends React.Component {
       for (let i = 0; i < opt.queries.length; i++) {
         const query = opt.queries[i]
 
-        if (typeof query.optimistic === 'function' || query.local !== void 0) {
+        if (typeof query.optimistic === 'function' || query.local !== true) {
           optimisticQueries.push(query)
         }
       }
@@ -164,7 +164,7 @@ class Endpoint extends React.Component {
     for (let i = 0; i < queries.length; i++) {
       const query = queries[i]
 
-      if (query.local === false) {
+      if (query.local !== true) {
         // attaches payload object for network queries
         const requires = {}
 

@@ -4,7 +4,7 @@ import {createQueryComponent} from './Query'
 import {WAITING} from './Store/Endpoint'
 
 
-const withoutReload = [{reload: 0}]
+const withoutReload = {reload: 0}
 
 export default createQueryComponent({
   name: 'Updater',
