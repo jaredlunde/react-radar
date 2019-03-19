@@ -149,7 +149,7 @@ class Endpoint extends React.Component {
       for (let i = 0; i < opt.queries.length; i++) {
         const query = opt.queries[i]
 
-        if (typeof query.optimistic === 'function' || query.local !== true) {
+        if (typeof query.optimistic === 'function' || query.local !== false) {
           optimisticQueries.push(query)
         }
       }
