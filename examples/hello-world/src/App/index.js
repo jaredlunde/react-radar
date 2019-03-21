@@ -68,7 +68,7 @@ export default class App extends React.PureComponent {
             )}
           </Updater>
 
-          <Query connect='viewer' run={[ViewerQuery()]}>
+          <Query async connect='viewer' run={[ViewerQuery()]}>
             {({viewer}, radar) => {
               // console.log(JSON.stringify(radar, null, 2))
               switch (radar.status) {
@@ -115,7 +115,7 @@ export default class App extends React.PureComponent {
             }}
           </Query>
 
-          <Query parallel connect='viewer' run={[ViewerQuery({test: 'pollish'}), ViewerQuery()]}>
+          <Query async parallel connect='viewer' run={[ViewerQuery({test: 'pollish'}), ViewerQuery()]}>
             {({viewer}, radar) => {
               // console.log(JSON.stringify(radar, null, 2))
               switch (radar.status) {

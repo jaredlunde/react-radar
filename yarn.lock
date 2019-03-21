@@ -2906,10 +2906,10 @@ to-regex@^3.0.1, to-regex@^3.0.2:
     regex-not "^1.0.2"
     safe-regex "^1.1.0"
 
-trie-memoize@^1.0.3:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/trie-memoize/-/trie-memoize-1.0.3.tgz#0aefd975f39ee53ef56309466f4a666b48d00870"
-  integrity sha512-R3pm9Cuz6Uf7FK+wJQBQho6aYaBxzDYDL45VcVbC4PE+z3S84xPCay1g9Zxi59cndAKJUIJK+6QPRq9Sc59AIg==
+trie-memoize@^1.0.4:
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/trie-memoize/-/trie-memoize-1.0.4.tgz#43d7f771d748dfb10a3ce0a50c774f983a1b3d24"
+  integrity sha512-s0BrFbwDvwT+0068rLZB6Ydg9rAWR+CIh0BWKBAcFRzRs0D3UrCoXBmGhFVcrVOjO7LpfINuO4BT5KE3gecygA==
   dependencies:
     is-plain-object "^2.0.4"
 

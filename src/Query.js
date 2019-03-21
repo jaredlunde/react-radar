@@ -51,6 +51,7 @@ export function createQueryComponent (opt = emptyObj) {
         })
       ]).isRequired,
       parallel: PropTypes.bool,
+      async: PropTypes.bool,
       forceReload: PropTypes.bool
     }
 
@@ -199,7 +200,15 @@ export function createQueryComponent (opt = emptyObj) {
       const queries = Object.values(queriesObject)
       const {endpoint} = this.props
       return queries.length > 0
-        ? endpoint.commit({queries, type: this.isRadarQuery ? 'QUERY' : 'UPDATE'})
+        ? endpoint.commit(
+            {
+              queries,
+              type: this.isRadarQuery ? 'QUERY' : 'UPDATE'
+            },
+            {
+              async: this.props.async
+            }
+          )
         : Promise.all(this.state.id.map(id => endpoint.getCached(id).commit))
     }
 

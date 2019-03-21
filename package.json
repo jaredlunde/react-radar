@@ -28,6 +28,7 @@
     "prepublishOnly": "yarn build"
   },
   "devDependencies": {
+    "@babel/traverse": "^7.4.0",
     "@stellar-apps/babel-preset-es": "^1.0.4",
     "@stellar-apps/babel-preset-react": "^1.0.1",
     "babel-plugin-tailcall-optimization": "^2.0.0",
@@ -45,7 +46,7 @@
     "is-mergeable-object": "^1.1.0",
     "node-fetch": "^2.3.0",
     "performance-now": "^2.1.0",
-    "trie-memoize": "^1.0.3"
+    "trie-memoize": "^1.0.4"
   },
   "peerDependencies": {
     "prop-types": ">= 15.6.0",

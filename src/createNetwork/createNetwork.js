@@ -94,12 +94,19 @@ export default props => {
           // resolves the promise
           resolve(...args)
         }
-        // creates a pending, cancelable update
-        const PENDING_UPDATE = [query, resolver, queryTimeout]
-        pendingUpdates.push(PENDING_UPDATE)
-        // if this is the only pending query, go ahead and resolve it
-        if (pendingUpdates.length === 1) {
-          resolveSynchronously(pendingUpdates)
+
+        if (context.async !== true) {
+          // creates a pending, cancelable, synchronous update
+          const PENDING_UPDATE = [query, resolver, queryTimeout]
+          pendingUpdates.push(PENDING_UPDATE)
+          // if this is the only pending query, go ahead and resolve it
+          if (pendingUpdates.length === 1) {
+            resolveSynchronously(pendingUpdates)
+          }
+        }
+        else {
+          // asynchronously resolves the query and adds it to state
+          query.then(resolver)
         }
       }
     )
