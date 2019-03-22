@@ -95,7 +95,7 @@ export default props => {
           resolve(...args)
         }
 
-        if (context.async !== true) {
+        if (context !== void 0 && context.async !== true) {
           // creates a pending, cancelable, synchronous update
           const PENDING_UPDATE = [query, resolver, queryTimeout]
           pendingUpdates.push(PENDING_UPDATE)
