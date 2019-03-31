@@ -20,41 +20,6 @@ export function createQueryComponent (opt = emptyObj) {
   class Query extends React.Component {
     id = null
 
-    static propTypes = {
-      endpoint: PropTypes.shape({
-        commitLocal: PropTypes.func.isRequired,
-        commit: PropTypes.func.isRequired
-      }),
-      connect: PropTypes.string,
-      run: PropTypes.oneOfType([
-        PropTypes.arrayOf(
-          PropTypes.shape({
-            name: PropTypes.string.isRequired,
-            local: PropTypes.bool,
-            requires: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
-            optimistic: PropTypes.func,
-            rollback: PropTypes.func,
-            props: PropTypes.object.isRequired,
-            reducer: PropTypes.func.isRequired,
-            isRecordUpdate: PropTypes.bool.isRequired
-          })
-        ),
-        PropTypes.shape({
-          name: PropTypes.string.isRequired,
-          local: PropTypes.bool,
-          requires: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
-          optimistic: PropTypes.func,
-          rollback: PropTypes.func,
-          props: PropTypes.object.isRequired,
-          reducer: PropTypes.func.isRequired,
-          isRecordUpdate: PropTypes.bool.isRequired
-        })
-      ]).isRequired,
-      parallel: PropTypes.bool,
-      async: PropTypes.bool,
-      forceReload: PropTypes.bool
-    }
-
     constructor (props) {
       super(props)
       this.state = {
@@ -227,6 +192,30 @@ export function createQueryComponent (opt = emptyObj) {
 
   if (__DEV__) {
     Query.displayName = name
+
+    const queryShape = PropTypes.shape({
+      name: PropTypes.string.isRequired,
+      local: PropTypes.bool,
+      requires: PropTypes.object,
+      optimistic: PropTypes.func,
+      rollback: PropTypes.func,
+      params: PropTypes.object.isRequired,
+      input: PropTypes.object.isRequired,
+      reducer: PropTypes.func.isRequired,
+      isRecordUpdate: PropTypes.bool.isRequired
+    })
+
+    Query.propTypes = {
+      endpoint: PropTypes.shape({
+        commitLocal: PropTypes.func.isRequired,
+        commit: PropTypes.func.isRequired
+      }),
+      connect: PropTypes.string,
+      run: PropTypes.oneOfType([PropTypes.arrayOf(queryShape), queryShape]).isRequired,
+      parallel: PropTypes.bool,
+      async: PropTypes.bool,
+      forceReload: PropTypes.bool
+    }
   }
 
   for (let key in prototype) {

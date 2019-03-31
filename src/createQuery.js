@@ -41,15 +41,16 @@ export const defaultReducer = createReducer(
   }
 )
 
-export const noop = createReducer('noop', prevState => prevState)
+const defaultParams = p => p
+export const noop = createReducer('noop', defaultParams)
 const noRequires = () => {}
 
 export default ({
   name,
   requires,
-  defaultProps,
-  getOptimistic,
-  getRollback,
+  params = defaultParams,
+  optimistic,
+  rollback,
   local = false,
   reducer = defaultReducer
 }) => {
@@ -57,28 +58,24 @@ export default ({
     invariant(name, `Queries must be created with a 'name' property.`)
   }
 
-  function Query (props = emptyObj, requires_, reducer_) {
-    if (typeof props === 'function') {
+  function Query (input = emptyObj, requires_, reducer_) {
+    if (typeof input === 'function') {
       reducer_ = requires_
-      requires_ = props
-      props = emptyObj
+      requires_ = input
+      input = null
     }
-    else {
-      props = Object.assign({}, defaultProps, props)
-    }
-
-    const queryRequires = (requires_ || requires || noRequires)(props)
 
     return {
-      // network props
       name,
-      props,
-      requires: queryRequires,
-      // local props
-      local,
-      optimistic: getOptimistic,
-      rollback: getRollback,
+      input,
+      params: params(input),
+      requires: (requires_ || requires || noRequires)(input),
+
+      optimistic,
+      rollback,
       reducer: reducer_ || reducer,
+
+      local,
       isRecordUpdate: Query.isRecordUpdate || false
     }
   }

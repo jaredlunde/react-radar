@@ -1,4 +1,6 @@
-export default (strings, values) => {
+import emptyArr from 'empty/array'
+
+export default (strings, values = emptyArr) => {
   let output = '', i = 0
 
   for (; i < strings.length; i++) {

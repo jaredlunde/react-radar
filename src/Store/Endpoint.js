@@ -25,7 +25,7 @@ export const getQueryID = memoize([WeakMap], query => {
   }
 
   let props = {}, requires = {}
-  Object.keys(query.props).sort().forEach(k => props[k] = query.props[k])
+  Object.keys(query.params).sort().forEach(k => props[k] = query.params[k])
   Object.keys(query.requires || emptyObj).sort().forEach(
     k => requires[k] = query.requires[k].requiresFields
   )
@@ -172,7 +172,7 @@ class Endpoint extends React.Component {
           requires[key] = query.requires[key].requiresFields
         }
 
-        payload.push({name: query.name, props: query.props, requires})
+        payload.push({name: query.name, props: query.params, requires})
       }
     }
 
@@ -190,28 +190,29 @@ class Endpoint extends React.Component {
       // data in the tree.
       isNode === false && this.props.store.updateState(
         state => {
+          // function which executes rollbacks on queries that need them
+          const doRollback = rollbacks => {
+            for (let i = 0; i < rollbacks.length; i++) {
+              const query = rollbacks[i]
+              if (query === void 0) continue
+              if (typeof query.rollback === 'function') {
+                // optimistic updates can rollback on errors
+                queries.unshift(query)
+                nextState.unshift(query.rollback(query.input, state, query))
+              }
+            }
+          }
+
           switch (response.status) {
             case   0:
             case 200:
+              doRollback(queries.map(
+                (query, i) => response.json && response.json[i].isRadarError ? query : void 0
+              ))
               break;
             default:
               // executes rollbacks on the failed mutations
-              const rollbackQueries = [], rollbacks = []
-
-              for (let i = 0; i < queries.length; i++) {
-                const query = queries[i]
-                if (typeof query.rollback === 'function') {
-                  // optimistic updates can rollback on errors
-                  rollbackQueries.push(query)
-                  rollbacks.push(query.rollback(query.props, state, query.requires))
-                }
-              }
-
-              if (rollbacks.length > 0) {
-                nextState = rollbacks
-                queries = rollbackQueries
-                type = `ROLLBACK_${type.toUpperCase()}`
-              }
+              doRollback(queries)
           }
 
           return {nextState, queries, response, type}
@@ -250,7 +251,7 @@ class Endpoint extends React.Component {
             const query = opt.queries[i]
 
             if (typeof query.optimistic === 'function') {
-              updates.push(query.optimistic(query.props, state, query.requires))
+              updates.push(query.optimistic(query.input, state, query))
             }
             else {
               updates.push(emptyObj)
