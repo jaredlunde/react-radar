@@ -108,14 +108,11 @@ export function createQueryComponent (opt = emptyObj) {
       if (anyDone === true && this.props.forceReload === true) {
         this.reload()
       }
+      else if (anyDone === false || statuses.some(s => s !== DONE && s !== LOADING) === true) {
+        this.load()
+      }
       else {
-        if (anyDone === false || statuses.some(s => s !== DONE && s !== LOADING) === true) {
-          this.load()
-        }
-        else {
-          this.subscribeAll()
-        }
-
+        this.subscribeAll()
         let {run} = this.props, queries = {}
         run = Array.isArray(run) === true ? run : [run]
 
