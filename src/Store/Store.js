@@ -60,9 +60,13 @@ export default class Store extends React.Component {
   }
 
   hydrateBrowser () {
+    // TODO: Unfortunately, hydration is completely fucking broken. We need a way to track
+    //       queries as they are reloaded as opposed to this current method because nested
+    //       queries WILL be undefined after the initial mount.
     return Promise.all(
       this.props.cache.map(
-        (id, query) => query.response && this.updateState(() => formatHydrateQuery(query))
+        (id, query) =>
+          query.response && query.query && this.updateState(() => formatHydrateQuery(query))
       )
     )
   }

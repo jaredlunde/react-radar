@@ -159,6 +159,22 @@ class Endpoint extends React.Component {
     }
     // creates query payloads for the network
     let {type = 'update', queries} = opt
+
+    // commits the payloads to the network
+    if (context.async === true) {
+      const promises = []
+
+      for (let i = 0; i < queries.length; i++) {
+        promises.push(this.processQueries(type, queries.slice(i, i + 1), context))
+      }
+
+      return Promise.all(promises)
+    }
+
+    return this.processQueries(type, queries, context)
+  }
+
+  async processQueries (type, queries, context) {
     const payload = []
 
     for (let i = 0; i < queries.length; i++) {
@@ -177,7 +193,6 @@ class Endpoint extends React.Component {
     }
 
     if (payload.length > 0) {
-      // commits the payloads to the network
       const commit = this.commitPayload(payload, context)
       // sets the commit promise in the cache
       for (let i = 0; i < queries.length; i++) {
