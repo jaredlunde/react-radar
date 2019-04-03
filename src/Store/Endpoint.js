@@ -71,7 +71,8 @@ class Endpoint extends React.Component {
       // local 'optimistic' updates, does not send commit over the network
       commitLocal: this.commitLocal,
       // remote + optimistic updates - commits to the network
-      commit: this.commit
+      commit: this.commit,
+      commitFromCache: this.commitFromCache
     }
   }
 
@@ -251,6 +252,33 @@ class Endpoint extends React.Component {
     // posts the JSON request
     const response = await this.props.network.post(payload, context)
     return {response, nextState: response.json}
+  }
+
+  commitFromCache = opt => {
+    if (opt.queries.length > 0) {
+      this.props.store.updateState(
+        state => {
+          const updates = [], updateQueries = []
+
+          for (let i = 0; i < opt.queries.length; i++) {
+            const
+              query = opt.queries[i],
+              cached = this.cache.get(getQueryID(query))
+
+            if (cached?.response !== void 0 && cached?.response?.json) {
+              updateQueries.push(query)
+              updates.push(cached.response.json)
+            }
+          }
+
+          return {
+            nextState: updates,
+            queries: updateQueries,
+            type: (opt.type || 'update').toUpperCase()
+          }
+        }
+      )
+    }
   }
 
   commitLocal = opt /*{type, queries}*/=> {

@@ -13,7 +13,6 @@ const getAggregateStatus = queries => Math.min(...Object.values(queries).map(q =
 export const getID = queries =>
   Array.isArray(queries) ? queries.map(getQueryID) : [getQueryID(queries)]
 
-
 export function createQueryComponent (opt = emptyObj) {
   let {name = 'Query', prototype = emptyObj} = opt
 
@@ -66,7 +65,7 @@ export function createQueryComponent (opt = emptyObj) {
 
     static getDerivedStateFromProps (props, state) {
       let nextID = getID(props.run),
-          nextState = null
+        nextState = null
 
       if (strictShallowEqual(nextID, state.id) === false) {
         nextState = {id: nextID}
@@ -109,18 +108,42 @@ export function createQueryComponent (opt = emptyObj) {
       if (anyDone === true && this.props.forceReload === true) {
         this.reload()
       }
-      else if (anyDone === false || statuses.some(s => s !== DONE && s !== LOADING) === true) {
-        this.load()
-      }
       else {
-        this.subscribeAll()
+        if (anyDone === false || statuses.some(s => s !== DONE && s !== LOADING) === true) {
+          this.load()
+        }
+        else {
+          this.subscribeAll()
+        }
+
+        let {run} = this.props, queries = {}
+        run = Array.isArray(run) === true ? run : [run]
+
+        for (let i = 0; i < this.state.id.length; i++) {
+          queries[this.state.id[i]] = run[i]
+        }
+
+        this.commit(queries, true)
       }
     }
 
     componentDidUpdate (_, {id}) {
-      if (strictShallowEqual(id || emptyArr, this.state.id) === false) {
-        this.unsubscribeAll()
-        this.load()
+      const reload = []
+
+      for (let id_ of this.state.id) {
+        if (id.indexOf(id_) === -1) {
+          reload.push(id_)
+        }
+      }
+
+      for (let id_ of id) {
+        if (this.state.id.indexOf(id_) === -1) {
+          this.props.endpoint.unsubscribe(id_, this)
+        }
+      }
+
+      if (reload.length > 0) {
+        this.reload(reload)
       }
     }
 
@@ -161,25 +184,32 @@ export function createQueryComponent (opt = emptyObj) {
         : this.commit(queries)
     }
 
-    commit (queriesObject = emptyObj) {
+    commit (queriesObject = emptyObj, fromCache = false) {
       const queries = Object.values(queriesObject)
       const {endpoint} = this.props
       return queries.length > 0
-        ? endpoint.commit(
-            {
-              queries,
-              type: this.isRadarQuery ? 'QUERY' : 'UPDATE'
-            },
-            {
-              async: this.props.async
-            }
-          )
+        ? endpoint[fromCache === true ? 'commitFromCache' : 'commit'](
+          {
+            queries,
+            type: this.isRadarQuery ? 'QUERY' : 'UPDATE'
+          },
+          {
+            async: this.props.async
+          }
+        )
         : Promise.all(this.state.id.map(id => endpoint.getCached(id).commit))
     }
 
     reload = (ids = emptyArr) => {
       ids = ids.length > 0 && typeof ids[0] === 'string' ? ids : this.state.id
-      ids.forEach(id => this.props.endpoint.setCached(id, {status: WAITING}))
+      ids.forEach(id => {
+        const query = this.props.endpoint.getCached(id)
+
+        if (query !== void 0 && query.status !== LOADING) {
+          this.props.endpoint.setCached(id, {status: WAITING})
+        }
+      })
+
       return this.load()
     }
 
@@ -225,16 +255,16 @@ export function createQueryComponent (opt = emptyObj) {
   const componentWithEndpoint = props => (
     props.connect
       ? Connect({
-          to: props.connect,
-          __internal: true,
-          __internal_observedKeys: getID(props.run),
-          children: (connections, endpoint) =>
-            <Query endpoint={endpoint} connections={connections} {...props}/>
-        })
+        to: props.connect,
+        __internal: true,
+        __internal_observedKeys: getID(props.run),
+        children: (connections, endpoint) =>
+          <Query endpoint={endpoint} connections={connections} {...props}/>
+      })
       : <EndpointConsumer
-          observedKeys={getID(props.run)}
-          children={endpoint => <Query endpoint={endpoint} {...props}/>}
-        />
+        observedKeys={getID(props.run)}
+        children={endpoint => <Query endpoint={endpoint} {...props}/>}
+      />
   )
 
   componentWithEndpoint.WAITING = WAITING
