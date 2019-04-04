@@ -204,36 +204,38 @@ class Endpoint extends React.Component {
       // We only want to perform state updates with setState in the browser.
       // On the server side we use the query cache and multiple iterations to populate the
       // data in the tree.
-      isNode === false && this.props.store.updateState(
-        state => {
-          // function which executes rollbacks on queries that need them
-          const doRollback = rollbacks => {
-            for (let i = 0; i < rollbacks.length; i++) {
-              const query = rollbacks[i]
-              if (query === void 0) continue
-              if (typeof query.rollback === 'function') {
-                // optimistic updates can rollback on errors
-                queries.unshift(query)
-                nextState.unshift(query.rollback(query.input, state, query))
+      if (isNode === false) {
+        this.props.store.updateState(
+          state => {
+            // function which executes rollbacks on queries that need them
+            const doRollback = rollbacks => {
+              for (let i = 0; i < rollbacks.length; i++) {
+                const query = rollbacks[i]
+                if (query === void 0) continue
+                if (typeof query.rollback === 'function') {
+                  // optimistic updates can rollback on errors
+                  queries.unshift(query)
+                  nextState.unshift(query.rollback(query.input, state, query))
+                }
               }
             }
-          }
 
-          switch (response.status) {
-            case   0:
-            case 200:
-              doRollback(queries.map(
-                (query, i) => response.json && response.json[i].isRadarError ? query : void 0
-              ))
-              break;
-            default:
-              // executes rollbacks on the failed mutations
-              doRollback(queries)
-          }
+            switch (response.status) {
+              case   0:
+              case 200:
+                doRollback(queries.map(
+                  (query, i) => response.json && response.json[i].isRadarError ? query : void 0
+                ))
+                break;
+              default:
+                // executes rollbacks on the failed mutations
+                doRollback(queries)
+            }
 
-          return {nextState, queries, response, type}
-        }
-      )
+            return {nextState, queries, response, type}
+          }
+        )
+      }
       // if the response was not a 200 response it is considered an error status
       const status = response.ok === true ? DONE : ERROR
       // updates the cache for each query
