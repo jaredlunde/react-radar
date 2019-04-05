@@ -125,11 +125,22 @@ export function createQueryComponent (opt = emptyObj) {
     }
 
     componentDidUpdate (_, {id}) {
-      const reload = []
+      let reload = [], loadCached = {}, loadFromCache = false, {run} = this.props
+      run = Array.isArray(run) === true ? run : [run]
 
-      for (let id_ of this.state.id) {
-        if (id.indexOf(id_) === -1) {
-          reload.push(id_)
+      for (let i = 0; i < this.state.id.length; i++) {
+        const id_ = this.state.id[i]
+        const query = this.props.endpoint.getCached(id_)
+
+        if (id.indexOf(id_) === -1 ) {
+          if (status === void 0 || query === void 0 || query.status === WAITING) {
+            reload.push(id_)
+          }
+          else if (query.status === DONE) {
+            this.props.endpoint.subscribe(id_, this)
+            loadCached[id_] = this.props.run[i]
+            loadFromCache = true
+          }
         }
       }
 
@@ -137,6 +148,10 @@ export function createQueryComponent (opt = emptyObj) {
         if (this.state.id.indexOf(id_) === -1) {
           this.props.endpoint.unsubscribe(id_, this)
         }
+      }
+
+      if (loadFromCache === true) {
+        this.commit(loadCached, true)
       }
 
       if (reload.length > 0) {
