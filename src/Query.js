@@ -84,7 +84,7 @@ export function createQueryComponent (opt = emptyObj) {
             || stateQuery.response !== query.response
           )
         ) {
-          nextState = nextState || {...state}
+          nextState = nextState || {...state, queries: {}}
           nextState.queries = nextState.queries || {}
           nextState.queries[id] = {
             status: query.status,

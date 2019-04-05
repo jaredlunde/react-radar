@@ -143,7 +143,7 @@ class Endpoint extends React.Component {
     ({queries}) => ({queries: {...queries, [id]: {...query}}})
   )
 
-  commit = async (opt, context) => {
+  commit = async (opt, context = emptyObj) => {
     if (isNode === false) {
       const optimisticQueries = []
 
@@ -250,7 +250,7 @@ class Endpoint extends React.Component {
     }
   }
 
-  async commitPayload (payload, context) {
+  async commitPayload (payload, context = emptyObj) {
     // posts the JSON request
     const response = await this.props.network.post(payload, context)
     return {response, nextState: response.json}
