@@ -1,20 +1,16 @@
 export default (objA, objB) => {
-  if (objA === objB) {
-    return true
-  }
+  if (objA === objB) return true
 
-  const aKeys = Object.keys(objA),
-        keyLen = aKeys.length
+  const
+    aKeys = Object.keys(objA),
+    keyLen = aKeys.length
 
-  if (keyLen !== Object.keys(objB).length) {
-    return false
-  }
+  if (keyLen !== Object.keys(objB).length) return false
 
-  for (let i = 0; i < keyLen; i++) {
-    if (objA[aKeys[i]] !== objB[aKeys[i]]) {
+  let i = 0
+  for (; i < keyLen; i++)
+    if (objA[aKeys[i]] !== objB[aKeys[i]])
       return false
-    }
-  }
 
   return true
 }
