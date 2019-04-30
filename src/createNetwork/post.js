@@ -1,4 +1,4 @@
-import {workerify} from '../utils'
+const workerify = require('../utils/workerify').default
 
 
 // POST w/ fetch or fetch polyfill
@@ -54,7 +54,14 @@ const post = self => (url, opt) => {
       let headers = {}
       r.headers.forEach((value, name) => headers[name] = value)
 
-      return r.json().then(
+      return !r.ok ? ({
+        ok: r.ok,
+        url,
+        headers,
+        status: r.status,
+        statusText: r.statusText,
+        json: null,
+      }) : r.json().then(
         json => (
           {
             ok: r.ok,
@@ -62,7 +69,7 @@ const post = self => (url, opt) => {
             headers,
             status: r.status,
             statusText: r.statusText,
-            json: r.ok === true ? json : false,
+            json,
           }
         ),
       )

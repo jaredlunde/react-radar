@@ -1,4 +1,4 @@
-import Promise from 'cancelable-promise'
+const Promise = require('cancelable-promise').default
 
 
 const workerTemplate = `this.onmessage=function(e){(<code>)(self).apply(null,e.data.args).then(function(r){postMessage({type:'RPC',id:e.data.id,result:r});}).catch(function(e){postMessage({type:'RPC',id:e.data.id,error:e});});};`

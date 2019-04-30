@@ -196,9 +196,8 @@ class Endpoint extends React.Component {
     if (payload.length > 0) {
       const commit = this.commitPayload(payload, context)
       // sets the commit promise in the cache
-      for (let i = 0; i < queries.length; i++) {
+      for (let i = 0; i < queries.length; i++)
         this.cache.setCommit(getQueryID(queries[i]), commit)
-      }
       // resolves the commit promise
       let {response, nextState} = await commit
       // We only want to perform state updates with setState in the browser.
@@ -209,6 +208,7 @@ class Endpoint extends React.Component {
           state => {
             // function which executes rollbacks on queries that need them
             const doRollback = rollbacks => {
+              nextState = nextState || []
               for (let i = 0; i < rollbacks.length; i++) {
                 const query = rollbacks[i]
                 if (query === void 0) continue
@@ -224,12 +224,17 @@ class Endpoint extends React.Component {
               case   0:
               case 200:
                 doRollback(queries.map(
-                  (query, i) => response.json && response.json[i].isRadarError ? query : void 0
+                  (query, i) =>
+                    response.json
+                    && response.json[i]
+                    && response.json[i].isRadarError
+                      ? query
+                      : void 0
                 ))
                 break;
               default:
                 // executes rollbacks on the failed mutations
-                doRollback(queries)
+                doRollback(queries.slice(0))
             }
 
             return {nextState, queries, response, type}

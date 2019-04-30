@@ -260,9 +260,8 @@ export function createQueryComponent (opt = emptyObj) {
     }
   }
 
-  for (let key in prototype) {
+  for (let key in prototype)
     Query.prototype[key] = prototype[key]
-  }
 
   const componentWithEndpoint = props => (
     props.connect
