@@ -102,8 +102,9 @@ export function createQueryComponent (opt = emptyObj) {
     }
 
     componentDidMount () {
-      const statuses = Object.values(this.state.queries).map(q => q.status)
-      const anyDone = statuses.some(s => s === DONE)
+      const
+        statuses = Object.values(this.state.queries).map(q => q.status),
+        anyDone = statuses.some(s => s === DONE)
 
       if (anyDone === true && this.props.forceReload === true) {
         this.reload()
@@ -129,8 +130,9 @@ export function createQueryComponent (opt = emptyObj) {
       run = Array.isArray(run) === true ? run : [run]
 
       for (let i = 0; i < this.state.id.length; i++) {
-        const id_ = this.state.id[i]
-        const query = this.props.endpoint.getCached(id_)
+        const
+          id_ = this.state.id[i],
+          query = this.props.endpoint.getCached(id_)
 
         if (id.indexOf(id_) === -1 ) {
           if (status === void 0 || query === void 0 || query.status === WAITING) {
@@ -150,13 +152,11 @@ export function createQueryComponent (opt = emptyObj) {
         }
       }
 
-      if (loadFromCache === true) {
+      if (loadFromCache === true)
         this.commit(loadCached, true)
-      }
 
-      if (reload.length > 0) {
+      if (reload.length > 0)
         this.reload(reload)
-      }
     }
 
     componentWillUnmount () {
@@ -197,8 +197,10 @@ export function createQueryComponent (opt = emptyObj) {
     }
 
     commit (queriesObject = emptyObj, fromCache = false) {
-      const queries = Object.values(queriesObject)
-      const {endpoint} = this.props
+      const
+        queries = Object.values(queriesObject),
+        {endpoint} = this.props
+
       return queries.length > 0
         ? endpoint[fromCache === true ? 'commitFromCache' : 'commit'](
           {

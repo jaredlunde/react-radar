@@ -1,8 +1,7 @@
+const proto = Object.prototype, getProto = Object.getPrototypeOf, isArray = Array.isArray
 export default o => {
-  if (typeof o === 'object' && o !== null) {
-    const proto = Object.getPrototypeOf(o)
-    return proto === Object.prototype || proto === null
-  }
+  if (typeof o === 'object' && isArray(o) === false && o !== null)
+    return getProto(o) === proto
 
   return false
 }

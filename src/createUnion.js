@@ -13,9 +13,8 @@ const getSharedFields = records => {
 }
 
 export default ({records}) => {
-  if (__DEV__) {
+  if (__DEV__)
     invariant(records, `Unions must be constructed with a \'records\' option.`)
-  }
 
   const sharedFields = getSharedFields(records)
 

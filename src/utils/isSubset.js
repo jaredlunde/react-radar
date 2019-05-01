@@ -1,12 +1,8 @@
 const isSubset = (superset, subset) => {
-  if (superset === subset) {
-    return true
-  }
-
+  if (superset === subset) return true
   // here for fishy needs. will have to look into this
-  if (subset === null || subset === void 0 || superset === null || superset === void 0) {
+  if (subset === null || subset === void 0 || superset === null || superset === void 0)
     return false
-  }
 
   if (typeof superset === 'object' && typeof subset === 'object') {
     if (superset.getTime !== void 0 || subset.getTime !== void 0) {
@@ -15,20 +11,16 @@ const isSubset = (superset, subset) => {
         : false
     }
 
-    const subsetKeys = Object.keys(subset)
-    for (let i = 0; i < subsetKeys.length; i++) {
-      const key = subsetKeys[i]
-      const supersetItem = superset[key]
+    let
+      subsetKeys = Object.keys(subset),
+      i = 0
 
-      //if (superset.hasOwnProperty(key) === false) {
-      if (supersetItem === void 0) {
+    for (; i < subsetKeys.length; i++) {
+      const
+        key = subsetKeys[i],
+        supersetItem = superset[key]
+      if (supersetItem === void 0 || isSubset(supersetItem, subset[key]) === false)
         return false
-      }
-      const subsetItem = subset[key]
-
-      if (isSubset(supersetItem, subsetItem) === false) {
-        return false
-      }
     }
 
     return true

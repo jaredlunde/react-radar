@@ -41,16 +41,13 @@ export const arrayMergeReplace = (target, source, optionsArgument) => {
 }
 
 const mergeObject = (target, source, optionsArgument) => {
-  if (target === source) {
+  if (target === source)
     return target
-  }
 
-  if (isStoreRecord(target) || isStoreRecord(source)) {
+  if (isStoreRecord(target) || isStoreRecord(source))
     return source
-  }
 
-	const destination = {...target}
-  const sourceKeys = Object.keys(source)
+	const destination = {...target}, sourceKeys = Object.keys(source)
 
   for (let i = 0; i < sourceKeys.length; i++) {
     const key = sourceKeys[i]
@@ -66,18 +63,18 @@ const mergeObject = (target, source, optionsArgument) => {
 }
 
 const deepMerge = (target, source, optionsArgument) => {
-	const sourceIsArray = Array.isArray(source),
-        targetIsArray = Array.isArray(target),
-        options = optionsArgument || { arrayMerge: arrayMergeOverwrite },
-        sourceAndTargetTypesMatch = sourceIsArray === targetIsArray
+	const
+    sourceIsArray = Array.isArray(source),
+    targetIsArray = Array.isArray(target),
+    options = optionsArgument || { arrayMerge: arrayMergeOverwrite },
+    sourceAndTargetTypesMatch = sourceIsArray === targetIsArray
 
-	if (!sourceAndTargetTypesMatch) {
+	if (!sourceAndTargetTypesMatch)
 		return mergeIfMergeable(source, optionsArgument)
-	} else if (sourceIsArray) {
+	else if (sourceIsArray)
 		return (options.arrayMerge || arrayMergeOverwrite)(target, source, optionsArgument)
-	} else {
+	else
 		return mergeObject(target, source, optionsArgument)
-	}
 }
 
 export default deepMerge

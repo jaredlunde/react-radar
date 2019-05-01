@@ -49,9 +49,9 @@ export class StoreRecord {
     return toImmutable(this.state)
   }
 
-  setState (reducer) {
+  setState (reducer, nextState, context) {
     // assigns the new state according to a reducer or state object
-    const nextState = reducer(this.state)
+    nextState = reducer(this.state, nextState, context)
 
     if (nextState !== null && nextState !== this.state) {
       this.state = nextState
@@ -73,19 +73,13 @@ const withoutContext = {state: 0, recordType: 0, reducer: 0}
 export default context => {
   const {state, recordType, reducer} = context
   context = objectWithoutProps(context, withoutContext)
+  context.record = recordType
 
   const key = state[recordType.keyField]
   // const context = reduceProps(props, ['state', 'recordType', 'reducer'])
   // no key was found, right now this is kind of just a bailout
   if (key === void 0) {
     return
-  }
-
-  const stateReducer = currentState => {
-    // wraps the defined reducer or by default the record type reducer
-    // with the context of the action/query
-    const reducerContext = {record: recordType, ...context}
-    return (reducer || recordType.reducer)(currentState, state, reducerContext)
   }
 
   let record = Records.get(key)
@@ -95,11 +89,8 @@ export default context => {
     record = new StoreRecord(key)
     // tracks all the records globally
     Records.set(key, record)
-    // sets the state of the record
-    record.setState(stateReducer)
-  } else {
-    record.setState(stateReducer)
   }
-
+  // sets the state of the record
+  record.setState(reducer || recordType.reducer, state, context)
   return record
 }

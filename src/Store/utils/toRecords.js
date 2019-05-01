@@ -127,9 +127,8 @@ export default ({state, nextState, queries, ...context}) => {
     state = query.reducer(state, records, objectWithoutProps(context, withoutContext))
   }
 
-  if (hasRecordUpdates === true) {
+  if (hasRecordUpdates === true)
     state = deepInvalidate(state)
-  }
 
   return state
 }

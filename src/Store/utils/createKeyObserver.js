@@ -10,9 +10,8 @@ export default () => {
       // determines which context shard given keys reside in
       let bits = 0
 
-      if (buckets === void 0) {
+      if (buckets === void 0)
         return bits
-      }
 
       for (i = 0; i < keys.length; i++) {
         let bucketId = buckets.get(keys[i])

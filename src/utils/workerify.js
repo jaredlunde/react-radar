@@ -5,9 +5,8 @@ const workerTemplate = `this.onmessage=function(e){(<code>)(self).apply(null,e.d
 
 export default fn => {
   if (typeof window !== 'undefined') {
-    if (window.Promise === void 0) {
+    if (window.Promise === void 0)
       window.Promise = Promise
-    }
 
     if (typeof Worker !== 'undefined') {
       const workerCode = workerTemplate.replace('<code>', Function.prototype.toString.call(fn))

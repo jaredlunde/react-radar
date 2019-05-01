@@ -12,8 +12,10 @@ const deepIntersection = (...objects) => {
       continue
     }
 
-    const objKeys = Object.keys(object)
-    const newKeys = []
+    const
+      objKeys = Object.keys(object),
+      newKeys = []
+
     for (j = 0; j < objKeys.length; j++) {
       const key = keys[j]
       if (objKeys.indexOf(key) > -1)
@@ -26,16 +28,18 @@ const deepIntersection = (...objects) => {
   const output = {}
 
   for (i = 0; i < keys.length; i++) {
-    const key = keys[i]
-    const deepObjects = []
+    const
+      key = keys[i],
+      deepObjects = []
 
     for (j = 0; j < objects.length; j++) {
-      const object = objects[j]
-      const deep = object[key]
+      const
+        object = objects[j],
+        deep = object[key]
 
-      if (isPlainObject(deep)) {
+      if (isPlainObject(deep) === true) {
         deepObjects.push(deep)
-      } else if (typeof deep === 'function' && (deep.isRadarRecord || deep.isRadarUnion)) {
+      } else if (typeof deep === 'function' && (deep.isRadarRecord === true || deep.isRadarUnion === true)) {
         deepObjects.push(deep.fields)
       }
     }

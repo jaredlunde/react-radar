@@ -13,26 +13,26 @@ const recordDidChange = (prevRecord, nextRecord) => {
 
 
 export default (prevState, nextState) => {
-  if (nextState === null || nextState === void 0) {
+  if (nextState === null || nextState === void 0)
     return false
-  }
 
-  const prevStateKeys = Object.keys(prevState)
-  const nextStateKeys = Object.keys(nextState)
+  const
+    prevStateKeys = Object.keys(prevState),
+    nextStateKeys = Object.keys(nextState)
 
-  if (prevStateKeys.length !== nextStateKeys.length) {
+  if (prevStateKeys.length !== nextStateKeys.length)
     return true
-  }
 
   let i = 0, j = 0
 
   for (; i < nextStateKeys.length; i++) {
-    const key = nextStateKeys[i]
-    const nextVal = nextState[key]
-    const prevVal = prevState[key]
+    const
+      key = nextStateKeys[i],
+      nextVal = nextState[key],
+      prevVal = prevState[key]
 
     if (
-      (Array.isArray(nextVal) || isPlainObject(nextVal))
+      (Array.isArray(nextVal) === true || isPlainObject(nextVal) === true)
       && typeof prevVal === 'object'
       && prevVal !== null
     ) {
@@ -41,23 +41,22 @@ export default (prevState, nextState) => {
       // traverse descending because the assumption is most mutations will
       // be pushes rather than shifts
       for (j = nextKeys.length; j > -1; j--) {
-        const nextKey = nextKeys[j]
-        const nextRec = nextVal[nextKey]
-        const prevRec = prevVal[nextKey]
+        const
+          nextKey = nextKeys[j],
+          nextRec = nextVal[nextKey],
+          prevRec = prevVal[nextKey]
         // if its a record and unequal, we know it is invalid. with other
         // values, we just don't want to go any deeper
-        if (nextRec !== prevRec) {
+        if (nextRec !== prevRec)
           return true
-        }
-        else if (isStoreRecord(nextRec) && recordDidChange(prevRec, nextRec) === true) {
+        else if (isStoreRecord(nextRec) === true && recordDidChange(prevRec, nextRec) === true)
           return true
-        }
       }
     }
     else if (nextVal !== prevVal) {
       return true
     }
-    else if (isStoreRecord(nextVal) && recordDidChange(prevVal, nextVal) === true) {
+    else if (isStoreRecord(nextVal) === true && recordDidChange(prevVal, nextVal) === true) {
       return true
     }
   }

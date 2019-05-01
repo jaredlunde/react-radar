@@ -10,14 +10,16 @@ export const RADAR_CHILDREN_KEY = '__@@RADAR_CHILDREN@@__'
 const getRecordsFromPlainObject = memoize(
   [WeakMap],
   obj => {
-    const stateKeys = Object.keys(obj)
-    let children = {},
-        i = 0,
-        j = 0
+    let
+      stateKeys = Object.keys(obj),
+      children = {},
+      i = 0,
+      j = 0
 
     for (; i < stateKeys.length; i++) {
-      const nextChildren = getChildRecords(obj[stateKeys[i]])
-      const childKeys = Object.keys(nextChildren)
+      const
+        nextChildren = getChildRecords(obj[stateKeys[i]]),
+        childKeys = Object.keys(nextChildren)
 
       for (j = 0; j < childKeys.length; j++)
         children[childKeys[j]] = nextChildren[childKeys[j]]
@@ -29,12 +31,12 @@ const getRecordsFromPlainObject = memoize(
 
 
 const getChildRecords = obj => {
-  if (isStoreRecord(obj)) {
+  if (isStoreRecord(obj) === true) {
     const childRecs = getChildRecords(obj.state)
     childRecs[obj[RADAR_ID_KEY]] = obj
     return childRecs
   }
-  else if (isPlainObject(obj) || Array.isArray(obj)) {
+  else if (Array.isArray(obj) === true || isPlainObject(obj) === true) {
     return getRecordsFromPlainObject(obj)
   }
 

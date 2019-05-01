@@ -35,12 +35,12 @@ export const pickShape = (from, shape) => {
 // picks a shape {foo: null, bar: null} out of an object
 // (from) [{foo: 'abweb', bar: 'babeob'}]
 export const pick = memoize([WeakMap, WeakMap], (from, shape) => {
-  if (Array.isArray(from)) {
+  if (Array.isArray(from) === true) {
     const output = []
     for (let i = 0; i < from.length; i++) output.push(pickShape(from[i], shape));
     return __DEV__ ? Object.freeze(output) : output
   }
-  else if (isPlainObject(from)) {
+  else if (isPlainObject(from) === true) {
     return pickShape(from, shape)
   }
   else {

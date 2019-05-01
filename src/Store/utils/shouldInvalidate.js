@@ -8,10 +8,9 @@ export const childrenDidChange = children => {
   for (let i = 0; i < childKeys.length; i++) {
     const prevID = Number(childKeys[i])
 
-    if (prevID !== children[prevID][RADAR_ID_KEY]) {
+    if (prevID !== children[prevID][RADAR_ID_KEY])
       // the record's ID was invalidated at some point
       return true
-    }
   }
 
   return false
@@ -19,17 +18,15 @@ export const childrenDidChange = children => {
 
 
 export default record => {
-  if (record[RADAR_PREV_ID_KEY] !== record[RADAR_ID_KEY]) {
+  if (record[RADAR_PREV_ID_KEY] !== record[RADAR_ID_KEY])
     // next children are lazy loaded here
     return false
-  }
 
   // check children for invalidations
   const didChange = childrenDidChange(record[RADAR_CHILDREN_KEY])
 
-  if (didChange === true) {
+  if (didChange === true)
     record[RADAR_CHILDREN_KEY] = getChildRecords(record.state)
-  }
 
   return didChange
 }

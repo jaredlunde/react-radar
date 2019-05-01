@@ -5,8 +5,9 @@ const deepInvalidate = obj => {
   const isArray = Array.isArray(obj)
 
   if (isArray || isPlainObject(obj)) {
-    const output = isArray ? [] : {},
-          objKeys = Object.keys(obj)
+    const
+      output = isArray ? [] : {},
+      objKeys = Object.keys(obj)
     // let didChange = false
 
     for (let i = 0; i < objKeys.length; i++)
