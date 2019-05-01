@@ -35,13 +35,14 @@ export function createQueryComponent (opt = emptyObj) {
       // initial state. If the query is not already cached AND this is a server-side render
       // phase, it will load the query here since componentDidMount() does not get caleld
       // on the server.
-      let {endpoint, run} = props
-      run = Array.isArray(props.run) ? props.run : [props.run]
+      let {endpoint, run} = props, i = 0
+      run = Array.isArray(props.run) === true ? props.run : [props.run]
 
-      for (let i = 0; i < this.state.id.length; i++) {
-        const id = this.state.id[i]
-        const query = endpoint.getCached(id)
-        const status = query === void 0 ? WAITING : query.status
+      for (; i < this.state.id.length; i++) {
+        const
+          id = this.state.id[i],
+          query = endpoint.getCached(id),
+          status = query === void 0 ? WAITING : query.status
 
         if (query !== void 0) {
           query.query = query.query || run[i]
@@ -154,7 +155,6 @@ export function createQueryComponent (opt = emptyObj) {
 
       if (loadFromCache === true)
         this.commit(loadCached, true)
-
       if (reload.length > 0)
         this.reload(reload)
     }

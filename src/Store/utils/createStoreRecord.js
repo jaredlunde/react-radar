@@ -78,10 +78,7 @@ export default context => {
   const key = state[recordType.keyField]
   // const context = reduceProps(props, ['state', 'recordType', 'reducer'])
   // no key was found, right now this is kind of just a bailout
-  if (key === void 0) {
-    return
-  }
-
+  if (key === void 0) return
   let record = Records.get(key)
 
   if (record === void 0) {

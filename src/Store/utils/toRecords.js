@@ -15,11 +15,12 @@ const toRecord = (props/*{state, query, recordType}*/) => {
 
 
 const fromPlainObject = (props/*{state, query, recordType, ...context}*/) => {
-  const output = {}
-  const recordType = props.recordType
-  const state = props.state
-  const stateKeys = Object.keys(state)
-  const mutableBaseRecord = Object.assign({}, props)
+  const
+    output = {},
+    recordType = props.recordType,
+    state = props.state,
+    stateKeys = Object.keys(state),
+    mutableBaseRecord = Object.assign({}, props)
 
   for (let i = 0; i < stateKeys.length; i++) {
     const key = stateKeys[i]
@@ -37,7 +38,7 @@ const fromPlainObject = (props/*{state, query, recordType, ...context}*/) => {
 
   if (
     recordType && (
-      recordType.isRadarRecord           // sub record
+      recordType.isRadarRecord === true   // sub record
       || recordType.keyField !== void 0  // top-level
     )
   ) {
@@ -53,9 +54,10 @@ const fromPlainObject = (props/*{state, query, recordType, ...context}*/) => {
 
 
 const fromArray = (props/*{state, query, recordType}*/) => {
-  const mutableProps = Object.assign({}, props)
-  const records = []
-  const state = mutableProps.state
+  const
+    mutableProps = Object.assign({}, props),
+    records = [],
+    state = mutableProps.state
 
   for (let i = 0; i < state.length; i++) {
     mutableProps.state = state[i]
@@ -69,15 +71,12 @@ const fromArray = (props/*{state, query, recordType}*/) => {
 const routeToRecords = (props/*{state, query, recordType}*/) => {
   const state = props.state
 
-  if (Array.isArray(state) === true) {
+  if (Array.isArray(state) === true)
     return fromArray(props)
-  }
-  else if (state === null) {
+  else if (state === null)
     return state
-  }
-  else if (typeof state === 'object') {
+  else if (typeof state === 'object')
     return fromPlainObject(props)
-  }
 
   return typeof props.recordType === 'function' ? props.recordType(state) : state
 }
@@ -95,9 +94,8 @@ export default ({state, nextState, queries, ...context}) => {
     const query = queries[i]
     context.query = query
 
-    if (query.isRecordUpdate === true) {
+    if (query.isRecordUpdate === true)
       hasRecordUpdates = true
-    }
 
     if (queryState === null || queryState === void 0) {
       continue

@@ -49,14 +49,14 @@ export default (prevState, nextState) => {
         // values, we just don't want to go any deeper
         if (nextRec !== prevRec)
           return true
-        else if (isStoreRecord(nextRec) === true && recordDidChange(prevRec, nextRec) === true)
+        else if (isStoreRecord(nextRec) && recordDidChange(prevRec, nextRec) === true)
           return true
       }
     }
     else if (nextVal !== prevVal) {
       return true
     }
-    else if (isStoreRecord(nextVal) === true && recordDidChange(prevVal, nextVal) === true) {
+    else if (isStoreRecord(nextVal) && recordDidChange(prevVal, nextVal) === true) {
       return true
     }
   }

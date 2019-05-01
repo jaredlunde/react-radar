@@ -67,19 +67,13 @@ export default class Store extends React.Component {
 
   getNextState = (state = emptyObj, updates)=> {
     let start
-
-    if (__DEV__) {
-      start = now()
-    }
+    if (__DEV__) start = now()
 
     let nextState = toRecords(Object.assign({state: state._data}, updates))
     // do a shallow comparison of the previous state to this one to avoid
     // unnecessary re-renders
     if (nextState === null || stateDidChange(state._data, nextState) === false) {
-      if (__DEV__) {
-        console.log('[Radar] state profiler:', now() - start)
-      }
-
+      if (__DEV__) console.log('[Radar] state profiler:', now() - start)
       return null
     }
     // used for calculating changed bits in React context
@@ -88,10 +82,7 @@ export default class Store extends React.Component {
     // when a record is removed from the state tree, it should be
     // assumed that this record is 'cleared', as well
     collectStaleRecords(nextState)
-
-    if (__DEV__) {
-      console.log('[Radar] state profiler:', now() - start)
-    }
+    if (__DEV__) console.log('[Radar] state profiler:', now() - start)
 
     return {
       _data: __DEV__ ? Object.freeze(nextState) : nextState,
