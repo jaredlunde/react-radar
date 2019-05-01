@@ -1,7 +1,9 @@
 export default () => {
-  let id = -1, i = 0
-  const buckets = new Map()
-  const setBucket = key => buckets.has(key) === false && buckets.set(key, ++id)
+  let
+    id = -1,
+    i = 0,
+    buckets = new Map(),
+    setBucket = key => buckets.has(key) === false && buckets.set(key, ++id)
 
   return {
     buckets,

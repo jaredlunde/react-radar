@@ -15,7 +15,7 @@ const getRecordKeys = memoize([WeakMap], obj => {
     const value = obj[objKeys[i]]
 
     if (typeof value === 'object' && value !== null) {
-      if (isStoreRecord(value)) {
+      if (isStoreRecord(value) === true) {
         output.add(value.key)
         const
           children = value[RADAR_CHILDREN_KEY],
@@ -26,8 +26,7 @@ const getRecordKeys = memoize([WeakMap], obj => {
       }
       else {
         const nestedValues = getRecordKeys(value)
-
-        if (nestedValues !== void 0 && nestedValues.size)
+        if (nestedValues !== void 0 && nestedValues.size > 0)
           for (let k of nestedValues)
             output.add(k)
       }
@@ -37,13 +36,15 @@ const getRecordKeys = memoize([WeakMap], obj => {
   return output
 })
 
+const del = Records.delete.bind(Records)
+
 export default nextState => {
   if (Records.size === 0) return
   const nextKeys = getRecordKeys(nextState)
 
-  for (let [key, _] of Records)
+  for (let key of Records.keys())
     if (nextKeys.has(key) === false)
-      Records.delete(key)
+      del(key)
 
   if (__DEV__)
     console.log('[Radar] records:', Records.size, '->', Records)
