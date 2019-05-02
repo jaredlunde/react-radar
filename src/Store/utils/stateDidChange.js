@@ -6,7 +6,6 @@ import isStoreRecord from './isStoreRecord'
 const recordDidChange = (prevRecord, nextRecord) => {
   if (prevRecord[RADAR_ID_KEY] !== nextRecord[RADAR_ID_KEY])
     return true
-
   return nextRecord.isInvalid()
 }
 
@@ -15,20 +14,21 @@ export default (prevState, nextState) => {
   if (nextState === null || nextState === void 0)
     return false
 
-  let nextStateKeys = Object.keys(nextState), i = 0, j = 0
+  const
+    prevStateKeys = Object.values(prevState),
+    nextStateKeys = Object.keys(nextState)
 
+  if (prevStateKeys.length !== nextStateKeys.length)
+    return true
+
+  let i = 0, j = 0
   for (; i < nextStateKeys.length; i++) {
     const
       key = nextStateKeys[i],
       nextVal = nextState[key],
       prevVal = prevState[key]
-    if (nextVal !== prevVal) {
-      return true
-    }
-    else if (isStoreRecord(nextVal) === true && recordDidChange(prevVal, nextVal) === true) {
-      return true
-    }
-    else if (
+
+    if (
       (Array.isArray(nextVal) === true || isPlainObject(nextVal) === true)
       && typeof prevVal === 'object'
       && prevVal !== null
@@ -50,6 +50,10 @@ export default (prevState, nextState) => {
           return true
       }
     }
+    else if (nextVal !== prevVal)
+      return true
+    else if (isStoreRecord(nextVal) && recordDidChange(prevVal, nextVal) === true)
+      return true
   }
 
   return false
