@@ -71,16 +71,15 @@ StoreRecord.prototype.toJSON = StoreRecord.prototype.toImmutable
 const withoutContext = {state: 0, recordType: 0, reducer: 0}
 
 export default context => {
-  const {state, recordType, reducer} = context
-  context = objectWithoutProps(context, withoutContext)
-  context.record = recordType
-
-  const key = state[recordType.keyField]
-  // const context = reduceProps(props, ['state', 'recordType', 'reducer'])
+  const
+    {state, recordType, reducer} = context,
+    key = state[recordType.keyField]
   // no key was found, right now this is kind of just a bailout
   if (key === void 0) return
+  context = objectWithoutProps(context, withoutContext)
+  context.record = recordType
+  // const context = reduceProps(props, ['state', 'recordType', 'reducer'])
   let record = Records.get(key)
-
   if (record === void 0) {
     // record = StoreRecordFn(key)
     record = new StoreRecord(key)
