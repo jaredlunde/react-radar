@@ -1,6 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import memoize from 'trie-memoize'
+import memoizeOne from '@essentials/memoize-one'
 import emptyObj from 'empty/object'
 import {stringify} from '../createRecord'
 import {invariant, isNode} from '../utils'
@@ -32,6 +33,7 @@ export const getQueryID = memoize([WeakMap], query => {
 
   return `${query.name}(${JSON.stringify(props)}) => ${query.reducer.id}(${stringify(requires)})`
 })
+const getContext = memoizeOne((state, queries) => ({...state, queries}))
 
 /**
  * The Endpoint component is the glue that binds together the Networking layer,
@@ -61,7 +63,6 @@ class Endpoint extends React.Component {
     this.keyObserver = createKeyObserver()
     this.state = {
       // internals
-      queries: {},
       setCached: this.cache.set.bind(this.cache.set),
       getCached: this.cache.get.bind(this.cache.get),
       promises: context?.waitForPromises?.chunkPromises,
@@ -83,12 +84,12 @@ class Endpoint extends React.Component {
   componentWillUnmount () {
     this.props.network.abort()
 
-    for (let id in this.listeners) {
+    for (let id in this.listeners)
       this.cache.unsubscribe(id, this)
-    }
   }
 
   listeners = {}
+  queries = {}
 
   subscribe = (id, component) => {
     if (this.listeners[id] === void 0) {
@@ -96,11 +97,7 @@ class Endpoint extends React.Component {
       this.cache.subscribe(id, this)
       // sets the query in state
       this.listeners[id] = new Set()
-      this.setState(
-        ({queries}) => queries[id] === void 0
-          ? ({queries: {...queries, [id]: this.cache.get(id)}})
-          : null
-      )
+      this.queries = {...this.queries, [id]: this.cache.get(id)}
       // used for calculating changed bits for context
       this.keyObserver.setBucket(id)
     }
@@ -116,32 +113,28 @@ class Endpoint extends React.Component {
 
       if (listeners.size === 0) {
         this.cache.unsubscribe(id, this)
-        delete this.listeners[id]
+        this.listeners[id] = void 0
+        let
+          nextQueries = {},
+          keys = Object.keys(this.queries),
+          i = 0,
+          qid
 
-        this.setState(
-          ({queries}) => {
-            let nextQueries = {},
-              keys = Object.keys(queries),
-              i = 0,
-              qid
+        for (; i < keys.length; i++) {
+          qid = keys[i]
+          if (qid === id) continue
+          nextQueries[qid] = this.queries[qid]
+        }
 
-            for (; i < keys.length; i++) {
-              qid = keys[i]
-              if (qid === id) continue
-              nextQueries[qid] = queries[qid]
-            }
-
-            return {queries: nextQueries}
-          }
-        )
+        this.queries = nextQueries
       }
     }
   }
 
-  notify = (id, query) => this.setState(
-    // this must be immutable for getBits
-    ({queries}) => ({queries: {...queries, [id]: {...query}}})
-  )
+  notify = (id, query) => {
+    this.queries = {...this.queries, [id]: {...query}}
+    this.forceUpdate()
+  }
 
   commit = async (opt, context = emptyObj) => {
     if (isNode === false) {
@@ -321,7 +314,10 @@ class Endpoint extends React.Component {
   render () {
     return (
       <EndpointInternalContext.Provider value={this.state.getBits}>
-        <EndpointContext.Provider value={this.state} children={this.props.children}/>
+        <EndpointContext.Provider
+          value={getContext(this.state, this.queries)}
+          children={this.props.children}
+        />
       </EndpointInternalContext.Provider>
     )
   }

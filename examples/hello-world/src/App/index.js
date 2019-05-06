@@ -21,7 +21,6 @@ const LocalQuery = createQuery({
   name: 'LocalQuery',
   local: true,
   reducer: createReducer('localReducer', (state, nextState, context) => {
-    console.log(state, nextState, context)
     return {...state, localStuff: {foo: Math.random()}, viewer: null}
   })
 })
@@ -61,7 +60,7 @@ export default class App extends React.PureComponent {
           <Updater connect='viewer' run={ViewerQuery2()}>
             {({viewer, errors}, radar) => viewer === null && (
               <div style={{marginBottom: 32}}>
-                <button onClick={radar.reload}>
+                <button onClick={radar.update}>
                   {radar.status === Updater.LOADING ? 'Loading...' : radar.status === Updater.ERROR ? 'Try again?' : 'Load viewer'}
                 </button>
               </div>

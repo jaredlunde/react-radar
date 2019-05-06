@@ -42,7 +42,7 @@ export function createQueryComponent (opt = emptyObj) {
         const
           id = this.state.id[i],
           query = endpoint.getCached(id),
-          status = query === void 0 ? WAITING : query.status
+          status = query?.status === void 0 ? WAITING : query.status
 
         if (query !== void 0) {
           query.query = query.query || run[i]
@@ -68,12 +68,11 @@ export function createQueryComponent (opt = emptyObj) {
       let nextID = getID(props.run),
         nextState = null
 
-      if (strictShallowEqual(nextID, state.id) === false) {
+      if (strictShallowEqual(nextID, state.id) === false)
         nextState = {id: nextID}
-      }
 
       for (let id of nextID) {
-        const query = props.endpoint.queries[id]
+        const query = props.endpoint.getCached(id)
         const stateQuery = state.queries[id]
 
         if (
@@ -88,7 +87,7 @@ export function createQueryComponent (opt = emptyObj) {
           nextState = nextState || {...state, queries: {}}
           nextState.queries = nextState.queries || {}
           nextState.queries[id] = {
-            status: query.status,
+            status: query.status === void 0 ? WAITING : query.status,
             response: query.response
           }
         }
