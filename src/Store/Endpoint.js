@@ -169,9 +169,9 @@ class Endpoint extends React.Component {
   }
 
   async processQueries (type, queries, context) {
-    const payload = []
+    let payload = [], i = 0
 
-    for (let i = 0; i < queries.length; i++) {
+    for (i = 0; i < queries.length; i++) {
       const query = queries[i]
 
       if (query.local !== true) {
@@ -189,7 +189,7 @@ class Endpoint extends React.Component {
     if (payload.length > 0) {
       const commit = this.commitPayload(payload, context)
       // sets the commit promise in the cache
-      for (let i = 0; i < queries.length; i++)
+      for (i = 0; i < queries.length; i++)
         this.cache.setCommit(getQueryID(queries[i]), commit)
       // resolves the commit promise
       let {response, nextState} = await commit
@@ -200,9 +200,24 @@ class Endpoint extends React.Component {
         this.props.store.updateState(
           state => {
             // function which executes rollbacks on queries that need them
-            const doRollback = rollbacks => {
+            let rollbacks = []
+
+            switch (response.status) {
+              case   0:
+              case 200:
+                for (i = 0; i < queries.length; i++)
+                  if (response.json && response.json[i] && response.json[i].isRadarError)
+                    rollbacks.push(queries[i])
+                break;
+              default:
+                // executes rollbacks on the failed mutations
+                rollbacks = queries.slice(0)
+            }
+
+            if (rollbacks.length > 0) {
               nextState = nextState || []
-              for (let i = 0; i < rollbacks.length; i++) {
+              
+              for (i = 0; i < rollbacks.length; i++) {
                 const query = rollbacks[i]
                 if (query === void 0) continue
                 if (typeof query.rollback === 'function') {
@@ -213,23 +228,6 @@ class Endpoint extends React.Component {
               }
             }
 
-            switch (response.status) {
-              case   0:
-              case 200:
-                doRollback(queries.map(
-                  (query, i) =>
-                    response.json
-                    && response.json[i]
-                    && response.json[i].isRadarError
-                      ? query
-                      : void 0
-                ))
-                break;
-              default:
-                // executes rollbacks on the failed mutations
-                doRollback(queries.slice(0))
-            }
-
             return {nextState, queries, response, type}
           }
         )
@@ -237,7 +235,7 @@ class Endpoint extends React.Component {
       // if the response was not a 200 response it is considered an error status
       const status = response.ok === true ? DONE : ERROR
       // updates the cache for each query
-      for (let i = 0; i < queries.length; i++) {
+      for (i = 0; i < queries.length; i++) {
         this.cache.set(
           getQueryID(queries[i]),
           {status, response: {...response, json: response.json && response.json[i]}}
