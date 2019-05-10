@@ -1,6 +1,6 @@
 {
   "name": "react-radar",
-  "version": "2.0.0-beta.82",
+  "version": "2.0.0-beta.84",
   "main": "dist/cjs/index.js",
   "browser": "dist/es/index.browser.js",
   "module": "dist/node-esm/index.esm.js",
@@ -28,31 +28,31 @@
     "prepublishOnly": "yarn build"
   },
   "devDependencies": {
-    "@babel/traverse": "^7.4.0",
+    "@babel/traverse": "^7.4.4",
     "@essentials/benchmark": "^1.0.4",
     "@stellar-apps/babel-preset-es": "^1.0.4",
-    "@stellar-apps/babel-preset-react": "^1.0.1",
+    "@stellar-apps/babel-preset-react": "^1.0.3",
     "babel-plugin-tailcall-optimization": "^2.0.0",
-    "prettier": "^1.16.4",
-    "react": "^16.8.3",
-    "react-dom": "^16.8.3",
+    "prettier": "^1.17.0",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
     "renamer": "^1.1.1",
     "rimraf": "^2.6.3"
   },
   "dependencies": {
-    "@babel/runtime": "^7.4.0",
+    "@babel/runtime": "^7.4.4",
     "@essentials/memoize-one": "^1.0.0",
     "@jaredlunde/get-unique-id": "^0.1.1",
     "cancelable-promise": "^2.4.1",
     "empty": "^0.10.1",
     "is-mergeable-object": "^1.1.0",
-    "node-fetch": "^2.3.0",
+    "node-fetch": "^2.5.0",
     "performance-now": "^2.1.0",
-    "trie-memoize": "^1.0.4"
+    "trie-memoize": "^1.0.7"
   },
   "peerDependencies": {
     "prop-types": ">= 15.6.0",
-    "react": ">= 16.3.0",
-    "react-dom": ">= 16.3.0"
+    "react": ">= 16.8.0",
+    "react-dom": ">= 16.8.0"
   }
 }

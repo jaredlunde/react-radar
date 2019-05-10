@@ -22,17 +22,20 @@ export default createQueryComponent({
     componentDidUpdate (_, {id}) {
       if (strictShallowEqual(id, this.state.id) === false) {
         id.forEach(
-          pid => this.state.id.indexOf(pid) === -1
-            && this.props.endpoint.unsubscribe(pid, this)
+          pid =>
+            this.state.id.indexOf(pid) === -1 && this.props.endpoint.unsubscribe(pid, this)
         )
       }
     },
 
     update () {
-      const queries = {}
-      const {endpoint} = this.props
+      let
+        queries = {},
+        {endpoint} = this.props,
+        i = 0
 
-      for (let id of this.state.id) {
+      for (; i < this.state.id.length; i++) {
+        const id = this.state.id[i]
         endpoint.subscribe(id, this)
         endpoint.setCached(id, {status: WAITING})
         const query = endpoint.getCached(id)

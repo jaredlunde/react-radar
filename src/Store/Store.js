@@ -2,22 +2,19 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import emptyObj from 'empty/object'
 import {isNode} from '../utils'
+import createNetwork from '../createNetwork'
 import {
-  toRecords, 
-  stateDidChange, 
-  toImmutable, 
-  collectStaleRecords, 
+  toRecords,
+  stateDidChange,
+  toImmutable,
+  collectStaleRecords,
   createKeyObserver
 } from './utils'
 import {StoreContext, StoreInternalContext} from './StoreContext'
 import Endpoint from './Endpoint'
-import createNetwork from '../createNetwork'
 
 let now
-if (__DEV__) {
-  now = require('performance-now')
-}
-
+if (__DEV__) now = require('performance-now')
 
 const defaultState = {_data: emptyObj, data: emptyObj}
 const formatHydrateQuery = query => ({
@@ -42,14 +39,12 @@ export default class Store extends React.Component {
     // in react context
     this.keyObserver = createKeyObserver()
     // parses any initial state in props or the DOM
-    if (props.cache !== void 0 && props.cache.size > 0) {
+    if (props.cache !== void 0 && props.cache.size > 0)
       this.state = isNode === true ? this.hydrateNode(props.cache) : defaultState
-    }
-    else {
+    else
       // didn't have an initial state
       this.state = defaultState
-    }
-
+    // provides context for calculating changed bits
     this.state.getBits = this.keyObserver.getBits
   }
 
@@ -57,7 +52,7 @@ export default class Store extends React.Component {
     let state = defaultState
 
     cache.forEach(
-      (id, query) =>
+      query =>
         query.response
         && (state = this.getNextState(state, formatHydrateQuery(query)) || state)
     )
@@ -68,7 +63,6 @@ export default class Store extends React.Component {
   getNextState = (state = emptyObj, updates)=> {
     let start
     if (__DEV__) start = now()
-
     let nextState = toRecords(Object.assign({state: state._data}, updates))
     // do a shallow comparison of the previous state to this one to avoid
     // unnecessary re-renders
@@ -83,7 +77,6 @@ export default class Store extends React.Component {
     // assumed that this record is 'cleared', as well
     collectStaleRecords(nextState)
     if (__DEV__) console.log('[Radar] state profiler:', now() - start)
-
     return {
       _data: __DEV__ ? Object.freeze(nextState) : nextState,
       data: toImmutable(nextState)
@@ -96,7 +89,6 @@ export default class Store extends React.Component {
 
   render () {
     if (__DEV__) console.log('[Radar] state:\n', this.state._data)
-    
     return (
       <StoreInternalContext.Provider value={this.state.getBits}>
         <StoreContext.Provider value={this.state}>

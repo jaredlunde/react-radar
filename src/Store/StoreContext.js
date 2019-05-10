@@ -17,15 +17,14 @@ export const calculateChangedBits = stateKey => (prev, next) => {
     for (i; i < prevKeys.length; i++) {
       const k = prevKeys[i]
       // the previous key isn't in the current state
-      if (nextState[k] === void 0) {
-        changedKeys.push(k)
-      }
+      if (nextState[k] === void 0) changedKeys.push(k)
     }
 
     for (i = 0; i < nextKeys.length; i++) {
       const k = nextKeys[i]
 
-      if (// this key wasn't in the previous state
+      if (
+        // this key wasn't in the previous state
         prevState[k] === void 0
         // the previous state for this key was different than the current state
         || prevState[k] !== nextState[k]

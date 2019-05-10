@@ -63,7 +63,7 @@ export default (
       map.forEach((v, k) => output.push(fn(k, v)))
       return output
     },
-    forEach: fn => map.forEach((v, k) => fn(k, v)),
+    forEach: map.forEach.bind(map),
     clear: map.clear.bind(map),
     getIDs: map.keys.bind(map),
     toJSON (...a) {

@@ -97,7 +97,8 @@ class Endpoint extends React.Component {
       this.cache.subscribe(id, this)
       // sets the query in state
       this.listeners[id] = new Set()
-      this.queries = {...this.queries, [id]: this.cache.get(id)}
+      this.queries = Object.assign({}, this.queries)
+      this.queries[id] = this.cache.get(id)
       // used for calculating changed bits for context
       this.keyObserver.setBucket(id)
     }
@@ -132,17 +133,17 @@ class Endpoint extends React.Component {
   }
 
   notify = (id, query) => {
-    this.queries = {...this.queries, [id]: {...query}}
+    this.queries = Object.assign({}, this.queries)
+    this.queries[id] = Object.assign({}, query)
     this.forceUpdate()
   }
 
   commit = async (opt, context = emptyObj) => {
     if (isNode === false) {
-      const optimisticQueries = []
+      let optimisticQueries = [],  i = 0
 
-      for (let i = 0; i < opt.queries.length; i++) {
+      for (; i < opt.queries.length; i++) {
         const query = opt.queries[i]
-
         if (typeof query.optimistic === 'function' || query.local !== false)
           optimisticQueries.push(query)
       }
@@ -155,9 +156,9 @@ class Endpoint extends React.Component {
 
     // commits the payloads to the network
     if (context.async === true) {
-      const promises = []
+      let promises = [], i = 0
 
-      for (let i = 0; i < queries.length; i++)
+      for (; i < queries.length; i++)
         promises.push(this.processQueries(type, queries.slice(i, i + 1), context))
 
       return Promise.all(promises)
@@ -232,12 +233,11 @@ class Endpoint extends React.Component {
       // if the response was not a 200 response it is considered an error status
       const status = response.ok === true ? DONE : ERROR
       // updates the cache for each query
-      for (i = 0; i < queries.length; i++) {
+      for (i = 0; i < queries.length; i++)
         this.cache.set(
           getQueryID(queries[i]),
           {status, response: {...response, json: response.json && response.json[i]}}
         )
-      }
 
       return response
     }
@@ -283,17 +283,15 @@ class Endpoint extends React.Component {
     if (opt.queries.length > 0) {
       this.props.store.updateState(
         state => {
-          const updates = []
+          let updates = [], i = 0
 
-          for (let i = 0; i < opt.queries.length; i++) {
+          for (; i < opt.queries.length; i++) {
             const query = opt.queries[i]
 
-            if (typeof query.optimistic === 'function') {
+            if (typeof query.optimistic === 'function')
               updates.push(query.optimistic(query.input, state, query))
-            }
-            else {
+            else
               updates.push(emptyObj)
-            }
           }
 
           return {
