@@ -143,9 +143,8 @@ class Endpoint extends React.Component {
       for (let i = 0; i < opt.queries.length; i++) {
         const query = opt.queries[i]
 
-        if (typeof query.optimistic === 'function' || query.local !== false) {
+        if (typeof query.optimistic === 'function' || query.local !== false)
           optimisticQueries.push(query)
-        }
       }
 
       // commits an optimistic updates first but not on the server
@@ -158,9 +157,8 @@ class Endpoint extends React.Component {
     if (context.async === true) {
       const promises = []
 
-      for (let i = 0; i < queries.length; i++) {
+      for (let i = 0; i < queries.length; i++)
         promises.push(this.processQueries(type, queries.slice(i, i + 1), context))
-      }
 
       return Promise.all(promises)
     }
@@ -178,9 +176,8 @@ class Endpoint extends React.Component {
         // attaches payload object for network queries
         const requires = {}
 
-        for (let key in query.requires) {
+        for (let key in query.requires)
           requires[key] = query.requires[key].requiresFields
-        }
 
         payload.push({name: query.name, props: query.params, requires})
       }
@@ -216,7 +213,7 @@ class Endpoint extends React.Component {
 
             if (rollbacks.length > 0) {
               nextState = nextState || []
-              
+
               for (i = 0; i < rollbacks.length; i++) {
                 const query = rollbacks[i]
                 if (query === void 0) continue

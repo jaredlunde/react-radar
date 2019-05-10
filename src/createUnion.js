@@ -3,11 +3,13 @@ import {invariant, tag, deepIntersection} from './utils'
 
 
 const getSharedFields = records => {
-  const recs = []
+  let
+    recs = [],
+    values = Object.values(records),
+    i = 0
 
-  for (let record of Object.values(records)) {
-    recs.push(record.fields)
-  }
+  for (; i < values.length; i++)
+    recs.push(values[i].fields)
 
   return deepIntersection(...recs)
 }

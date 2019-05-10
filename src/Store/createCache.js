@@ -44,18 +44,15 @@ export default (
       if (listeners) {
         listeners.delete(c)
         // deletes this query from the cache if there are no more listeners
-        if (listeners.size === 0) {
+        if (listeners.size === 0)
           map.delete(id)
-        }
       }
     },
     collect: () => {
-      for (let [id, query] of map.entries()) {
-        // only deletes queries that aren't in loading states
-        if (query.listeners !== void 0 && query.listeners.size === 0 && query.status === 3) {
+      // only deletes queries that aren't in loading states
+      for (let [id, query] of map.entries())
+        if (query.listeners !== void 0 && query.listeners.size === 0 && query.status === 3)
           map.delete(id)
-        }
-      }
     },
     setStatus: (id, v) => cache.set(id, {status: v}),
     setCommit: (id, v) => cache.set(id, {commit: v}),
@@ -74,22 +71,19 @@ export default (
 
       map.forEach((v, k) => {
         output[k] = objectWithoutProps(v, jsonExclusions)
-
-        if (output[k].response) {
+        if (output[k].response)
           output[k].response = objectWithoutProps(output[k].response, urlExclusion)
-        }
       })
 
       return JSON.stringify(output, ...a)
     },
     fromJSON (json) {
-      const obj = JSON.parse(json)
-      const keys = Object.keys(obj)
+      let
+        obj = JSON.parse(json),
+        keys = Object.keys(obj),
+        i = 0
 
-      for (let i = 0; i < keys.length; i++) {
-        const k = keys[i]
-        map.set(k, obj[k])
-      }
+      for (; i < keys.length; i++) map.set(keys[i], obj[keys[i]])
     }
   }
 
@@ -101,9 +95,8 @@ export default (
 
     if (textContent) {
       cache.fromJSON(initialQueries.textContent)
-      while (initialQueries.firstChild) {
+      while (initialQueries.firstChild)
         initialQueries.removeChild(initialQueries.firstChild)
-      }
     }
   }
   else if (typeof initialQueries === 'string') {

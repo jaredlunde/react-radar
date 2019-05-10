@@ -37,18 +37,16 @@ const deepIntersection = (...objects) => {
         object = objects[j],
         deep = object[key]
 
-      if (isPlainObject(deep) === true) {
+      if (isPlainObject(deep) === true)
         deepObjects.push(deep)
-      } else if (typeof deep === 'function' && (deep.isRadarRecord === true || deep.isRadarUnion === true)) {
+      else if (typeof deep === 'function' && (deep.isRadarRecord === true || deep.isRadarUnion === true))
         deepObjects.push(deep.fields)
-      }
     }
 
     let deepIntersections = null
 
-    if (deepObjects.length === objects.length) {
+    if (deepObjects.length === objects.length)
       deepIntersections = deepIntersection(...deepObjects)
-    }
 
     output[key] = (
       deepIntersections === null || Object.keys(deepIntersections).length === 0

@@ -140,11 +140,12 @@ if (__DEV__) {
   };
 }
 
-const whitespace = /^[ \t\r\n]/
-const number = /^[0-9]/
-const alpha = /^[a-z]/i
-const under = /^[_]/
-const newline = /^[ \n]/
+const
+  whitespace = /^[ \t\r\n]/,
+  number = /^[0-9]/,
+  alpha = /^[a-z]/i,
+  under = /^[_]/,
+  newline = /^[ \n]/
 
 const p$parse = (input, options) => {
   options = options !== void 0 ? options : {};
@@ -624,4 +625,4 @@ const p$parse = (input, options) => {
 }
 
 const parse = p$parse
-export  {parse}
+export {parse}

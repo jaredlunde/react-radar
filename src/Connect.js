@@ -7,12 +7,13 @@ import {pick} from './utils'
 
 
 const Connect = ({to, __internal, __internal_observedKeys, children}) => {
-  const shape = to && toShape(to.replace(whitespace, ''))
-  const observedKeys = toBaseKeys(shape || emptyObj)
-  const connectChildren = radar => StoreConsumer({
-    observedKeys,
-    children: state => children(shape ? pick(state, shape) : state, radar)
-  })
+  const shape =
+    to && toShape(to.replace(whitespace, '')),
+    observedKeys = toBaseKeys(shape || emptyObj),
+    connectChildren = radar => StoreConsumer({
+      observedKeys,
+      children: state => children(shape ? pick(state, shape) : state, radar)
+    })
 
   return __internal === true
     ? <EndpointConsumer observedKeys={__internal_observedKeys} children={connectChildren}/>
@@ -27,9 +28,10 @@ Connect.propTypes = /* remove-proptypes */ {
 const whitespace = /\s+/
 const toBaseKeys = memoize([WeakMap], to => Object.keys(to))
 const toShape = memoize([Map], strings => {
-  let out = {},
-      i = 0,
-      j = 0
+  let
+    out = {},
+    i = 0,
+    j = 0
   strings = strings.split(',')
 
   for (; i < strings.length; i++) {
@@ -41,12 +43,12 @@ const toShape = memoize([Map], strings => {
     else {
       const baseKey = strArr[0]
 
-      if (out[baseKey] === void 0) {
+      if (out[baseKey] === void 0)
         out[baseKey] = {}
-      }
 
-      const shape = {}
-      let nextShape = shape
+      let
+        shape = {},
+        nextShape = shape
 
       for (j = 1; j < strArr.length; j++) {
         const key = strArr[j]
@@ -63,6 +65,7 @@ const toShape = memoize([Map], strings => {
 
 export const useConnect = (...to) => {
   const shape = to.length && toShape(to.join(','))
+  // TODO: Remove comments below when useContext() supports observed bits
   // const observedKeys = toBaseKeys(shape)
   // const getBits = useContext(StoreInternalContext)
   // if (getBits === null) return emptyObj

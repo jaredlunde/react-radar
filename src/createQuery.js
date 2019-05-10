@@ -10,29 +10,25 @@ export const createReducer = (name, reducer) => {
 export const defaultReducer = createReducer(
   'defaultReducer',
   (prevState, nextState, context) => {
-    let remove = [],
-        realNextState = {},
-        nextKeys = Object.keys(nextState),
-        prevKeys = Object.keys(prevState),
-        i = 0
+    let
+      remove = [],
+      realNextState = {},
+      nextKeys = Object.keys(nextState),
+      prevKeys = Object.keys(prevState),
+      i = 0
 
     for (; i < nextKeys.length; i++) {
       const key = nextKeys[i]
 
-      if (nextState[key] === void 0 && nextState.hasOwnProperty(key)) {
+      if (nextState[key] === void 0 && nextState.hasOwnProperty(key))
         remove.push(nextState[key])
-      }
-      else {
+      else
         realNextState[key] = nextState[key]
-      }
     }
 
     for (i = 0; i < prevKeys.length; i++) {
       const key = prevKeys[i]
-
-      if (realNextState[key] === void 0) {
-        realNextState[key] = prevState[key]
-      }
+      if (realNextState[key] === void 0) realNextState[key] = prevState[key]
     }
 
     return remove.length > 0
@@ -58,18 +54,17 @@ export default ({
     invariant(name, `Queries must be created with a 'name' property.`)
   }
 
-  function Query (input = emptyObj, requires_, reducer_) {
-    if (typeof input === 'function') {
+  const Query = (input = emptyObj, requires_, reducer_) => {
+    if (typeof requires_ === 'function') {
       reducer_ = requires_
-      requires_ = input
-      input = null
+      requires_ = void 0
     }
 
     return {
       name,
       input,
       params: params(input),
-      requires: (requires_ || requires || noRequires)(input),
+      requires: requires_ ? requires_ : (requires || noRequires)(input),
 
       optimistic,
       rollback,

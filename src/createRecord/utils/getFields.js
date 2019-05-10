@@ -6,8 +6,10 @@ import recursivelyRequire from './recursivelyRequire'
 const requires = memoize(
   [Map, Map],
   (fields, requestedFields) => {
-    let shape = {}, i = 0
-    const parsedFields = parser.parse(requestedFields)
+    let
+      shape = {},
+      i = 0,
+      parsedFields = parser.parse(requestedFields)
 
     for (; i < parsedFields.length; i++) {
       const field = parsedFields[i]
@@ -21,11 +23,5 @@ const requires = memoize(
 
 export default (availableFields, requestedFields) => {
   let normalizedFields = normalize(requestedFields)
-
-  if (normalizedFields.length === 0) {
-    // normalizedFields = stringify(availableFields)
-    return null
-  }
-
-  return requires(availableFields, normalizedFields)
+  return normalizedFields.length === 0 ? null : requires(availableFields, normalizedFields)
 }

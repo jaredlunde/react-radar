@@ -15,13 +15,16 @@ const recursivelyRequire = (shape, allowedFields, field) => {
   if (field.shape === null) {
     shape[field.name] = null
   } else {
-    if (shape[field.name] === void 0) {
+    if (shape[field.name] === void 0)
       shape[field.name] = {}
-    } else if (shape[field.name] === null) {
+    else if (shape[field.name] === null)
       return shape
-    }
 
-    for (let i = 0; i < field.shape.length; i++) {
+    let
+      i = 0,
+      j = 0
+
+    for (; i < field.shape.length; i++) {
       let allowedField = allowedFields[field.name]
 
       if (typeof allowedField === 'function') {
@@ -36,12 +39,14 @@ const recursivelyRequire = (shape, allowedFields, field) => {
           // Check if current field is a shared field
           if (unions.sharedFields[field.shape[i].name] !== void 0) {
           //if (unions.sharedFields.hasOwnProperty(field.shape[i].name)) {
-            for (let union of Object.keys(unions.fields)) {
-              const unionShape = [{
-                name: union,
-                shape: [field.shape[i]]
-              }]
-              const unparsedShape = unparse(unionShape)
+            const unionKeys = Object.keys(unions.fields)
+            for (j = 0; j < unionKeys.length; j++) {
+              const
+                unionShape = [{
+                  name: unionKeys[j],
+                  shape: [field.shape[i]]
+                }],
+                unparsedShape = unparse(unionShape)
 
               recursivelyRequire(
                 shape[field.name],

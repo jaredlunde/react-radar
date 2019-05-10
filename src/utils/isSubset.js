@@ -5,11 +5,10 @@ const isSubset = (superset, subset) => {
     return false
 
   if (typeof superset === 'object' && typeof subset === 'object') {
-    if (superset.getTime !== void 0 || subset.getTime !== void 0) {
+    if (superset.getTime !== void 0 || subset.getTime !== void 0)
       return subset.constructor === superset.constructor
         ? superset.valueOf() === subset.valueOf()
         : false
-    }
 
     let
       subsetKeys = Object.keys(subset),

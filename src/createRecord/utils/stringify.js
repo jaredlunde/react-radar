@@ -6,18 +6,20 @@ import {isPlainObject} from '../../utils'
 const stringify = memoize(
   [Map],
   fields => {
-    let out = '', i = 0
-    const keys = Object.keys(fields).sort()
+    let
+      out = '',
+      i = 0,
+      keys = Object.keys(fields).sort()
 
     for (; i < keys.length; i++) {
-      const key = keys[i]
-      const val = fields[key]
+      const
+        key = keys[i],
+        val = fields[key]
 
-      if (isPlainObject(val) && !val.isRadarKey) {
-        out += ` ${key}{${stringify(val)}}`
-      } else {
-        out += ` ${key}`
-      }
+      out +=
+        isPlainObject(val) === true && val.isRadarKey !== true
+          ? ` ${key}{${stringify(val)}}`
+          : out += ` ${key}`
     }
 
     return out.replace(trim, '')

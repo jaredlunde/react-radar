@@ -6,7 +6,6 @@ import PropTypes from 'prop-types'
 export class WaitForPromises {
   // Map from Query component instances to pending promises.
   chunkPromises = []
-
   load () {
     return Promise.all(this.chunkPromises).then(() => this.chunkPromises = [])
   }
@@ -16,17 +15,9 @@ export default (app, render = require('react-dom/server').renderToStaticMarkup) 
   const waitForPromises = new WaitForPromises()
 
   class WaitForPromisesProvider extends React.Component {
-    static childContextTypes = {
-      waitForPromises: PropTypes.object,
-    }
-
-    getChildContext () {
-      return {waitForPromises}
-    }
-
-    render () {
-      return app
-    }
+    static childContextTypes = {waitForPromises: PropTypes.object}
+    getChildContext () { return {waitForPromises} }
+    render () { return app }
   }
 
   const process = () => {

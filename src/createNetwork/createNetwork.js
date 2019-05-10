@@ -17,11 +17,10 @@ const getRequestHeaders = ({body, headers}) => {
   if (typeof headers === 'function') {
     const promiseOrResult = headers(body)
 
-    if (promiseOrResult && typeof promiseOrResult.then === 'function') {
+    if (promiseOrResult && typeof promiseOrResult.then === 'function')
       return promiseOrResult
-    } else {
+    else
       realHeaders = promiseOrResult
-    }
   } else {
     realHeaders = headers
   }
@@ -58,13 +57,11 @@ export default props => {
         // sets user-defined headers
         headers = Object.assign({}, await getRequestHeaders({body, headers}))
         // sets headers from context
-        if (typeof context === 'object' && context.headers !== void 0) {
+        if (typeof context === 'object' && context.headers !== void 0)
           headers = Object.assign(headers, context.headers)
-        }
         // sets required headers
-        for (let name in REQUIRED_HEADERS) {
+        for (let name in REQUIRED_HEADERS)
           headers[name] = REQUIRED_HEADERS[name]
-        }
         // must be wrapped in CancelablePromise to make it cancelable
         const query = new Promise(
           resolve => postFetch(url, {...opt, headers}).then(resolve)
@@ -100,9 +97,8 @@ export default props => {
           const PENDING_UPDATE = [query, resolver, queryTimeout]
           pendingUpdates.push(PENDING_UPDATE)
           // if this is the only pending query, go ahead and resolve it
-          if (pendingUpdates.length === 1) {
+          if (pendingUpdates.length === 1)
             resolveSynchronously(pendingUpdates)
-          }
         }
         else {
           // asynchronously resolves the query and adds it to state
@@ -113,16 +109,12 @@ export default props => {
   }
 
   function abort () {
-    while (pendingUpdates.length) {
-      const [promise, resolver, timeout] = pendingUpdates.shift()
+    while (pendingUpdates.length > 0) {
+      const [promise, _, timeout] = pendingUpdates.shift()
       promise.cancel()
       clearTimeout(timeout)
     }
   }
 
-  function Network (endpoint) {
-    return endpoint({post, abort})
-  }
-
-  return Network
+  return endpoint => endpoint({post, abort})
 }

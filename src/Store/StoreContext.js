@@ -2,12 +2,13 @@ import React from 'react'
 
 
 export const calculateChangedBits = stateKey => (prev, next) => {
-  let prevState = prev[stateKey],
-      nextState = next[stateKey],
-      prevKeys =  Object.keys(prevState),
-      nextKeys =  Object.keys(nextState),
-      i = 0,
-      changedKeys = []
+  let
+    prevState = prev[stateKey],
+    nextState = next[stateKey],
+    prevKeys =  Object.keys(prevState),
+    nextKeys =  Object.keys(nextState),
+    i = 0,
+    changedKeys = []
 
   if (prevKeys.length === 0) {
     changedKeys = nextKeys
