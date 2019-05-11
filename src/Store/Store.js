@@ -1,6 +1,7 @@
-import React from 'react'
+import React, {useRef, useReducer, useCallback} from 'react'
 import PropTypes from 'prop-types'
 import emptyObj from 'empty/object'
+import emptyArr from 'empty/array'
 import {isNode} from '../utils'
 import createNetwork from '../createNetwork'
 import {
@@ -24,86 +25,78 @@ const formatHydrateQuery = query => ({
   type: 'QUERY'
 })
 
-export default class Store extends React.Component {
-  static defaultProps = {
-    network: createNetwork(),
-  }
+const Store = ({network = createNetwork(), cache, children}) => {
+  const keyObserver = useRef(null)
+  if (keyObserver.current === null) keyObserver.current = createKeyObserver()
 
-  static propTypes = {
+  const getNextState = useCallback(
+    (state = emptyObj, updates) => {
+      let start
+      if (__DEV__) start = now()
+      let nextState = toRecords(Object.assign({state: state._data}, updates))
+      // do a shallow comparison of the previous state to this one to avoid
+      // unnecessary re-renders
+      if (nextState === null || stateDidChange(state._data, nextState) === false) {
+        if (__DEV__) console.log('[Radar] state profiler:', now() - start)
+        return null
+      }
+      // used for calculating changed bits in React context
+      keyObserver.current.setBuckets(nextState)
+      // TODO: Maybe reinstate this?
+      // removes stale records to avoid unexpected behaviors
+      // when a record is removed from the state tree, it should be
+      // assumed that this record is 'cleared', as well
+      // collectStaleRecords(nextState)
+      if (__DEV__) {
+        console.log('[Radar] records', require('./utils/Records').default)
+        console.log('[Radar] state profiler:', now() - start)
+      }
+      return {
+        _data: __DEV__ ? Object.freeze(nextState) : nextState,
+        data: toImmutable(nextState),
+        getBits: keyObserver.current.getBits,
+      }
+    },
+    emptyArr
+  )
+
+  const init = useCallback(
+    cache => {
+      let state = defaultState
+      if (cache?.size && isNode === true) {
+        cache.forEach(
+          query =>
+            query.response && (state = getNextState(state, formatHydrateQuery(query)) || state)
+        )
+      }
+      // provides context for calculating changed bits
+      state.getBits = keyObserver.current.getBits
+      return state
+    },
+    emptyArr
+  )
+
+  const
+    reducer = useCallback((state, data) => Object.assign({}, state, data), emptyArr),
+    [state, dispatch] = useReducer(reducer, cache, init),
+    updateState = useCallback(
+      updates => dispatch(getNextState(state, updates(state.data))),
+      emptyArr
+    )
+
+  if (__DEV__) console.log('[Radar] state:\n', state._data)
+  return (
+    <StoreInternalContext.Provider value={keyObserver.current.getBits}>
+      <StoreContext.Provider value={state}>
+        <Endpoint updateState={updateState} cache={cache} network={network} children={children}/>
+      </StoreContext.Provider>
+    </StoreInternalContext.Provider>
+  )
+}
+
+if (__DEV__)
+  Store.propTypes = {
     network: PropTypes.func.isRequired
   }
 
-  constructor (props) {
-    super(props)
-    // used for only updating connections that actually changed with unstable_observeBits
-    // in react context
-    this.keyObserver = createKeyObserver()
-    // parses any initial state in props or the DOM
-    if (props.cache !== void 0 && props.cache.size > 0)
-      this.state = isNode === true ? this.hydrateNode(props.cache) : defaultState
-    else
-      // didn't have an initial state
-      this.state = defaultState
-    // provides context for calculating changed bits
-    this.state.getBits = this.keyObserver.getBits
-  }
-
-  hydrateNode (cache) {
-    let state = defaultState
-
-    cache.forEach(
-      query =>
-        query.response
-        && (state = this.getNextState(state, formatHydrateQuery(query)) || state)
-    )
-
-    return state
-  }
-
-  getNextState = (state = emptyObj, updates)=> {
-    let start
-    if (__DEV__) start = now()
-    let nextState = toRecords(Object.assign({state: state._data}, updates))
-    // do a shallow comparison of the previous state to this one to avoid
-    // unnecessary re-renders
-    if (nextState === null || stateDidChange(state._data, nextState) === false) {
-      if (__DEV__) console.log('[Radar] state profiler:', now() - start)
-      return null
-    }
-    // used for calculating changed bits in React context
-    this.keyObserver.setBuckets(nextState)
-    // TODO: Maybe reinstate this?
-    // removes stale records to avoid unexpected behaviors
-    // when a record is removed from the state tree, it should be
-    // assumed that this record is 'cleared', as well
-    // collectStaleRecords(nextState)
-    if (__DEV__) {
-      console.log('[Radar] records', require('./utils/Records').default)
-      console.log('[Radar] state profiler:', now() - start)
-    }
-    return {
-      _data: __DEV__ ? Object.freeze(nextState) : nextState,
-      data: toImmutable(nextState)
-    }
-  }
-
-  updateState = updates/*state => ({nextState, queries, [<context> response, type]})*/ => {
-    this.setState(state => this.getNextState(state, updates(state.data)))
-  }
-
-  render () {
-    if (__DEV__) console.log('[Radar] state:\n', this.state._data)
-    return (
-      <StoreInternalContext.Provider value={this.state.getBits}>
-        <StoreContext.Provider value={this.state}>
-          <Endpoint
-            updateState={this.updateState}
-            cache={this.props.cache}
-            network={this.props.network}
-            children={this.props.children}
-          />
-        </StoreContext.Provider>
-      </StoreInternalContext.Provider>
-    )
-  }
-}
+export default Store

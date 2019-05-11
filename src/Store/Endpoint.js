@@ -2,7 +2,6 @@ import React, {useMemo, useRef, useEffect, useCallback} from 'react'
 import useForceUpdate from 'use-force-update'
 import PropTypes from 'prop-types'
 import memoize from 'trie-memoize'
-import memoizeOne from '@essentials/memoize-one'
 import emptyObj from 'empty/object'
 import emptyArr from 'empty/array'
 import {stringify} from '../createRecord'
@@ -43,22 +42,19 @@ export const getQueryID = memoize([WeakMap], query => {
  */
 const Endpoint = ({store, network, children}) => {
   const
-    cache = useRef(store.cache || createCache()),
-    keyObserver = useRef(createKeyObserver()),
-    listeners = useRef({}),
+    cache = useRef(store.cache),
+    keyObserver = useRef(null),
+    listeners = useRef(null),
     queries = useRef(emptyObj),
     forceUpdate = useForceUpdate()
-  // garbage collect the cache each update
+  // populates current values for listeners, keyObserver, and cache
+  if (listeners.current === null) {
+    listeners.current = {}
+    keyObserver.current = createKeyObserver()
+    cache.current = cache.current || createCache()
+  }
+  // garbage collects the cache each update
   useEffect(() => cache.current.collect(), [queries.current])
-  // unsubscribes this endpoint from the cache on unmount
-  useEffect(
-    () => () => {
-      network.abort()
-      for (let id in listeners.current)
-        cache.current.unsubscribe(id, notify)
-    },
-    [network.abort]
-  )
   // This notification callback is passed to the cache. It's fired each time the cache
   // updates.
   const notify = useCallback(
@@ -68,6 +64,21 @@ const Endpoint = ({store, network, children}) => {
       forceUpdate()
     },
     emptyArr
+  )
+  // aborts network requests on unmount
+  useEffect(() => () => network.abort(), [network.abort])
+  // unsubscribes notifiers on unmount or when notify callback changes
+  useEffect(
+    () => {
+      for (let id in listeners.current)
+        cache.current.subscribe(id, notify)
+
+      return () => {
+        for (let id in listeners.current)
+          cache.current.unsubscribe(id, notify)
+      }
+    },
+    [notify]
   )
   // manages subscriptions from queries/updates
   const subscribe = useCallback(
@@ -189,7 +200,7 @@ const Endpoint = ({store, network, children}) => {
               case   0:
               case 200:
                 for (i = 0; i < queries.length; i++)
-                  if (response.json && response.json[i] && response.json[i].isRadarError === true)
+                  if (response?.json?.[i]?.isRadarError === true)
                     rollbacks.push(queries[i])
                 break
               default:
@@ -235,11 +246,9 @@ const Endpoint = ({store, network, children}) => {
         const updates = [], updateQueries = []
 
         for (let i = 0; i < opt.queries.length; i++) {
-          const
-            query = opt.queries[i],
-            cached = cache.current.get(getQueryID(query))
+          const query = opt.queries[i], cached = cache.current.get(getQueryID(query))
 
-          if (cached?.response !== void 0 && cached?.response?.json) {
+          if (cached?.response?.json) {
             updateQueries.push(query)
             updates.push(cached.response.json)
           }
@@ -259,26 +268,21 @@ const Endpoint = ({store, network, children}) => {
     async (opt, context = emptyObj) => {
       if (isNode === false) {
         let optimisticQueries = [],  i = 0
-
         for (; i < opt.queries.length; i++) {
           const query = opt.queries[i]
           if (typeof query.optimistic === 'function' || query.local !== false)
             optimisticQueries.push(query)
         }
-
         // commits an optimistic updates first but not on the server
         commitLocal({...opt, queries: optimisticQueries})
       }
       // creates query payloads for the network
       let {type = 'update', queries} = opt
-
       // commits the payloads to the network
       if (context.async === true) {
         let promises = [], i = 0
-
         for (; i < queries.length; i++)
           promises.push(processQueries(type, queries.slice(i, i + 1), context))
-
         return Promise.all(promises)
       }
 
@@ -300,24 +304,16 @@ const Endpoint = ({store, network, children}) => {
       commitFromCache,
       queries: queries.current
     }),
-    [
-      subscribe,
-      unsubscribe,
-      commitLocal,
-      commit,
-      commitFromCache,
-      queries.current
-    ]
+    [subscribe, unsubscribe, commitLocal, commit, commitFromCache, queries.current]
   )
 
-  return (
-    <EndpointInternalContext.Provider value={childContext.getBits}>
-      <EndpointContext.Provider value={childContext} children={children}/>
-    </EndpointInternalContext.Provider>
-  )
+  return <EndpointInternalContext.Provider
+    value={keyObserver.current.getBits}
+    children={<EndpointContext.Provider value={childContext} children={children}/>}
+  />
 }
 
-if (__DEV__) {
+if (__DEV__)
   Endpoint.propTypes = {
     store: PropTypes.shape({
       cache: PropTypes.object,
@@ -328,7 +324,6 @@ if (__DEV__) {
       abort: PropTypes.func.isRequired,
     }).isRequired
   }
-}
 
 export default ({children, network, ...props}) => network(
   context => <Endpoint network={context} store={props} children={children}/>

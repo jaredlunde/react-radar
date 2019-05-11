@@ -38,20 +38,21 @@ export default (
     },
     unsubscribe (id, notify) {
       const query = map.get(id)
-      if (query === void 0) return;
+      if (query === void 0) return
       const listeners = query.listeners
 
       if (listeners) {
         listeners.delete(notify)
+        // TODO: re-evaluate at a later date
         // deletes this query from the cache if there are no more listeners
-        if (listeners.size === 0)
-          map.delete(id)
+        // if (listeners.size === 0)
+        //   map.delete(id)
       }
     },
     collect: () => {
       // only deletes queries that aren't in loading states
       for (let [id, query] of map.entries())
-        if (query.listeners !== void 0 && query.listeners.size === 0 && query.status === 3)
+        if (query?.listeners?.size === 0 && query.status === 3)
           map.delete(id)
     },
     setStatus: (id, v) => cache.set(id, {status: v}),

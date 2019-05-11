@@ -106,14 +106,16 @@ export default props => {
     }
   )
 
-  const abort = () => {
-    while (pendingUpdates.length > 0) {
-      const [promise, _, timeout] = pendingUpdates.shift()
-      promise.cancel()
-      clearTimeout(timeout)
+  const network = {
+    post,
+    abort: () => {
+      while (pendingUpdates.length > 0) {
+        const [promise, _, timeout] = pendingUpdates.shift()
+        promise.cancel()
+        clearTimeout(timeout)
+      }
     }
   }
 
-  const network = {post, abort}
   return endpoint => endpoint(network)
 }
