@@ -19,7 +19,7 @@ const stringify = memoize(
       out +=
         isPlainObject(val) === true && val.isRadarKey !== true
           ? ` ${key}{${stringify(val)}}`
-          : out += ` ${key}`
+          : ` ${key}`
     }
 
     return out.replace(trim, '')
