@@ -2,6 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import memoize from 'trie-memoize'
 import memoizeOne from '@essentials/memoize-one'
+import {ServerPromisesContext} from '@react-hook/server-promises'
 import emptyObj from 'empty/object'
 import {stringify} from '../createRecord'
 import {invariant, isNode} from '../utils'
@@ -41,11 +42,7 @@ const getContext = memoizeOne((state, queries) => ({...state, queries}))
  * @extends React.Component
  */
 class Endpoint extends React.Component {
-  static contextTypes = {
-    // uses legacy for react-broker preloading compatibility
-    waitForPromises: PropTypes.object
-  }
-
+  static contextType = ServerPromisesContext
   static propTypes = {
     store: PropTypes.shape({
       cache: PropTypes.object,
@@ -65,7 +62,7 @@ class Endpoint extends React.Component {
       // internals
       setCached: this.cache.set.bind(this.cache.set),
       getCached: this.cache.get.bind(this.cache.get),
-      promises: context?.waitForPromises?.chunkPromises,
+      promises: context?.promises,
       subscribe: this.subscribe,
       unsubscribe: this.unsubscribe,
       getBits: this.keyObserver.getBits,

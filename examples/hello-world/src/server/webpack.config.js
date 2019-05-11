@@ -27,7 +27,8 @@ module.exports = createConfig({
       'node-fetch$': 'node-fetch/lib/index.js',
       webpack: path.join(__dirname, '../../node_modules/webpack'),
       react: path.join(__dirname, '../../node_modules/react'),
-      'react-dom': path.join(__dirname, '../../node_modules/react-dom')
+      'react-dom': path.join(__dirname, '../../node_modules/react-dom'),
+      '@react-hook/server-promises': path.join(__dirname, '../../../../node_modules/@react-hook/server-promises')
     },
   },
 
