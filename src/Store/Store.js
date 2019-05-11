@@ -63,12 +63,9 @@ const Store = ({network = createNetwork(), cache, children}) => {
   const init = useCallback(
     cache => {
       let state = defaultState
-      if (cache?.size && isNode === true) {
-        cache.forEach(
-          query =>
-            query.response && (state = getNextState(state, formatHydrateQuery(query)) || state)
-        )
-      }
+      if (cache?.size && isNode === true)
+        cache.forEach(query =>
+            query.response && (state = getNextState(state, formatHydrateQuery(query)) || state))
       // provides context for calculating changed bits
       state.getBits = keyObserver.current.getBits
       return state
@@ -78,18 +75,16 @@ const Store = ({network = createNetwork(), cache, children}) => {
 
   const
     reducer = useCallback(
-      (state, updates) =>
-        Object.assign({}, state, getNextState(state, updates(state.data))),
+      (state, updates) => Object.assign({}, state, getNextState(state, updates(state.data))),
       emptyArr
     ),
-    [state, dispatch] = useReducer(reducer, cache, init),
-    updateState = useCallback(updates => dispatch(updates), emptyArr)
+    [state, dispatch] = useReducer(reducer, cache, init)
 
   if (__DEV__) console.log('[Radar] state:\n', state._data)
   return (
     <StoreInternalContext.Provider value={keyObserver.current.getBits}>
       <StoreContext.Provider value={state}>
-        <Endpoint updateState={updateState} cache={cache} network={network} children={children}/>
+        <Endpoint updateState={dispatch} cache={cache} network={network} children={children}/>
       </StoreContext.Provider>
     </StoreInternalContext.Provider>
   )

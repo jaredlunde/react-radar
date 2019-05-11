@@ -29,7 +29,7 @@ const getState = ({run, endpoint}) => {
   }
 
   state.status = getAggregateStatus(state.queries)
-  state.is = is[this.state.status]
+  state.is = is[state.status]
   return state
 }
 
@@ -144,7 +144,7 @@ export const createQueryComponents = (isQuery = false) => {
             for (; i < state.id.length; i++)
               queries[state.id[i]] = run[i]
 
-            this.commit(queries, true)
+            commit(queries, true)
           }
         }
 
