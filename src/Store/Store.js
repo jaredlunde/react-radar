@@ -51,10 +51,10 @@ const Store = ({network = createNetwork(), cache, children}) => {
         console.log('[Radar] records', require('./utils/Records').default)
         console.log('[Radar] state profiler:', now() - start)
       }
+
       return {
         _data: __DEV__ ? Object.freeze(nextState) : nextState,
-        data: toImmutable(nextState),
-        getBits: keyObserver.current.getBits,
+        data: toImmutable(nextState)
       }
     },
     emptyArr
@@ -77,12 +77,13 @@ const Store = ({network = createNetwork(), cache, children}) => {
   )
 
   const
-    reducer = useCallback((state, data) => Object.assign({}, state, data), emptyArr),
-    [state, dispatch] = useReducer(reducer, cache, init),
-    updateState = useCallback(
-      updates => dispatch(getNextState(state, updates(state.data))),
+    reducer = useCallback(
+      (state, updates) =>
+        Object.assign({}, state, getNextState(state, updates(state.data))),
       emptyArr
-    )
+    ),
+    [state, dispatch] = useReducer(reducer, cache, init),
+    updateState = useCallback(updates => dispatch(updates), emptyArr)
 
   if (__DEV__) console.log('[Radar] state:\n', state._data)
   return (
