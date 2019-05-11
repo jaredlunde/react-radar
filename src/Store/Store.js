@@ -1,7 +1,6 @@
 import React, {useRef, useReducer, useCallback} from 'react'
 import PropTypes from 'prop-types'
 import emptyObj from 'empty/object'
-import emptyArr from 'empty/array'
 import {isNode} from '../utils'
 import createNetwork from '../createNetwork'
 import {
@@ -17,7 +16,6 @@ import Endpoint from './Endpoint'
 let now
 if (__DEV__) now = require('performance-now')
 
-const defaultState = {_data: emptyObj, data: emptyObj}
 const formatHydrateQuery = query => ({
   nextState: [query.response.json],
   response: query.response,
@@ -60,7 +58,6 @@ const Store = ({network = createNetwork(), cache, children}) => {
   const [state, dispatch] = useReducer(
     // reducer
     (state, updates) => {
-      console.log('Wtf...', state)
       const nextState = getNextState(state, updates(state.data))
 
       if (nextState === null)
@@ -74,7 +71,7 @@ const Store = ({network = createNetwork(), cache, children}) => {
     cache,
     // initializes the state
     cache => {
-      let state = defaultState
+      let state = {_data: emptyObj, data: emptyObj}
       // provides context for calculating changed bits
       state.getBits = keyObserver.current.getBits
       // pulls state from the cache
@@ -84,7 +81,8 @@ const Store = ({network = createNetwork(), cache, children}) => {
             const nextState = getNextState(state, formatHydrateQuery(query))
             if (nextState !== null) {
               keyObserver.current.setShards(nextState._data)
-              state = Object.assign({}, state, nextState)
+              // yes we can mutate here
+              state = Object.assign(state, nextState)
             }
           }
         })
