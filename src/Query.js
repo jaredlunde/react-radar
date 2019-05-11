@@ -193,7 +193,7 @@ export function createQueryComponent (opt = emptyObj) {
       for (; i < this.state.id.length; i++) {
         let id = this.state.id[i]
         endpoint.subscribe(id, this)
-        const query = endpoint.getCached(id)
+        let query = endpoint.getCached(id)
         // this will only run queries that aren't currently in a loading, done, or error state
         if (query.status === void 0 || query.status === WAITING) {
           queries[id] = run[i]

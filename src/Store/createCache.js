@@ -23,9 +23,9 @@ export default (
       }
 
       Object.assign(q, v)
-      q.listeners && q.listeners.forEach(c => c.notify(id, q))
+      q.listeners && q.listeners.forEach(notify => notify(id, q))
     },
-    subscribe (id, c) {
+    subscribe (id, notify) {
       let q = map.get(id)
 
       if (q === void 0) {
@@ -34,15 +34,15 @@ export default (
       }
 
       q.listeners = q.listeners || new Set()
-      q.listeners.add(c)
+      q.listeners.add(notify)
     },
-    unsubscribe (id, c) {
+    unsubscribe (id, notify) {
       const query = map.get(id)
       if (query === void 0) return;
       const listeners = query.listeners
 
       if (listeners) {
-        listeners.delete(c)
+        listeners.delete(notify)
         // deletes this query from the cache if there are no more listeners
         if (listeners.size === 0)
           map.delete(id)
