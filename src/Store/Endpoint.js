@@ -36,9 +36,8 @@ export const getQueryID = memoize([WeakMap], query => {
 })
 
 /**
- * The Endpoint component is the glue that binds together the Networking layer,
- * Props, the Store and Context.
- * @extends React.Component
+ * The Endpoint component is the glue that binds together the networking layer, store,
+ * and queries
  */
 const Endpoint = ({store, network, children}) => {
   const
@@ -91,7 +90,7 @@ const Endpoint = ({store, network, children}) => {
         queries.current = Object.assign({}, queries.current)
         queries.current[id] = cache.current.get(id)
         // used for calculating changed bits for context
-        keyObserver.current.setBucket(id)
+        keyObserver.current.setShard(id)
       }
 
       listeners.current[id].add(component)

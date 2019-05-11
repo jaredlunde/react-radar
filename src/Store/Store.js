@@ -25,64 +25,76 @@ const formatHydrateQuery = query => ({
   type: 'QUERY'
 })
 
+const getNextState = (state = emptyObj, updates) => {
+  let start
+  if (__DEV__) start = now()
+  let nextState = toRecords(Object.assign({state: state._data}, updates))
+  // do a shallow comparison of the previous state to this one to avoid
+  // unnecessary re-renders
+  if (nextState === null || stateDidChange(state._data, nextState) === false) {
+    if (__DEV__) console.log('[Radar] state profiler:', now() - start)
+    return null
+  }
+  // used for calculating changed bits in React context
+  // TODO: Maybe reinstate this?
+  // removes stale records to avoid unexpected behaviors
+  // when a record is removed from the state tree, it should be
+  // assumed that this record is 'cleared', as well
+  // collectStaleRecords(nextState)
+  if (__DEV__) {
+    console.log('[Radar] records', require('./utils/Records').default)
+    console.log('[Radar] state profiler:', now() - start)
+  }
+
+  return {
+    _data: __DEV__ ? Object.freeze(nextState) : nextState,
+    data: toImmutable(nextState)
+  }
+}
+
 const Store = ({network = createNetwork(), cache, children}) => {
   const keyObserver = useRef(null)
   if (keyObserver.current === null) keyObserver.current = createKeyObserver()
 
-  const getNextState = useCallback(
-    (state = emptyObj, updates) => {
-      let start
-      if (__DEV__) start = now()
-      let nextState = toRecords(Object.assign({state: state._data}, updates))
-      // do a shallow comparison of the previous state to this one to avoid
-      // unnecessary re-renders
-      if (nextState === null || stateDidChange(state._data, nextState) === false) {
-        if (__DEV__) console.log('[Radar] state profiler:', now() - start)
-        return null
-      }
-      // used for calculating changed bits in React context
-      keyObserver.current.setBuckets(nextState)
-      // TODO: Maybe reinstate this?
-      // removes stale records to avoid unexpected behaviors
-      // when a record is removed from the state tree, it should be
-      // assumed that this record is 'cleared', as well
-      // collectStaleRecords(nextState)
-      if (__DEV__) {
-        console.log('[Radar] records', require('./utils/Records').default)
-        console.log('[Radar] state profiler:', now() - start)
-      }
+  // this dispatcher is supplied to the child endpoint
+  const [state, dispatch] = useReducer(
+    // reducer
+    (state, updates) => {
+      console.log('Wtf...', state)
+      const nextState = getNextState(state, updates(state.data))
 
-      return {
-        _data: __DEV__ ? Object.freeze(nextState) : nextState,
-        data: toImmutable(nextState)
+      if (nextState === null)
+        return state
+      else {
+        keyObserver.current.setShards(nextState._data)
+        return Object.assign({}, state, nextState)
       }
     },
-    emptyArr
-  )
-
-  const init = useCallback(
+    // initial cache value
+    cache,
+    // initializes the state
     cache => {
       let state = defaultState
-      if (cache?.size && isNode === true)
-        cache.forEach(query =>
-            query.response && (state = getNextState(state, formatHydrateQuery(query)) || state))
       // provides context for calculating changed bits
       state.getBits = keyObserver.current.getBits
+      // pulls state from the cache
+      if (cache?.size && isNode === true)
+        cache.forEach(query => {
+          if (query.response) {
+            const nextState = getNextState(state, formatHydrateQuery(query))
+            if (nextState !== null) {
+              keyObserver.current.setShards(nextState._data)
+              state = Object.assign({}, state, nextState)
+            }
+          }
+        })
       return state
-    },
-    emptyArr
+    }
   )
-
-  const
-    reducer = useCallback(
-      (state, updates) => Object.assign({}, state, getNextState(state, updates(state.data))),
-      emptyArr
-    ),
-    [state, dispatch] = useReducer(reducer, cache, init)
 
   if (__DEV__) console.log('[Radar] state:\n', state._data)
   return (
-    <StoreInternalContext.Provider value={keyObserver.current.getBits}>
+    <StoreInternalContext.Provider value={state.getBits}>
       <StoreContext.Provider value={state}>
         <Endpoint updateState={dispatch} cache={cache} network={network} children={children}/>
       </StoreContext.Provider>
