@@ -7,7 +7,7 @@ import {
   toRecords,
   stateDidChange,
   toImmutable,
-  collectStaleRecords,
+  // collectStaleRecords,
   createKeyObserver
 } from './utils'
 import {StoreContext, StoreInternalContext} from './StoreContext'
@@ -72,11 +72,15 @@ export default class Store extends React.Component {
     }
     // used for calculating changed bits in React context
     this.keyObserver.setBuckets(nextState)
+    // TODO: Maybe reinstate this?
     // removes stale records to avoid unexpected behaviors
     // when a record is removed from the state tree, it should be
     // assumed that this record is 'cleared', as well
-    collectStaleRecords(nextState)
-    if (__DEV__) console.log('[Radar] state profiler:', now() - start)
+    // collectStaleRecords(nextState)
+    if (__DEV__) {
+      console.log('[Radar] records', require('./utils/Records').default)
+      console.log('[Radar] state profiler:', now() - start)
+    }
     return {
       _data: __DEV__ ? Object.freeze(nextState) : nextState,
       data: toImmutable(nextState)

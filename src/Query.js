@@ -2,6 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import emptyObj from 'empty/object'
 import emptyArr from 'empty/array'
+import {ServerPromisesContext} from '@react-hook/server-promises'
 import Connect from './Connect'
 import {WAITING, LOADING, ERROR, DONE, getQueryID} from './Store/Endpoint'
 import {EndpointConsumer} from './Store'
@@ -17,9 +18,10 @@ export function createQueryComponent (opt = emptyObj) {
   let {name = 'Query', prototype = emptyObj} = opt
 
   class Query extends React.Component {
+    static contextType = ServerPromisesContext
     id = null
 
-    constructor (props) {
+    constructor (props, context) {
       super(props)
       this.state = {
         id: getID(props.run),
@@ -51,10 +53,10 @@ export function createQueryComponent (opt = emptyObj) {
           // this checks to see if we're in a Node (SSR) environment
           isNode === true
           // makes sure this is a Query, not an update
-          && this.isRadarQuery
-          && endpoint.promises !== void 0
+          && this.isRadarQuery === true
+          && context?.promises
         ) {
-          endpoint.promises.push(this.load())
+          context.promises.push(this.load())
         }
 
         this.state.queries[id] = {status, response: query ? query.response : null}
@@ -225,10 +227,8 @@ export function createQueryComponent (opt = emptyObj) {
       ids = ids.length > 0 && typeof ids[0] === 'string' ? ids : this.state.id
       ids.forEach(id => {
         const query = this.props.endpoint.getCached(id)
-
-        if (query !== void 0 && query.status !== LOADING) {
+        if (query !== void 0 && query.status !== LOADING)
           this.props.endpoint.setCached(id, {status: WAITING})
-        }
       })
 
       return this.load()
@@ -269,10 +269,9 @@ export function createQueryComponent (opt = emptyObj) {
     }
   }
 
-  for (let key in prototype)
-    Query.prototype[key] = prototype[key]
+  for (let key in prototype) Query.prototype[key] = prototype[key]
 
-  const componentWithEndpoint = props => (
+  const componentWithEndpoint = props =>
     props.connect
       ? Connect({
           to: props.connect,
@@ -285,13 +284,11 @@ export function createQueryComponent (opt = emptyObj) {
           observedKeys={getID(props.run)}
           children={endpoint => <Query endpoint={endpoint} {...props}/>}
         />
-  )
 
   componentWithEndpoint.WAITING = WAITING
   componentWithEndpoint.ERROR = ERROR
   componentWithEndpoint.LOADING = LOADING
   componentWithEndpoint.DONE = DONE
-
   return componentWithEndpoint
 }
 

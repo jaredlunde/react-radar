@@ -2,7 +2,6 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import memoize from 'trie-memoize'
 import memoizeOne from '@essentials/memoize-one'
-import {ServerPromisesContext} from '@react-hook/server-promises'
 import emptyObj from 'empty/object'
 import {stringify} from '../createRecord'
 import {invariant, isNode} from '../utils'
@@ -42,7 +41,6 @@ const getContext = memoizeOne((state, queries) => ({...state, queries}))
  * @extends React.Component
  */
 class Endpoint extends React.Component {
-  static contextType = ServerPromisesContext
   static propTypes = {
     store: PropTypes.shape({
       cache: PropTypes.object,
@@ -54,15 +52,14 @@ class Endpoint extends React.Component {
     }).isRequired
   }
 
-  constructor (props, context) {
+  constructor (props) {
     super(props)
     this.cache = props.store.cache || createCache()
     this.keyObserver = createKeyObserver()
-    this.state = {
+    this.childContext = {
       // internals
       setCached: this.cache.set.bind(this.cache.set),
       getCached: this.cache.get.bind(this.cache.get),
-      promises: context?.promises,
       subscribe: this.subscribe,
       unsubscribe: this.unsubscribe,
       getBits: this.keyObserver.getBits,
@@ -80,7 +77,6 @@ class Endpoint extends React.Component {
 
   componentWillUnmount () {
     this.props.network.abort()
-
     for (let id in this.listeners)
       this.cache.unsubscribe(id, this)
   }
@@ -303,9 +299,9 @@ class Endpoint extends React.Component {
 
   render () {
     return (
-      <EndpointInternalContext.Provider value={this.state.getBits}>
+      <EndpointInternalContext.Provider value={this.childContext.getBits}>
         <EndpointContext.Provider
-          value={getContext(this.state, this.queries)}
+          value={getContext(this.childContext, this.queries)}
           children={this.props.children}
         />
       </EndpointInternalContext.Provider>
