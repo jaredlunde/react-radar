@@ -85,9 +85,8 @@ export const createQueryComponents = (isQuery = true) => {
           ? Promise.all(Object.entries(queries).map(([qid, query]) => commit({[qid]: query})))
           : commit(queries)
       },
-      id.concat([cxt.getCached, cxt.setCached,commit, parallel])
+      id.concat([cxt.getCached, cxt.setCached, commit, parallel])
     )
-
     // handles forceReload on mount
     if (isQuery === true)
       useEffect(
@@ -106,7 +105,6 @@ export const createQueryComponents = (isQuery = true) => {
         },
         emptyArr
       )
-
     // manages changes to the `id` between renders and determines the next state
     let isMounting = prevId.current === emptyArr, nextState = null, unchangedQueries = {}, i = 0
 
@@ -123,13 +121,18 @@ export const createQueryComponents = (isQuery = true) => {
         query = cxt.getCached(qid),
         prev = state.queries?.[qid]
 
+      cxt.subscribe(qid, componentId.current)
+
       if (query === void 0) {
-        cxt.subscribe(qid, componentId.current)
         const query = cxt.setCached(qid, {status: WAITING})
         nextState = nextState || {queries: {}}
         nextState.queries[qid] = Object.assign({}, query)
       }
-      else if (prev?.status !== query.status || prev.response !== query.response) {
+      else if (
+        (prev !== void 0 && isMounting === true)
+        || prev?.status !== query.status
+        || prev.response !== query.response
+      ) {
         nextState = nextState || {queries: {}}
         nextState.queries[qid] = Object.assign({}, query)
       }
@@ -140,9 +143,10 @@ export const createQueryComponents = (isQuery = true) => {
     if (nextState !== null) {
       // loads any SSR queries
       const waiting = id.filter(i => nextState.queries[i]?.status === WAITING)
-      if (waiting.length > 0) {
+
+      if (waiting.length > 0 && isQuery === true) {
         const promise = load(waiting)
-        if (isNode === true && isQuery === true && serverPromises)
+        if (isNode === true && serverPromises)
           serverPromises.push(promise)
       }
       // creates the full queries object
@@ -162,8 +166,11 @@ export const createQueryComponents = (isQuery = true) => {
       // dispatches the next state
       dispatch(nextState)
     }
-    console.log(`[${componentId.current}] status:`, state.status, state.is)
-    return useMemo(() => Object.assign({}, state, {reload: load}), [load, state])
+
+    return useMemo(
+      () => Object.assign({}, state, {[isQuery === true ? 'reload' : 'update']: load}),
+      [load, state]
+    )
   }
 
   const Query = ({connect, children, run, ...props}) => {

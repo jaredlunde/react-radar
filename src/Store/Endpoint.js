@@ -153,6 +153,8 @@ const Endpoint = ({store, network, children}) => {
               updates.push(query.optimistic(query.input, state, query))
             else
               updates.push(emptyObj)
+            // TODO: this could cause some fuckery, we'll see
+            cache.current.set(getQueryID(query), {status: DONE})
           }
 
           return {
