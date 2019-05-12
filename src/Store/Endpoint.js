@@ -94,6 +94,7 @@ const Endpoint = ({store, network, children}) => {
       }
 
       listeners.current[id].add(component)
+      return queries.current[id]
     },
     emptyArr
   )

@@ -5,7 +5,7 @@ import isStoreRecord from './isStoreRecord'
 import {RADAR_ID_KEY} from './invalidateID'
 
 
-export const RADAR_CHILDREN_KEY = '__@@RADAR_CHILDREN@@__'
+export const RADAR_CHILDREN_KEY = Symbol.for('radar.children')
 
 const getRecordsFromPlainObject = memoize(
   [WeakMap],

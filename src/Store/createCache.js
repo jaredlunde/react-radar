@@ -43,10 +43,9 @@ export default (
 
       if (listeners) {
         listeners.delete(notify)
-        // TODO: re-evaluate at a later date
         // deletes this query from the cache if there are no more listeners
-        // if (listeners.size === 0)
-        //   map.delete(id)
+        if (listeners.size === 0)
+          map.delete(id)
       }
     },
     collect: () => {

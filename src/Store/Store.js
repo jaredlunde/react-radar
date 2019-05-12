@@ -1,4 +1,4 @@
-import React, {useRef, useReducer, useCallback} from 'react'
+import React, {useRef, useReducer} from 'react'
 import PropTypes from 'prop-types'
 import emptyObj from 'empty/object'
 import {isNode} from '../utils'
@@ -7,7 +7,7 @@ import {
   toRecords,
   stateDidChange,
   toImmutable,
-  // collectStaleRecords,
+  collectStaleRecords,
   createKeyObserver
 } from './utils'
 import {StoreContext, StoreInternalContext} from './StoreContext'
@@ -33,12 +33,10 @@ const getNextState = (state = emptyObj, updates) => {
     if (__DEV__) console.log('[Radar] state profiler:', now() - start)
     return null
   }
-  // used for calculating changed bits in React context
-  // TODO: Maybe reinstate this?
   // removes stale records to avoid unexpected behaviors
   // when a record is removed from the state tree, it should be
   // assumed that this record is 'cleared', as well
-  // collectStaleRecords(nextState)
+  collectStaleRecords(nextState)
   if (__DEV__) {
     console.log('[Radar] records', require('./utils/Records').default)
     console.log('[Radar] state profiler:', now() - start)
@@ -59,13 +57,11 @@ const Store = ({network = createNetwork(), cache, children}) => {
     // reducer
     (state, updates) => {
       const nextState = getNextState(state, updates(state.data))
-
-      if (nextState === null)
-        return state
-      else {
-        keyObserver.current.setShards(nextState._data)
-        return Object.assign({}, state, nextState)
-      }
+      // bails out when next state returns null
+      if (nextState === null) return state
+      // immutably assigns next state to current state, updates our key observer
+      keyObserver.current.setShards(nextState._data)
+      return Object.assign({}, state, nextState)
     },
     // initial cache value
     cache,

@@ -6,11 +6,11 @@ export createRecordUpdate from './createRecordUpdate'
 export createUnion from './createUnion'
 export load from './load'
 export Key from './Key'
-export Query from './Query'
+export {Query} from './NextQuery'
+//export Query from './Query'
 export Store, {createCache, RadarConsumer, useRadar} from './Store'
 export Updater from './Updater'
 export withRadar from './withRadar'
-
 // reducer utils
 export {
   isSubset,
