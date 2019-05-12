@@ -101,6 +101,7 @@ const Endpoint = ({store, network, children}) => {
   // manages unmounts of queries/updates
   const unsubscribe = useCallback(
     (id, component) => {
+      console.log(`[${component}] unsubscribe:`, id)
       const idListeners = listeners.current[id]
 
       if (idListeners !== void 0) {
@@ -228,11 +229,11 @@ const Endpoint = ({store, network, children}) => {
         // if the response was not a 200 response it is considered an error status
         const status = response.ok === true ? DONE : ERROR
         // updates the cache for each query
-        for (i = 0; i < queries.length; i++)
-          cache.current.set(
-            getQueryID(queries[i]),
-            {status, response: {...response, json: response.json && response.json[i]}}
-          )
+        for (i = 0; i < queries.length; i++) {
+          const oneResponse = Object.assign({}, response)
+          oneResponse.json = response?.json?.[i]
+          cache.current.set(getQueryID(queries[i]), {status, response: oneResponse})
+        }
 
         return response
       }

@@ -164,6 +164,7 @@ export function createQueryComponent (opt = emptyObj) {
 
       if (loadFromCache === true)
         this.commit(loadCached, true)
+
       if (reload.length > 0)
         this.reload(reload)
     }

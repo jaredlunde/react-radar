@@ -24,6 +24,7 @@ export default (
 
       Object.assign(q, v)
       q.listeners && q.listeners.forEach(notify => notify(id, q))
+      return q
     },
     subscribe (id, notify) {
       let q = map.get(id)
