@@ -18,21 +18,18 @@ const getRecordKeys = memoize([WeakMap], obj => {
 
     if (typeof value === 'object' && value !== null) {
       if (isStoreRecord(value) === true) {
-        output[value.key] = 0
+        output[value.key] = value.key
         const childrenKeys = Object.values(value[RADAR_CHILDREN_KEY])
         // removes the record children
         for (j = 0; j < childrenKeys.length; j++) {
           const key = childrenKeys[j].key
-          output[key] = children[key].key
+          output[key] = key
         }
       }
       else {
-        const nestedValues = getRecordKeys(value)
-        if (nestedValues !== void 0 && nestedValues.size > 0) {
-          const nestedValues = Object.values(nestedValues)
-          for (j = 0; j < nestedValues.length; j++)
-            output[nestedValues[j]] = nestedValues[j]
-        }
+        const nestedValues = Object.values(getRecordKeys(value))
+        for (j = 0; j < nestedValues.length; j++)
+          output[nestedValues[j]] = nestedValues[j]
       }
     }
   }

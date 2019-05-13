@@ -94,8 +94,8 @@ export const createQueryComponents = (isQuery = true) => {
         // will still be added to the store synchronously
         return parallel === true
           ? Promise.all(
-              Object.entries(queries).map(([queryId, query]) => commit({[queryId]: query}))
-            )
+            Object.entries(queries).map(([queryId, query]) => commit({[queryId]: query}))
+          )
           : commit(queries)
       },
       [parallel]
@@ -207,6 +207,7 @@ export const createQueryComponents = (isQuery = true) => {
     }
     // unsubscribes from the endpoint on unmount
     useEffect(() => () => id.current.forEach(queryId => cxt.unsubscribe(queryId)), emptyArr)
+    console.log('State:', state)
     // returns the query context object
     return useMemoOne(
       () => Object.assign({}, state, {[isQuery === true ? 'reload' : 'update']: load}),

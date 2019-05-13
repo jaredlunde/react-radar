@@ -1,186 +1,214 @@
-import React, {useReducer, useMemo, useEffect, useContext, useCallback, useRef}  from 'react'
+import React, {useReducer, useEffect, useContext, useRef}  from 'react'
+import {useCallbackOne, useMemoOne} from 'use-memo-one'
 import emptyObj from 'empty/object'
 import emptyArr from 'empty/array'
 import {ServerPromisesContext} from '@react-hook/server-promises'
-import {WAITING, LOADING, ERROR, DONE, getQueryID} from './Store/Endpoint'
+import {WAITING, LOADING, ERROR, DONE, getQueryId} from './Store/Endpoint'
 import {EndpointContext} from './Store'
-import {isNode, strictShallowEqual} from './utils'
+import {isNode} from './utils'
 import Connect from './Connect'
 import PropTypes from 'prop-types'
 
 
 const
   is = ['waiting', 'error', 'loading', 'done'],
-  getAggregateStatus = queries => Math.min(...Object.values(queries).map(q => q.status))
-
-export const getID = queries =>
-  Array.isArray(queries) === true ? queries.map(getQueryID) : [getQueryID(queries)]
+  getAggregateStatus = queries => Math.min(...Object.values(queries).map(q => q.status)),
+  getNewIds = (prevIds, nextIds) => {
+    // yes, Array.filter exists, but due to the frequency of this call I thought it
+    // a good idea to make this function as fast as possible
+    const diff = []
+    for (let i = 0; i < nextIds.length; i++)
+      if (prevIds.indexOf(nextIds[i]) === -1)
+        diff.push(nextIds[i])
+    return diff
+  },
+  getStaleIds = (prevIds, nextIds) => getNewIds(nextIds, prevIds),
+  getId = queries => {
+    // yes, Array.map exists, but due to the frequency of this call I thought it
+    // a good idea to make this function as fast as possible
+    if (Array.isArray(queries) === true) {
+      const out = []
+      for (let i = 0; i < queries.length; i++)
+        out.push(getQueryId(queries[i]))
+      return out
+    }
+    else return [getQueryId(queries)]
+  }
 
 const init = ({cxt, id}) => {
-  let queries = {}
-  for (let i = 0; i < id.current.length; i++)
-    queries[id.current[i]] = Object.assign({}, cxt.getCached(id.current[i]))
-
+  let queries = {}, i = 0
+  for (; i < id.length; i++)
+    queries[id[i]] = Object.assign({status: WAITING}, cxt.getCached(id[i]))
   const status = getAggregateStatus(queries)
   return {status, is: is[status], queries}
 }
 
-const reducer = (state, nextState) => {
-  nextState = Object.assign({}, state, nextState)
-  nextState.status = getAggregateStatus(nextState.queries)
-  nextState.is = is[nextState.status]
-  return nextState
+const reducer = (state, queries) => {
+  const status = getAggregateStatus(queries)
+  return {queries, status, id: is[status]}
 }
 
 export const createQueryComponents = (isQuery = true) => {
   let
     name = isQuery === true ? 'Query' : 'Updater',
-    type = isQuery ? 'QUERY' : 'UPDATE',
-    uniqueId = 0
+    type = isQuery ? 'QUERY' : 'UPDATE'
 
   const useQuery = (queries, {parallel = false, async = false, forceReload = false}) => {
     const
       run = useRef(null),
       id = useRef(null),
       prevId = useRef(emptyArr),
-      newIds = useRef(emptyArr),
+      didMount = useRef(false),
       serverPromises = useContext(ServerPromisesContext),
       cxt = useContext(EndpointContext)
-    id.current = getID(queries)
+    id.current = getId(queries)
     run.current = Array.isArray(queries) === true ? queries : [queries]
-    const [state, dispatch] = useReducer(reducer, {cxt, id}, init)
+    const [state, dispatch] = useReducer(reducer, {cxt, id: id.current}, init)
     // commits a set of queries ot the network phase
-    const commit = useCallback(
-      (queriesObject = emptyObj, fromCache = false) => {
-        const queries = Object.values(queriesObject)
-        return cxt[fromCache === true ? 'commitFromCache' : 'commit']({queries, type}, {async})
-      },
-      [async, cxt.getCached, cxt.commit, cxt.commitFromCache]
+    const commit = useCallbackOne(
+      (queriesObject = emptyObj) => cxt.commit(
+        {queries: Object.values(queriesObject), type},
+        {async}
+      ),
+      [async]
+    )
+    // commmits a set of queries from the query cache
+    const commitFromCache = useCallbackOne(
+      (queriesObject = emptyObj) => cxt.commitFromCache(
+        {queries: Object.values(queriesObject), type},
+        {async}
+      ),
+      [async]
     )
     // loads a set of queries
-    const load = useCallback(
+    const load = useCallbackOne(
       ids => {
-        let queries = {}, i = 0
-        ids = ids?.length ? ids : id.current
-
-        for (; i < ids.length; i++) {
-          let qid = ids[i]
-          const query = cxt.subscribe(qid, dispatch)
-          // this will only run queries that aren't currently in a loading, done,
-          // or error state
-          if (query.status !== LOADING) {
-            queries[qid] = run.current[id.current.indexOf(qid)]
-            cxt.setCached(qid, {query: queries[qid], status: LOADING, response: null})
-          }
-        }
-        // parallel means that the queries are sent separately *over the network*, but they will
-        // still be added to the store synchronously
+        let queries = {};
+        (ids?.length ? ids : id.current)
+          .filter(queryId => cxt.getCached(queryId).status !== LOADING)
+          .forEach(queryId => {
+            queries[queryId] = run.current[id.current.indexOf(queryId)]
+            cxt.setCached(queryId, {query: queries[queryId], status: LOADING})
+          })
+        // parallel means that the queries are sent separately *over the network*, but they
+        // will still be added to the store synchronously
         return parallel === true
-          ? Promise.all(Object.entries(queries).map(([qid, query]) => commit({[qid]: query})))
+          ? Promise.all(
+            Object.entries(queries).map(([queryId, query]) => commit({[queryId]: query}))
+          )
           : commit(queries)
       },
-      [cxt.getCached, cxt.setCached, commit, parallel]
+      [parallel]
+    )
+    // reads any cached queries and commits them to the store
+    const loadFromCache = useCallbackOne(
+      () => {
+        let
+          newIds = getNewIds(prevId.current, id.current),
+          cached = Object.entries(state.queries).filter(
+            ([i, q]) => newIds.indexOf(i) > -1 && q.status === DONE
+          )
+
+        if (cached.length > 0)
+          commitFromCache(
+            cached.reduce(
+              (qs, [i]) => Object.assign(qs, {[i]: run.current[id.current.indexOf(i)]}),
+              {}
+            )
+          )
+      },
+      emptyArr
+    )
+    // This is here to prevent a flash during SSR rehydration. When loadFromCache() is only
+    // called in useEffect(), there is a very grotesque flash that happens while the data
+    // is pending its commit to the store. When it is done during this initial render phase,
+    // it doesn't happen.
+    useMemoOne(loadFromCache, emptyArr)
+    // this effect unsubscribes from stale queries each update and subscribes to new ones
+    useEffect(
+      () => {
+        // adds new subscriptions
+        getNewIds(prevId.current, id.current).forEach(queryId => cxt.subscribe(queryId))
+        // removes stale subscriptions
+        getStaleIds(prevId.current, id.current).forEach(queryId => cxt.unsubscribe(queryId))
+      }
+    )
+    // this effect is called any time the queries object changes in the state
+    useEffect(
+      () => {
+        // commits new ids in waiting states
+        if (isQuery === true) {
+          const waiting = getNewIds(prevId.current, id.current).filter(
+            queryId => state?.queries?.[queryId].status === WAITING
+          )
+          waiting.length > 0 && load(waiting)
+        }
+        // loads data from the query cache into the store if this isn't the initial mount
+        if (didMount.current === true)
+          loadFromCache()
+
+        didMount.current = true
+        // updates the prevId each time state.queries changes
+        prevId.current = id.current
+      },
+      [state.queries]
     )
     // handles forceReload on mount
     if (isQuery === true)
       useEffect(
         () => {
-          const reload =
-            Object
-              .entries(state.queries)
-              .filter(([_, q]) => q.status === DONE || q.status === ERROR)
-              .map(([i]) => i)
+          if (forceReload === true) {
+            const reload =
+              Object
+                .entries(state.queries)
+                .filter(([_, q]) => q.status === DONE || q.status === ERROR)
+                .map(([i]) => i)
 
-          if (forceReload === true && reload.length > 0) load(reload)
+            if (reload.length > 0) load(reload)
+          }
         },
-        [forceReload]
+        emptyArr
       )
-    // manages changes to the `id` between renders and determines the next state
-    let
-      isMounting = prevId.current === emptyArr,
-      nextState = null,
-      unchangedQueries = {},
-      i = 0
-
-    if (strictShallowEqual(id.current, prevId.current) === false) {
-      nextState = {queries: {}}
-      // handles stale id subscriptions
-      newIds.current = id.current.filter(i => prevId.current.indexOf(i) === -1)
-      prevId.current.forEach(i => id.current.indexOf(i) === -1 && cxt.unsubscribe(i, dispatch))
-      prevId.current = id.current
-    }
+    // derives `queries` state from props, only dispatching when there is new material
+    let nextQueries, unchanged = {}, i = 0
 
     for (; i < id.current.length; i++) {
       let
-        qid = id.current[i],
-        query = cxt.getCached(qid),
-        prev = state.queries?.[qid]
+        queryId = id.current[i],
+        query = cxt.getCached(queryId),
+        prev = state.queries?.[queryId]
 
-      if (query === void 0) {
-        const query = cxt.setCached(qid, {status: WAITING})
-        nextState = nextState || {queries: {}}
-        nextState.queries[qid] = Object.assign({}, query)
-      }
-      else if (
-        (prev !== void 0 && isMounting === true)
-        || prev?.status !== query.status
-        || prev.response !== query.response
-      ) {
-        nextState = nextState || {queries: {}}
-        nextState.queries[qid] = Object.assign({}, query)
-      }
+      if (query === void 0)
+        (nextQueries = nextQueries || {})[queryId] = Object.assign(
+          {},
+          cxt.setCached(queryId, {status: WAITING})
+        )
+      else if (prev?.status !== query.status || prev?.response !== query.response)
+        (nextQueries = nextQueries || {})[queryId] = Object.assign({}, query)
       else
-        unchangedQueries[qid] = Object.assign({}, query)
-
-      if (newIds.current.indexOf(qid) > -1)
-        cxt.subscribe(qid, dispatch)
+        unchanged[queryId] = Object.assign({}, query)
     }
 
-    if (nextState !== null) {
-      // loads any SSR queries
-      if (isQuery === true) {
-        const waiting = id.current.filter(i => !nextState.queries[i]?.status)
-        if (isNode === true && waiting.length > 0) {
+    if (nextQueries !== void 0) {
+      nextQueries = Object.assign(nextQueries, unchanged)
+      // this fetches any WAITING state queries in SSR
+      if (isNode === true && isQuery === true) {
+        const waiting = id.current.filter(queryId => nextQueries[queryId]?.status === WAITING)
+
+        if (waiting.length > 0) {
+          waiting.forEach(queryId => cxt.setCached(queryId, {status: WAITING}))
           const promise = load(waiting)
           if (serverPromises)
             serverPromises.push(promise)
         }
       }
-      // creates the full queries object
-      Object.assign(nextState.queries, unchangedQueries)
-      // dispatches the next state
-      dispatch(nextState)
+      // sets the new queries and status in local state
+      dispatch(nextQueries)
     }
-    // handles cleanup on unmount
-    useEffect(
-      () => {
-        // loads from cache
-        if (isNode === false && newIds.current.length > 0) {
-          let
-            cached = Object.entries(state.queries).filter(
-              ([i, q]) => newIds.current.indexOf(i) > -1 && q.status === DONE
-            ),
-            fromCache = cached.reduce(
-              (qs, [i]) => Object.assign(qs, {[i]: run.current[id.current.indexOf(i)]}),
-              {}
-            )
-
-          if (cached.length > 0)
-            commit(fromCache, true)
-        }
-
-        if (isQuery === true) {
-          const waiting = id.current.filter(i => state.queries[i].status === WAITING)
-          console.log('WAITING')
-          waiting.length > 0 && load(waiting)
-        }
-      },
-      [state.queries]
-    )
-    useEffect(() => id.current.forEach(i => cxt.subscribe(i, dispatch)))
-    useEffect(() => () => id.current.forEach(i => cxt.unsubscribe(i, dispatch)), emptyArr)
-
-    return useMemo(
+    // unsubscribes from the endpoint on unmount
+    useEffect(() => () => id.current.forEach(queryId => cxt.unsubscribe(queryId)), emptyArr)
+    // returns the query context object
+    return useMemoOne(
       () => Object.assign({}, state, {[isQuery === true ? 'reload' : 'update']: load}),
       [load, state]
     )
@@ -221,7 +249,6 @@ export const createQueryComponents = (isQuery = true) => {
   Query.ERROR = ERROR
   Query.LOADING = LOADING
   Query.DONE = DONE
-
   return [useQuery, Query]
 }
 
