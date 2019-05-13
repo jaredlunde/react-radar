@@ -45,16 +45,18 @@ export default (
         if (listeners) {
           listeners.delete(notify)
           // deletes this query from the cache if there are no more listeners
-          if (listeners.size === 0)
-            map.delete(id)
+          // if (listeners.size === 0)
+          //   map.delete(id)
         }
       },
-      collect: () => {
-        // only deletes queries that aren't in loading states
-        for (let [id, query] of map.entries())
-          if (query?.listeners?.size === 0 && query.status === 3)
-            map.delete(id)
-      },
+      // TODO: this should not be needed due to ref counting.... but we'll see
+      // collect: () => {
+      //   // only deletes queries that aren't in loading states
+      //   for (let [id, query] of map.entries())
+      //     if (query?.listeners?.size === 0 && query.status === 3)
+      //       map.delete(id)
+      // },
+      get size () { return map.size },
       forEach: map.forEach.bind(map),
       toJSON (...a) {
         const output = {}

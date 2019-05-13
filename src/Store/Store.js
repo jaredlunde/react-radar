@@ -75,6 +75,7 @@ const Store = ({network = createNetwork(), cache, children}) => {
         cache.forEach(query => {
           if (query.response) {
             const nextState = getNextState(state, formatHydrateQuery(query))
+
             if (nextState !== null) {
               keyObserver.current.setShards(nextState._data)
               // yes we can mutate here

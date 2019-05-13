@@ -81,7 +81,7 @@ const Endpoint = ({store, network, children}) => {
         cache.current.subscribe(id, notify)
         // sets the query in state
         // listeners.current[id] = new Set()
-        numListeners = 1
+        numListeners = 0
         queries.current = Object.assign({}, queries.current)
         queries.current[id] = cache.current.get(id)
         // used for calculating changed bits for context
@@ -89,7 +89,7 @@ const Endpoint = ({store, network, children}) => {
       }
 
       // listeners.current[id].add(component)
-      listeners.current.set(id, numListeners++)
+      listeners.current.set(id, ++numListeners)
       return queries.current[id]
     },
     emptyArr
@@ -100,7 +100,7 @@ const Endpoint = ({store, network, children}) => {
       let numListeners = listeners.current.get(id)
       if (numListeners !== void 0) {
         // listeners.current[id].delete(component)
-        listeners.current.set(id, numListeners--)
+        listeners.current.set(id, --numListeners)
         // if (idListeners.size === 0) {
         if (numListeners === 0) {
           cache.current.unsubscribe(id, notify)
@@ -300,7 +300,8 @@ const Endpoint = ({store, network, children}) => {
     [queries.current]
   )
   // garbage collects the cache each update
-  useEffect(() => { cache.current.collect() } , [queries.current])
+  // TODO: this should not be needed due to ref counting.... but we'll see
+  // useEffect(() => { cache.current.collect() } , [queries.current])
   useEffect(() => { console.log('Current listeners:', listeners.current) })
   return <EndpointInternalContext.Provider
     value={keyObserver.current.getBits}
