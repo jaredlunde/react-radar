@@ -64,6 +64,9 @@ export const createQueryComponents = (isQuery = true) => {
     id.current = getId(queries)
     run.current = Array.isArray(queries) === true ? queries : [queries]
     const [state, dispatch] = useReducer(reducer, {cxt, id: id.current}, init)
+    // subscribe/unsubscribe helpers
+    const subscribe = ids => { for (let i = 0; i < ids.length; i++)   cxt.subscribe(ids[i]) }
+    const unsubscribe = ids => { for (let i = 0; i < ids.length; i++) cxt.unsubscribe(ids[i]) }
     // commits a set of queries ot the network phase
     const commit = useCallbackOne(
       (queriesObject = emptyObj) => cxt.commit(
@@ -128,9 +131,9 @@ export const createQueryComponents = (isQuery = true) => {
     useEffect(
       () => {
         // adds new subscriptions
-        getNewIds(prevId.current, id.current).forEach(queryId => cxt.subscribe(queryId))
+        subscribe(getNewIds(prevId.current, id.current))
         // removes stale subscriptions
-        getStaleIds(prevId.current, id.current).forEach(queryId => cxt.unsubscribe(queryId))
+        unsubscribe(getStaleIds(prevId.current, id.current))
       }
     )
     // this effect is called any time the queries object changes in the state
@@ -206,7 +209,7 @@ export const createQueryComponents = (isQuery = true) => {
       dispatch(nextQueries)
     }
     // unsubscribes from the endpoint on unmount
-    useEffect(() => () => id.current.forEach(queryId => cxt.unsubscribe(queryId)), emptyArr)
+    useEffect(() => () => unsubscribe(id.current), emptyArr)
     // returns the query context object
     return useMemoOne(
       () => Object.assign({}, state, {[isQuery === true ? 'reload' : 'update']: load}),
