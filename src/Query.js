@@ -13,16 +13,32 @@ import PropTypes from 'prop-types'
 const
   is = ['waiting', 'error', 'loading', 'done'],
   getAggregateStatus = queries => Math.min(...Object.values(queries).map(q => q.status)),
-  getNewIds = (prevIds, nextIds) => nextIds.filter(id => prevIds.indexOf(id) === -1),
+  getNewIds = (prevIds, nextIds) => {
+    // yes, Array.filter exists, but due to the frequency of this call I thought it
+    // a good idea to make this function as fast as possible
+    const diff = []
+    for (let i = 0; i < nextIds.length; i++)
+      if (prevIds.indexOf(nextIds[i]) === -1)
+        diff.push(nextIds[i])
+    return diff
+  },
   getStaleIds = (prevIds, nextIds) => getNewIds(nextIds, prevIds),
-  getId =
-    queries =>
-      Array.isArray(queries) === true ? queries.map(getQueryId) : [getQueryId(queries)]
+  getId = queries => {
+    // yes, Array.map exists, but due to the frequency of this call I thought it
+    // a good idea to make this function as fast as possible
+    if (Array.isArray(queries) === true) {
+      const out = []
+      for (let i = 0; i < queries.length; i++)
+        out.push(getQueryId(queries[i]))
+      return out
+    }
+    else return [getQueryId(queries)]
+  }
 
 const init = ({cxt, id}) => {
   let queries = {}, i = 0
-  for (; i < id.current.length; i++)
-    queries[id.current[i]] = Object.assign({status: WAITING}, cxt.getCached(id.current[i]))
+  for (; i < id.length; i++)
+    queries[id[i]] = Object.assign({status: WAITING}, cxt.getCached(id[i]))
   const status = getAggregateStatus(queries)
   return {status, is: is[status], queries}
 }
@@ -47,7 +63,7 @@ export const createQueryComponents = (isQuery = true) => {
       cxt = useContext(EndpointContext)
     id.current = getId(queries)
     run.current = Array.isArray(queries) === true ? queries : [queries]
-    const [state, dispatch] = useReducer(reducer, {cxt, id}, init)
+    const [state, dispatch] = useReducer(reducer, {cxt, id: id.current}, init)
     // commits a set of queries ot the network phase
     const commit = useCallbackOne(
       (queriesObject = emptyObj) => cxt.commit(

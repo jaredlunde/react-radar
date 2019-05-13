@@ -6,30 +6,32 @@ import Records from './Records'
 
 const getRecordKeys = memoize([WeakMap], obj => {
   let
+    // logically, output should be a Set() here, however due to painfully slow Set iteration
+    // by comparison to Object iteration, it's an Object instead
     output = {},
     i = 0,
     j = 0,
-    objKeys = Object.keys(obj)
+    objValues = Array.isArray(obj) === true ? obj : Object.values(obj)
 
-  for (; i < objKeys.length; i++) {
-    const value = obj[objKeys[i]]
+  for (; i < objValues.length; i++) {
+    const value = objValues[i]
 
     if (typeof value === 'object' && value !== null) {
       if (isStoreRecord(value) === true) {
         output[value.key] = 0
-        const
-          children = value[RADAR_CHILDREN_KEY],
-          childrenKeys = Object.keys(children)
+        const childrenKeys = Object.values(value[RADAR_CHILDREN_KEY])
         // removes the record children
-        for (j = 0; j < childrenKeys.length; j++)
-          output[children[childrenKeys[j]].key] = 0
+        for (j = 0; j < childrenKeys.length; j++) {
+          const key = childrenKeys[j].key
+          output[key] = children[key].key
+        }
       }
       else {
         const nestedValues = getRecordKeys(value)
         if (nestedValues !== void 0 && nestedValues.size > 0) {
-          const nestedKeys = Object.keys(nestedValues)
-          for (j = 0; j < nestedKeys.length; j++)
-            output[nestedKeys[j]] = 0
+          const nestedValues = Object.values(nestedValues)
+          for (j = 0; j < nestedValues.length; j++)
+            output[nestedValues[j]] = nestedValues[j]
         }
       }
     }
@@ -51,3 +53,26 @@ export default nextState => {
   if (__DEV__)
     console.log('[Radar] records:', Records.size, '->', Records)
 }
+/*
+const bench = require('@essentials/benchmark').default
+const m = new Map()
+for (let i = 0; i < 10000; i++)
+  m.set(i, i)
+bench(() => { for (let key of m.keys()) key })
+bench(() => { for (let value of m.values()) value })
+*/
+
+/*
+ const bench = require('@essentials/benchmark').default
+ const m = {}
+ for (let i = 0; i < 10000; i++)
+ m[i] = i
+ bench(() => {
+ const keys = Object.keys(m)
+ for (let i = 0; i < keys.length; i++) keys[i]
+ })
+ bench(() => {
+ const values = Object.values(m)
+ for (let i = 0; i < values.length; i++) values[i]
+ })
+*/

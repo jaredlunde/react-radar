@@ -1,4 +1,4 @@
-import React, {useReducer} from 'react'
+import React, {useReducer, useEffect} from 'react'
 import {useMemoOne} from 'use-memo-one'
 import PropTypes from 'prop-types'
 import emptyObj from 'empty/object'
@@ -34,10 +34,6 @@ const getNextState = (state = emptyObj, updates) => {
     if (__DEV__) console.log('[Radar] state profiler:', now() - start)
     return null
   }
-  // removes stale records to avoid unexpected behaviors
-  // when a record is removed from the state tree, it should be
-  // assumed that this record is 'cleared', as well
-  collectStaleRecords(nextState)
 
   if (__DEV__) {
     console.log('[Radar] records', require('./utils/Records').default)
@@ -86,6 +82,12 @@ const Store = ({network = createNetwork(), cache, children}) => {
       return state
     }
   )
+  // Removes stale records to avoid unexpected behaviors
+  // when a record is removed from the state tree, it should be
+  // assumed that this record is 'cleared', as well.
+  //
+  // TODO: Maybe this belongs in getNextState()?
+  useEffect(() => { collectStaleRecords(state._data) }, [state._data])
 
   if (__DEV__) console.log('[Radar] state:\n', state._data)
   return (

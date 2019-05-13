@@ -3,11 +3,9 @@ import {RADAR_ID_KEY, RADAR_PREV_ID_KEY} from './invalidateID'
 
 
 export const childrenDidChange = children => {
-  const childKeys = Object.keys(children)
-
-  for (let i = 0; i < childKeys.length; i++) {
+  let childKeys = Object.keys(children), i = 0
+  for (; i < childKeys.length; i++) {
     const prevID = Number(childKeys[i])
-
     if (prevID !== children[prevID][RADAR_ID_KEY])
       // the record's ID was invalidated at some point
       return true

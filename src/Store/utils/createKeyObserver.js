@@ -36,7 +36,6 @@ export default () => {
     setShards (data) {
       // assigns a unique id to each key name for context sharding
       const dataKeys = Object.keys(data)
-
       for (i = 0; i < dataKeys.length; i++)
         setShard(dataKeys[i])
     },

@@ -26,7 +26,7 @@ export default ({fields = emptyObj, initialState = emptyObj, reducer = defaultRe
   // Whenever nodes are received from the server they go through this reducer
   // The node updated is based on the key field of that node
   const RecordReducer = (currentState, proposedState) => reducer(
-    Object.keys(currentState).length ? currentState : initialState,
+    Object.values(currentState).length > 0 ? currentState : initialState,
     proposedState
   )
 
