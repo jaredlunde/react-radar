@@ -84,22 +84,6 @@ export const createQueryComponents = (isQuery = true) => {
       },
       [parallel]
     )
-    // handles forceReload on mount
-    if (isQuery === true)
-      useEffect(
-        () => {
-          if (forceReload === true) {
-            const reload =
-              Object
-                .entries(state.queries)
-                .filter(([_, q]) => q.status === DONE || q.status === ERROR)
-                .map(([i]) => i)
-
-            if (reload.length > 0) load(reload)
-          }
-        },
-        emptyArr
-      )
     // reads any cached queries and commits them to the store
     const loadFromCache = useCallbackOne(
       () => {
@@ -128,8 +112,7 @@ export const createQueryComponents = (isQuery = true) => {
     useEffect(
       () => {
         // adds new subscriptions
-        let newIds = getNewIds(prevId.current, id.current)
-        newIds.forEach(queryId => cxt.subscribe(queryId))
+        getNewIds(prevId.current, id.current).forEach(queryId => cxt.subscribe(queryId))
         // removes stale subscriptions
         getStaleIds(prevId.current, id.current).forEach(queryId => cxt.unsubscribe(queryId))
       }
@@ -147,12 +130,29 @@ export const createQueryComponents = (isQuery = true) => {
         // loads data from the query cache into the store if this isn't the initial mount
         if (didMount.current === true)
           loadFromCache()
+
         didMount.current = true
+        // updates the prevId each time state.queries changes
+        prevId.current = id.current
       },
       [state.queries]
     )
-    // this effect updates the prevId each time state.queries changes
-    useEffect(() => { prevId.current = id.current }, [state.queries])
+    // handles forceReload on mount
+    if (isQuery === true)
+      useEffect(
+        () => {
+          if (forceReload === true) {
+            const reload =
+              Object
+                .entries(state.queries)
+                .filter(([_, q]) => q.status === DONE || q.status === ERROR)
+                .map(([i]) => i)
+
+            if (reload.length > 0) load(reload)
+          }
+        },
+        emptyArr
+      )
     // derives `queries` state from props, only dispatching when there is new material
     let nextQueries, unchanged = {}, i = 0
 
