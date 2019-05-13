@@ -16,7 +16,7 @@ export const WAITING = 0
 export const ERROR = 1
 export const LOADING = 2
 export const DONE = 3
-export const getQueryID = memoize([WeakMap], query => {
+export const getQueryId = memoize([WeakMap], query => {
   if (__DEV__) {
     invariant(
       query.reducer.id,
@@ -74,7 +74,7 @@ const Endpoint = ({store, network, children}) => {
   )
   // manages subscriptions from queries/updates
   const subscribe = useCallbackOne(
-    (id, component) => {
+    id => {
       if (listeners.current[id] === void 0) {
         // adds this endpoint to the cache's listeners
         cache.current.subscribe(id, notify)
@@ -95,7 +95,7 @@ const Endpoint = ({store, network, children}) => {
   )
   // manages unmounts of queries/updates
   const unsubscribe = useCallbackOne(
-    (id, component) => {
+    id => {
       if (listeners.current[id] !== void 0) {
         // listeners.current[id].delete(component)
         listeners.current[id]--
@@ -142,7 +142,7 @@ const Endpoint = ({store, network, children}) => {
               updates.push(query.optimistic(query.input, state, query))
             else
               updates.push(emptyObj)
-            cache.current.set(getQueryID(query), {status: DONE})
+            cache.current.set(getQueryId(query), {status: DONE})
           }
 
           return {
@@ -176,7 +176,7 @@ const Endpoint = ({store, network, children}) => {
         const commit = commitPayload(payload, context)
         // sets the commit promise in the cache
         for (i = 0; i < queries.length; i++)
-          cache.current.setCommit(getQueryID(queries[i]), commit)
+          cache.current.setCommit(getQueryId(queries[i]), commit)
         // resolves the commit promise
         let {response, nextState} = await commit
         // We only want to perform state updates with setState in the browser.
@@ -222,7 +222,7 @@ const Endpoint = ({store, network, children}) => {
         for (i = 0; i < queries.length; i++) {
           const oneResponse = Object.assign({}, response)
           oneResponse.json = response?.json?.[i]
-          cache.current.set(getQueryID(queries[i]), {status, response: oneResponse})
+          cache.current.set(getQueryId(queries[i]), {status, response: oneResponse})
         }
 
         return response
@@ -237,7 +237,7 @@ const Endpoint = ({store, network, children}) => {
         const updates = [], updateQueries = []
 
         for (let i = 0; i < opt.queries.length; i++) {
-          const query = opt.queries[i], cached = cache.current.get(getQueryID(query))
+          const query = opt.queries[i], cached = cache.current.get(getQueryId(query))
 
           if (cached?.response?.json) {
             updateQueries.push(query)
