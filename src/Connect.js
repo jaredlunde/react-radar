@@ -2,11 +2,11 @@ import React, {useContext} from 'react'
 import PropTypes from 'prop-types'
 import emptyObj from 'empty/object'
 import memoize from 'trie-memoize'
-import {StoreContext, StoreConsumer, RadarConsumer, EndpointConsumer} from './Store'
+import {StoreContext, StoreConsumer, RadarConsumer} from './Store'
 import {pick} from './utils'
 
 
-const Connect = ({to, __internal, __internal_observedKeys, children}) => {
+const Connect = ({to, children}) => {
   const shape =
     to && toShape(to.replace(whitespace, '')),
     observedKeys = toBaseKeys(shape || emptyObj),
@@ -15,9 +15,7 @@ const Connect = ({to, __internal, __internal_observedKeys, children}) => {
       children: state => children(shape ? pick(state, shape) : state, radar)
     })
 
-  return __internal === true
-    ? <EndpointConsumer observedKeys={__internal_observedKeys} children={connectChildren}/>
-    : RadarConsumer({children: connectChildren})
+  return RadarConsumer({children: connectChildren})
 }
 
 Connect.propTypes = /* remove-proptypes */ {
