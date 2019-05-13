@@ -1,4 +1,5 @@
-import React, {useRef, useReducer} from 'react'
+import React, {useReducer} from 'react'
+import {useMemoOne} from 'use-memo-one'
 import PropTypes from 'prop-types'
 import emptyObj from 'empty/object'
 import {isNode} from '../utils'
@@ -49,9 +50,7 @@ const getNextState = (state = emptyObj, updates) => {
 }
 
 const Store = ({network = createNetwork(), cache, children}) => {
-  const keyObserver = useRef(null)
-  if (keyObserver.current === null) keyObserver.current = createKeyObserver()
-
+  const keyObserver = useMemoOne(() => ({current: createKeyObserver()}))
   // this dispatcher is supplied to the child endpoint
   const [state, dispatch] = useReducer(
     // reducer

@@ -71,9 +71,11 @@ export default (
       const output = {}
 
       map.forEach((v, k) => {
-        output[k] = objectWithoutProps(v, jsonExclusions)
-        if (output[k].response)
-          output[k].response = objectWithoutProps(output[k].response, urlExclusion)
+        if (v.status !== 0) {
+          output[k] = objectWithoutProps(v, jsonExclusions)
+          if (output[k].response)
+            output[k].response = objectWithoutProps(output[k].response, urlExclusion)
+        }
       })
 
       return JSON.stringify(output, ...a)

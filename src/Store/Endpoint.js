@@ -1,4 +1,5 @@
-import React, {useMemo, useRef, useEffect, useCallback} from 'react'
+import React, {useRef, useEffect} from 'react'
+import {useCallbackOne, useMemoOne} from 'use-memo-one'
 import useForceUpdate from 'use-force-update'
 import PropTypes from 'prop-types'
 import memoize from 'trie-memoize'
@@ -41,22 +42,14 @@ export const getQueryID = memoize([WeakMap], query => {
  */
 const Endpoint = ({store, network, children}) => {
   const
-    cache = useRef(store.cache),
-    keyObserver = useRef(null),
-    listeners = useRef(null),
+    cache = useMemoOne(() => ({current: store.cache || createCache()})),
+    keyObserver = useMemoOne(() => ({current: createKeyObserver()})),
+    listeners = useRef({}),
     queries = useRef(emptyObj),
     forceUpdate = useForceUpdate()
-  // populates current values for listeners, keyObserver, and cache
-  if (listeners.current === null) {
-    listeners.current = {}
-    keyObserver.current = createKeyObserver()
-    cache.current = cache.current || createCache()
-  }
-  // garbage collects the cache each update
-  useEffect(() => cache.current.collect(), [queries.current])
   // This notification callback is passed to the cache. It's fired each time the cache
   // updates.
-  const notify = useCallback(
+  const notify = useCallbackOne(
     (id, query) => {
       queries.current = Object.assign({}, queries.current)
       queries.current[id] = Object.assign({}, query)
@@ -65,7 +58,7 @@ const Endpoint = ({store, network, children}) => {
     emptyArr
   )
   // aborts network requests on unmount
-  useEffect(() => () => network.abort(), [network.abort])
+  useEffect(() => () => network.abort(), emptyArr)
   // unsubscribes notifiers on unmount or when notify callback changes
   useEffect(
     () => {
@@ -77,47 +70,43 @@ const Endpoint = ({store, network, children}) => {
           cache.current.unsubscribe(id, notify)
       }
     },
-    [notify]
+    emptyArr
   )
   // manages subscriptions from queries/updates
-  const subscribe = useCallback(
+  const subscribe = useCallbackOne(
     (id, component) => {
       if (listeners.current[id] === void 0) {
         // adds this endpoint to the cache's listeners
         cache.current.subscribe(id, notify)
         // sets the query in state
-        listeners.current[id] = new Set()
+        // listeners.current[id] = new Set()
+        listeners.current[id] = 0
         queries.current = Object.assign({}, queries.current)
         queries.current[id] = cache.current.get(id)
         // used for calculating changed bits for context
         keyObserver.current.setShard(id)
       }
 
-      listeners.current[id].add(component)
+      // listeners.current[id].add(component)
+      listeners.current[id]++
       return queries.current[id]
     },
     emptyArr
   )
   // manages unmounts of queries/updates
-  const unsubscribe = useCallback(
+  const unsubscribe = useCallbackOne(
     (id, component) => {
-      console.log(`[${component}] unsubscribe:`, id)
-      const idListeners = listeners.current[id]
-
-      if (idListeners !== void 0) {
-        idListeners.delete(component)
-
-        if (idListeners.size === 0) {
+      if (listeners.current[id] !== void 0) {
+        // listeners.current[id].delete(component)
+        listeners.current[id]--
+        // if (idListeners.size === 0) {
+        if (listeners.current[id] === 0) {
           cache.current.unsubscribe(id, notify)
-          listeners.current[id] = void 0
-          let
-            nextQueries = {},
-            keys = Object.keys(queries.current),
-            i = 0,
-            qid
+          delete listeners.current[id]
+          let nextQueries = {}, keys = Object.keys(queries.current), i = 0
 
           for (; i < keys.length; i++) {
-            qid = keys[i]
+            const qid = keys[i]
             if (qid === id) continue
             nextQueries[qid] = queries.current[qid]
           }
@@ -129,16 +118,16 @@ const Endpoint = ({store, network, children}) => {
     emptyArr
   )
   // commits a query payload to the network
-  const commitPayload = useCallback(
+  const commitPayload = useCallbackOne(
     async (payload, context = emptyObj) => {
       // posts the JSON request
       const response = await network.post(payload, context)
       return {response, nextState: response.json}
     },
-    [network.post]
+    emptyArr
   )
   // commits local updates to the store
-  const commitLocal = useCallback(
+  const commitLocal = useCallbackOne(
     opt /*{type, queries}*/=> {
       // TODO: pass record state than the application state to optimistic and rollback
       //       when performing record updates. getting the state of the record will
@@ -153,7 +142,6 @@ const Endpoint = ({store, network, children}) => {
               updates.push(query.optimistic(query.input, state, query))
             else
               updates.push(emptyObj)
-            // TODO: this could cause some fuckery, we'll see
             cache.current.set(getQueryID(query), {status: DONE})
           }
 
@@ -168,7 +156,7 @@ const Endpoint = ({store, network, children}) => {
     emptyArr
   )
   // processes incoming queries
-  const processQueries = useCallback(
+  const processQueries = useCallbackOne(
     async (type, queries, context) => {
       let payload = [], i = 0
 
@@ -240,10 +228,10 @@ const Endpoint = ({store, network, children}) => {
         return response
       }
     },
-    [commitPayload]
+    emptyArr
   )
   // commits queries from the query cache to the store
-  const commitFromCache = useCallback(
+  const commitFromCache = useCallbackOne(
     opt => {
       opt.queries.length > 0 && store.updateState(state => {
         const updates = [], updateQueries = []
@@ -267,7 +255,7 @@ const Endpoint = ({store, network, children}) => {
     emptyArr
   )
   // routes the various query types to their proper committer
-  const commit = useCallback(
+  const commit = useCallbackOne(
     async (opt, context = emptyObj) => {
       if (isNode === false) {
         let optimisticQueries = [],  i = 0
@@ -291,10 +279,10 @@ const Endpoint = ({store, network, children}) => {
 
       return processQueries(type, queries, context)
     },
-    [processQueries, commitLocal]
+    emptyArr
   )
   // creates a child context for queries to consume
-  const childContext = useMemo(
+  const childContext = useMemoOne(
     () => ({
       // internals
       setCached: cache.current.set.bind(cache.current.set),
@@ -307,9 +295,11 @@ const Endpoint = ({store, network, children}) => {
       commitFromCache,
       queries: queries.current
     }),
-    [subscribe, unsubscribe, commitLocal, commit, commitFromCache, queries.current]
+    [queries.current]
   )
-
+  // garbage collects the cache each update
+  useEffect(() => { cache.current.collect() } , [queries.current])
+  useEffect(() => { console.log('Current listeners:', listeners.current) })
   return <EndpointInternalContext.Provider
     value={keyObserver.current.getBits}
     children={<EndpointContext.Provider value={childContext} children={children}/>}
