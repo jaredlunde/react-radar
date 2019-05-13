@@ -36,13 +36,20 @@ export const getQueryId = memoize([WeakMap], query => {
   return `${query.name}(${JSON.stringify(props)}) => ${query.reducer.id}(${stringify(requires)})`
 })
 
+let defaultCache
+const getDefaultCache = () => {
+  if (defaultCache === void 0)
+    defaultCache = createCache()
+  return defaultCache
+}
+
 /**
  * The Endpoint component is the glue that binds together the networking layer, store,
  * and queries
  */
-const Endpoint = ({store, network, children}) => {
+const Endpoint = ({cache = getDefaultCache(), network, dispatchState, children}) => {
+  cache = useRef(cache)
   const
-    cache = useMemoOne(() => ({current: store.cache || createCache()})),
     keyObserver = useMemoOne(() => ({current: createKeyObserver()})),
     listeners = useRef(new Map()),
     queries = useRef(emptyObj),
@@ -59,16 +66,11 @@ const Endpoint = ({store, network, children}) => {
   )
   // aborts network requests on unmount
   useEffect(() => () => network.abort(), emptyArr)
-  // unsubscribes notifiers on unmount or when notify callback changes
+  // unsubscribes notifiers on unmount
   useEffect(
-    () => {
+    () => () => {
       for (let id of listeners.current.keys())
-        cache.current.subscribe(id, notify)
-
-      return () => {
-        for (let id of listeners.current.keys())
-          cache.current.unsubscribe(id, notify)
-      }
+        cache.current.unsubscribe(id, notify)
     },
     emptyArr
   )
@@ -80,7 +82,6 @@ const Endpoint = ({store, network, children}) => {
         // adds this endpoint to the cache's listeners
         cache.current.subscribe(id, notify)
         // sets the query in state
-        // listeners.current[id] = new Set()
         numListeners = 0
         queries.current = Object.assign({}, queries.current)
         queries.current[id] = cache.current.get(id)
@@ -88,7 +89,6 @@ const Endpoint = ({store, network, children}) => {
         keyObserver.current.setShard(id)
       }
 
-      // listeners.current[id].add(component)
       listeners.current.set(id, ++numListeners)
       return queries.current[id]
     },
@@ -99,9 +99,7 @@ const Endpoint = ({store, network, children}) => {
     id => {
       let numListeners = listeners.current.get(id)
       if (numListeners !== void 0) {
-        // listeners.current[id].delete(component)
         listeners.current.set(id, --numListeners)
-        // if (idListeners.size === 0) {
         if (numListeners === 0) {
           cache.current.unsubscribe(id, notify)
           listeners.current.delete(id)
@@ -134,7 +132,7 @@ const Endpoint = ({store, network, children}) => {
       // TODO: pass record state than the application state to optimistic and rollback
       //       when performing record updates. getting the state of the record will
       //       require knowing its key, which would be an api change
-      opt.queries.length > 0 && store.updateState(
+      opt.queries.length > 0 && dispatchState(
         state => {
           let updates = [], i = 0
 
@@ -185,7 +183,7 @@ const Endpoint = ({store, network, children}) => {
         // On the server side we use the query cache and multiple iterations to populate the
         // data in the tree.
         if (isNode === false) {
-          store.updateState(state => {
+          dispatchState(state => {
             // function which executes rollbacks on queries that need them
             let rollbacks = []
 
@@ -235,7 +233,7 @@ const Endpoint = ({store, network, children}) => {
   // commits queries from the query cache to the store
   const commitFromCache = useCallbackOne(
     opt => {
-      opt.queries.length > 0 && store.updateState(state => {
+      opt.queries.length > 0 && dispatchState(() => {
         const updates = [], updateQueries = []
 
         for (let i = 0; i < opt.queries.length; i++) {
@@ -311,17 +309,12 @@ const Endpoint = ({store, network, children}) => {
 
 if (__DEV__)
   Endpoint.propTypes = {
-    store: PropTypes.shape({
-      cache: PropTypes.object,
-      updateState: PropTypes.func.isRequired,
-    }).isRequired,
+    cache: PropTypes.object,
+    dispatchState: PropTypes.func.isRequired,
     network: PropTypes.shape({
       post: PropTypes.func.isRequired,
       abort: PropTypes.func.isRequired,
     }).isRequired
   }
 
-export default ({children, network, ...props}) => network(
-  context => <Endpoint network={context} store={props} children={children}/>
-)
-
+export default Endpoint

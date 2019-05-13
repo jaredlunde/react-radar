@@ -93,7 +93,7 @@ const Store = ({network = createNetwork(), cache, children}) => {
   return (
     <StoreInternalContext.Provider value={state.getBits}>
       <StoreContext.Provider value={state}>
-        <Endpoint updateState={dispatch} cache={cache} network={network} children={children}/>
+        <Endpoint dispatchState={dispatch} cache={cache} network={network} children={children}/>
       </StoreContext.Provider>
     </StoreInternalContext.Provider>
   )
@@ -101,7 +101,10 @@ const Store = ({network = createNetwork(), cache, children}) => {
 
 if (__DEV__)
   Store.propTypes = {
-    network: PropTypes.func.isRequired
+    network: PropTypes.shape({
+      post: PropTypes.func.isRequired,
+      abort: PropTypes.func.isRequired
+    }).isRequired
   }
 
 export default Store

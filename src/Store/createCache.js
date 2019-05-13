@@ -24,7 +24,10 @@ export default (
         }
 
         Object.assign(q, v)
-        q.listeners && q.listeners.forEach(notify => notify(id, q))
+        if (q.listeners !== void 0)
+          for (let i = 0; i < q.listeners.length; i++)
+            q.listeners[i](id, q)
+
         return q
       },
       subscribe (id, notify) {
@@ -35,17 +38,19 @@ export default (
           map.set(id, q)
         }
 
-        (q.listeners = q.listeners || new Set()).add(notify)
+        (q.listeners = q.listeners || []).push(notify)
       },
       unsubscribe (id, notify) {
         const query = map.get(id)
         if (query === void 0) return
         const listeners = query.listeners
 
-        if (listeners) {
-          listeners.delete(notify)
+        if (listeners !== void 0) {
+          // removes the listener from the query's listeners arry
+          listeners[listeners.indexOf(notify)] = listeners[listeners.length - 1]
+          listeners.pop()
           // deletes this query from the cache if there are no more listeners
-          if (listeners.size === 0)
+          if (listeners.length === 0)
             map.delete(id)
         }
       },

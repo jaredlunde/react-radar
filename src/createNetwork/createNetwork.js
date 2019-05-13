@@ -106,7 +106,7 @@ export default props => {
     }
   )
 
-  const network = {
+  return {
     post,
     abort: () => {
       while (pendingUpdates.length > 0) {
@@ -116,6 +116,4 @@ export default props => {
       }
     }
   }
-
-  return endpoint => endpoint(network)
 }
