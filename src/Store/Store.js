@@ -93,7 +93,7 @@ const Store = ({network = createNetwork(), cache, children}) => {
   return (
     <StoreInternalContext.Provider value={state.getBits}>
       <StoreContext.Provider value={state}>
-        <Endpoint dispatchState={dispatch} cache={cache} network={network} children={children}/>
+        <Endpoint dispatch={dispatch} cache={cache} network={network} children={children}/>
       </StoreContext.Provider>
     </StoreInternalContext.Provider>
   )

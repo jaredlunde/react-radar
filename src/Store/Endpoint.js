@@ -47,7 +47,7 @@ const getDefaultCache = () => {
  * The Endpoint component is the glue that binds together the networking layer, store,
  * and queries
  */
-const Endpoint = ({cache = getDefaultCache(), network, dispatchState, children}) => {
+const Endpoint = ({cache = getDefaultCache(), network, dispatch, children}) => {
   cache = useRef(cache)
   const
     keyObserver = useMemoOne(() => ({current: createKeyObserver()})),
@@ -64,11 +64,12 @@ const Endpoint = ({cache = getDefaultCache(), network, dispatchState, children})
     },
     emptyArr
   )
-  // aborts network requests on unmount
-  useEffect(() => () => network.abort(), emptyArr)
-  // unsubscribes notifiers on unmount
+  // handles 'unmount'
   useEffect(
     () => () => {
+      // aborts any pending network requests
+      network.abort()
+      // unsubscribes notifiers from the query cache on unmount
       for (let id of listeners.current.keys())
         cache.current.unsubscribe(id, notify)
     },
@@ -132,7 +133,7 @@ const Endpoint = ({cache = getDefaultCache(), network, dispatchState, children})
       // TODO: pass record state than the application state to optimistic and rollback
       //       when performing record updates. getting the state of the record will
       //       require knowing its key, which would be an api change
-      opt.queries.length > 0 && dispatchState(
+      opt.queries.length > 0 && dispatch(
         state => {
           let updates = [], i = 0
 
@@ -183,7 +184,7 @@ const Endpoint = ({cache = getDefaultCache(), network, dispatchState, children})
         // On the server side we use the query cache and multiple iterations to populate the
         // data in the tree.
         if (isNode === false) {
-          dispatchState(state => {
+          dispatch(state => {
             // function which executes rollbacks on queries that need them
             let rollbacks = []
 
@@ -233,12 +234,11 @@ const Endpoint = ({cache = getDefaultCache(), network, dispatchState, children})
   // commits queries from the query cache to the store
   const commitFromCache = useCallbackOne(
     opt => {
-      opt.queries.length > 0 && dispatchState(() => {
-        const updates = [], updateQueries = []
+      opt.queries.length > 0 && dispatch(() => {
+        let updates = [], updateQueries = [], i = 0
 
-        for (let i = 0; i < opt.queries.length; i++) {
+        for (; i < opt.queries.length; i++) {
           const query = opt.queries[i], cached = cache.current.get(getQueryId(query))
-
           if (cached?.response?.json) {
             updateQueries.push(query)
             updates.push(cached.response.json)
@@ -310,7 +310,7 @@ const Endpoint = ({cache = getDefaultCache(), network, dispatchState, children})
 if (__DEV__)
   Endpoint.propTypes = {
     cache: PropTypes.object,
-    dispatchState: PropTypes.func.isRequired,
+    dispatch: PropTypes.func.isRequired,
     network: PropTypes.shape({
       post: PropTypes.func.isRequired,
       abort: PropTypes.func.isRequired,
