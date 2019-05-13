@@ -207,7 +207,6 @@ export const createQueryComponents = (isQuery = true) => {
     }
     // unsubscribes from the endpoint on unmount
     useEffect(() => () => id.current.forEach(queryId => cxt.unsubscribe(queryId)), emptyArr)
-    console.log('State:', state)
     // returns the query context object
     return useMemoOne(
       () => Object.assign({}, state, {[isQuery === true ? 'reload' : 'update']: load}),

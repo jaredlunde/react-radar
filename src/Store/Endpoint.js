@@ -302,7 +302,7 @@ const Endpoint = ({store, network, children}) => {
   // garbage collects the cache each update
   // TODO: this should not be needed due to ref counting.... but we'll see
   // useEffect(() => { cache.current.collect() } , [queries.current])
-  useEffect(() => { console.log('Current listeners:', listeners.current) })
+  // useEffect(() => { console.log('Current listeners:', listeners.current) })
   return <EndpointInternalContext.Provider
     value={keyObserver.current.getBits}
     children={<EndpointContext.Provider value={childContext} children={children}/>}
