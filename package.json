@@ -1,6 +1,6 @@
 {
   "name": "react-radar",
-  "version": "2.0.0-beta.87",
+  "version": "2.0.0-beta.97",
   "main": "dist/cjs/index.js",
   "browser": "dist/es/index.browser.js",
   "module": "dist/node-esm/index.esm.js",
@@ -49,7 +49,9 @@
     "is-mergeable-object": "^1.1.0",
     "node-fetch": "^2.5.0",
     "performance-now": "^2.1.0",
-    "trie-memoize": "^1.0.7"
+    "trie-memoize": "^1.0.7",
+    "use-force-update": "^1.0.5",
+    "use-memo-one": "^1.1.0"
   },
   "peerDependencies": {
     "prop-types": ">= 15.6.0",

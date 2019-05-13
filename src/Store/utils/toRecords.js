@@ -13,16 +13,16 @@ const toRecord = (props/*{state, query, recordType}*/) => {
   return createStoreRecord(props)
 }
 
-
 const fromPlainObject = (props/*{state, query, recordType, ...context}*/) => {
-  const
+  let
     output = {},
     recordType = props.recordType,
     state = props.state,
     stateKeys = Object.keys(state),
-    mutableBaseRecord = Object.assign({}, props)
+    mutableBaseRecord = Object.assign({}, props),
+    i = 0
 
-  for (let i = 0; i < stateKeys.length; i++) {
+  for (; i < stateKeys.length; i++) {
     const key = stateKeys[i]
     mutableBaseRecord.state = state[key]
     mutableBaseRecord.recordType = (
@@ -52,21 +52,20 @@ const fromPlainObject = (props/*{state, query, recordType, ...context}*/) => {
   return output
 }
 
-
 const fromArray = (props/*{state, query, recordType}*/) => {
-  const
+  let
     mutableProps = Object.assign({}, props),
     records = [],
-    state = mutableProps.state
+    state = mutableProps.state,
+    i = 0
 
-  for (let i = 0; i < state.length; i++) {
+  for (; i < state.length; i++) {
     mutableProps.state = state[i]
     records.push(routeToRecords(mutableProps))
   }
 
   return records
 }
-
 
 const routeToRecords = (props/*{state, query, recordType}*/) => {
   const state = props.state
@@ -80,7 +79,6 @@ const routeToRecords = (props/*{state, query, recordType}*/) => {
 
   return typeof props.recordType === 'function' ? props.recordType(state) : state
 }
-
 
 const withoutError = ['isRadarError']
 const withoutContext = ['recordType', 'state']
@@ -106,11 +104,11 @@ export default ({state, nextState, queries, ...context}) => {
       state = query.reducer(state, queryState, context)
       continue
     }
-
-    const stateKeys = Object.keys(queryState)
     context.hasErrors = false
 
     if (query.requires !== void 0) {
+      const stateKeys = Object.keys(queryState)
+
       for (j = 0; j < stateKeys.length; j++) {
         const key = stateKeys[j]
         context.recordType = query.requires[key]

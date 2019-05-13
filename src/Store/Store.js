@@ -1,4 +1,5 @@
-import React from 'react'
+import React, {useReducer, useEffect} from 'react'
+import {useMemoOne} from 'use-memo-one'
 import PropTypes from 'prop-types'
 import emptyObj from 'empty/object'
 import {isNode} from '../utils'
@@ -7,7 +8,7 @@ import {
   toRecords,
   stateDidChange,
   toImmutable,
-  // collectStaleRecords,
+  collectStaleRecords,
   createKeyObserver
 } from './utils'
 import {StoreContext, StoreInternalContext} from './StoreContext'
@@ -16,7 +17,6 @@ import Endpoint from './Endpoint'
 let now
 if (__DEV__) now = require('performance-now')
 
-const defaultState = {_data: emptyObj, data: emptyObj}
 const formatHydrateQuery = query => ({
   nextState: [query.response.json],
   response: query.response,
@@ -24,86 +24,87 @@ const formatHydrateQuery = query => ({
   type: 'QUERY'
 })
 
-export default class Store extends React.Component {
-  static defaultProps = {
-    network: createNetwork(),
+const getNextState = (state = emptyObj, updates) => {
+  let start
+  if (__DEV__) start = now()
+  let nextState = toRecords(Object.assign({state: state._data}, updates))
+  // do a shallow comparison of the previous state to this one to avoid
+  // unnecessary re-renders
+  if (nextState === null || stateDidChange(state._data, nextState) === false) {
+    if (__DEV__) console.log('[Radar] state profiler:', now() - start)
+    return null
   }
 
-  static propTypes = {
-    network: PropTypes.func.isRequired
+  if (__DEV__) {
+    console.log('[Radar] records', require('./utils/Records').default)
+    console.log('[Radar] state profiler:', now() - start)
   }
 
-  constructor (props) {
-    super(props)
-    // used for only updating connections that actually changed with unstable_observeBits
-    // in react context
-    this.keyObserver = createKeyObserver()
-    // parses any initial state in props or the DOM
-    if (props.cache !== void 0 && props.cache.size > 0)
-      this.state = isNode === true ? this.hydrateNode(props.cache) : defaultState
-    else
-      // didn't have an initial state
-      this.state = defaultState
-    // provides context for calculating changed bits
-    this.state.getBits = this.keyObserver.getBits
-  }
-
-  hydrateNode (cache) {
-    let state = defaultState
-
-    cache.forEach(
-      query =>
-        query.response
-        && (state = this.getNextState(state, formatHydrateQuery(query)) || state)
-    )
-
-    return state
-  }
-
-  getNextState = (state = emptyObj, updates)=> {
-    let start
-    if (__DEV__) start = now()
-    let nextState = toRecords(Object.assign({state: state._data}, updates))
-    // do a shallow comparison of the previous state to this one to avoid
-    // unnecessary re-renders
-    if (nextState === null || stateDidChange(state._data, nextState) === false) {
-      if (__DEV__) console.log('[Radar] state profiler:', now() - start)
-      return null
-    }
-    // used for calculating changed bits in React context
-    this.keyObserver.setBuckets(nextState)
-    // TODO: Maybe reinstate this?
-    // removes stale records to avoid unexpected behaviors
-    // when a record is removed from the state tree, it should be
-    // assumed that this record is 'cleared', as well
-    // collectStaleRecords(nextState)
-    if (__DEV__) {
-      console.log('[Radar] records', require('./utils/Records').default)
-      console.log('[Radar] state profiler:', now() - start)
-    }
-    return {
-      _data: __DEV__ ? Object.freeze(nextState) : nextState,
-      data: toImmutable(nextState)
-    }
-  }
-
-  updateState = updates/*state => ({nextState, queries, [<context> response, type]})*/ => {
-    this.setState(state => this.getNextState(state, updates(state.data)))
-  }
-
-  render () {
-    if (__DEV__) console.log('[Radar] state:\n', this.state._data)
-    return (
-      <StoreInternalContext.Provider value={this.state.getBits}>
-        <StoreContext.Provider value={this.state}>
-          <Endpoint
-            updateState={this.updateState}
-            cache={this.props.cache}
-            network={this.props.network}
-            children={this.props.children}
-          />
-        </StoreContext.Provider>
-      </StoreInternalContext.Provider>
-    )
+  return {
+    _data: __DEV__ ? Object.freeze(nextState) : nextState,
+    data: toImmutable(nextState)
   }
 }
+
+const Store = ({network = createNetwork(), cache, children}) => {
+  const keyObserver = useMemoOne(() => ({current: createKeyObserver()}))
+  // this dispatcher is supplied to the child endpoint
+  const [state, dispatch] = useReducer(
+    // reducer
+    (state, updates) => {
+      const nextState = getNextState(state, updates(state.data))
+      // bails out when next state returns null
+      if (nextState === null) return state
+      // immutably assigns next state to current state, updates our key observer
+      keyObserver.current.setShards(nextState._data)
+      return Object.assign({}, state, nextState)
+    },
+    // initial cache value
+    cache,
+    // initializes the state
+    cache => {
+      let state = {_data: emptyObj, data: emptyObj}
+      // provides context for calculating changed bits
+      state.getBits = keyObserver.current.getBits
+      // pulls state from the cache
+      if (cache?.size && isNode === true)
+        cache.forEach(query => {
+          if (query.response) {
+            const nextState = getNextState(state, formatHydrateQuery(query))
+
+            if (nextState !== null) {
+              keyObserver.current.setShards(nextState._data)
+              // yes we can mutate here
+              state = Object.assign(state, nextState)
+            }
+          }
+        })
+      return state
+    }
+  )
+  // Removes stale records to avoid unexpected behaviors
+  // when a record is removed from the state tree, it should be
+  // assumed that this record is 'cleared', as well.
+  //
+  // TODO: Maybe this belongs in getNextState()?
+  useEffect(() => { collectStaleRecords(state._data) }, [state._data])
+
+  if (__DEV__) console.log('[Radar] state:\n', state._data)
+  return (
+    <StoreInternalContext.Provider value={state.getBits}>
+      <StoreContext.Provider value={state}>
+        <Endpoint dispatch={dispatch} cache={cache} network={network} children={children}/>
+      </StoreContext.Provider>
+    </StoreInternalContext.Provider>
+  )
+}
+
+if (__DEV__)
+  Store.propTypes = {
+    network: PropTypes.shape({
+      post: PropTypes.func.isRequired,
+      abort: PropTypes.func.isRequired
+    }).isRequired
+  }
+
+export default Store

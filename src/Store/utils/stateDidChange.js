@@ -15,10 +15,10 @@ export default (prevState, nextState) => {
     return false
 
   const
-    prevStateKeys = Object.values(prevState),
+    prevStateValues = Object.values(prevState),
     nextStateKeys = Object.keys(nextState)
 
-  if (prevStateKeys.length !== nextStateKeys.length)
+  if (prevStateValues.length !== nextStateKeys.length)
     return true
 
   let i = 0, j = 0

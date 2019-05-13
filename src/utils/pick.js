@@ -7,9 +7,9 @@ export const pickShape = (from, shape) => {
 
   const output = {}
   shape = shape.isRadarRecord || shape.isRadarUnion ? shape.fields : shape
-  const shapeKeys = Object.keys(shape)
+  let shapeKeys = Object.keys(shape), i = 0
 
-  for (let i = 0; i < shapeKeys.length; i++) {
+  for (; i < shapeKeys.length; i++) {
     const
       key = shapeKeys[i],
       fromVal = from[key]
@@ -40,12 +40,10 @@ export const pick = memoize([WeakMap, WeakMap], (from, shape) => {
       output.push(pickShape(from[i], shape));
     return __DEV__ ? Object.freeze(output) : output
   }
-  else if (isPlainObject(from) === true) {
+  else if (isPlainObject(from) === true)
     return pickShape(from, shape)
-  }
-  else {
+  else
     return from
-  }
 })
 
 export default pick

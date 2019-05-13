@@ -1,8 +1,10 @@
-import React from 'react'
+import React, {useRef, useEffect} from 'react'
+import {useCallbackOne, useMemoOne} from 'use-memo-one'
+import useForceUpdate from 'use-force-update'
 import PropTypes from 'prop-types'
 import memoize from 'trie-memoize'
-import memoizeOne from '@essentials/memoize-one'
 import emptyObj from 'empty/object'
+import emptyArr from 'empty/array'
 import {stringify} from '../createRecord'
 import {invariant, isNode} from '../utils'
 import {createKeyObserver} from './utils'
@@ -14,7 +16,7 @@ export const WAITING = 0
 export const ERROR = 1
 export const LOADING = 2
 export const DONE = 3
-export const getQueryID = memoize([WeakMap], query => {
+export const getQueryId = memoize([WeakMap], query => {
   if (__DEV__) {
     invariant(
       query.reducer.id,
@@ -33,163 +35,156 @@ export const getQueryID = memoize([WeakMap], query => {
 
   return `${query.name}(${JSON.stringify(props)}) => ${query.reducer.id}(${stringify(requires)})`
 })
-const getContext = memoizeOne((state, queries) => ({...state, queries}))
+
+let defaultCache
+const getDefaultCache = () => {
+  if (defaultCache === void 0)
+    defaultCache = createCache()
+  return defaultCache
+}
 
 /**
- * The Endpoint component is the glue that binds together the Networking layer,
- * Props, the Store and Context.
- * @extends React.Component
+ * The Endpoint component is the glue that binds together the networking layer, store,
+ * and queries
  */
-class Endpoint extends React.Component {
-  static propTypes = {
-    store: PropTypes.shape({
-      cache: PropTypes.object,
-      updateState: PropTypes.func.isRequired,
-    }).isRequired,
-    network: PropTypes.shape({
-      post: PropTypes.func.isRequired,
-      abort: PropTypes.func.isRequired,
-    }).isRequired
-  }
+const Endpoint = ({cache = getDefaultCache(), network, dispatch, children}) => {
+  cache = useRef(cache)
+  const
+    keyObserver = useMemoOne(() => ({current: createKeyObserver()})),
+    listeners = useRef(new Map()),
+    queries = useRef(emptyObj),
+    forceUpdate = useForceUpdate()
+  // This notification callback is passed to the cache. It's fired each time the cache
+  // updates.
+  const notify = useCallbackOne(
+    (id, query) => {
+      queries.current = Object.assign({}, queries.current)
+      queries.current[id] = Object.assign({}, query)
+      forceUpdate()
+    },
+    emptyArr
+  )
+  // handles 'unmount'
+  useEffect(
+    () => () => {
+      // aborts any pending network requests
+      network.abort()
+      // unsubscribes notifiers from the query cache on unmount
+      for (let id of listeners.current.keys())
+        cache.current.unsubscribe(id, notify)
+    },
+    emptyArr
+  )
+  // manages subscriptions from queries/updates
+  const subscribe = useCallbackOne(
+    id => {
+      let numListeners = listeners.current.get(id)
+      if (numListeners === void 0) {
+        // adds this endpoint to the cache's listeners
+        cache.current.subscribe(id, notify)
+        // sets the query in state
+        numListeners = 0
+        queries.current = Object.assign({}, queries.current)
+        queries.current[id] = cache.current.get(id)
+        // used for calculating changed bits for context
+        keyObserver.current.setShard(id)
+      }
 
-  constructor (props) {
-    super(props)
-    this.cache = props.store.cache || createCache()
-    this.keyObserver = createKeyObserver()
-    this.childContext = {
-      // internals
-      setCached: this.cache.set.bind(this.cache.set),
-      getCached: this.cache.get.bind(this.cache.get),
-      subscribe: this.subscribe,
-      unsubscribe: this.unsubscribe,
-      getBits: this.keyObserver.getBits,
-      // local 'optimistic' updates, does not send commit over the network
-      commitLocal: this.commitLocal,
-      // remote + optimistic updates - commits to the network
-      commit: this.commit,
-      commitFromCache: this.commitFromCache
-    }
-  }
+      listeners.current.set(id, ++numListeners)
+      return queries.current[id]
+    },
+    emptyArr
+  )
+  // manages unmounts of queries/updates
+  const unsubscribe = useCallbackOne(
+    id => {
+      let numListeners = listeners.current.get(id)
+      if (numListeners !== void 0) {
+        listeners.current.set(id, --numListeners)
+        if (numListeners === 0) {
+          cache.current.unsubscribe(id, notify)
+          listeners.current.delete(id)
+          let nextQueries = {}, keys = Object.keys(queries.current), i = 0
 
-  componentDidUpdate () {
-    this.cache.collect()
-  }
+          for (; i < keys.length; i++) {
+            const qid = keys[i]
+            if (qid === id) continue
+            nextQueries[qid] = queries.current[qid]
+          }
 
-  componentWillUnmount () {
-    this.props.network.abort()
-    for (let id in this.listeners)
-      this.cache.unsubscribe(id, this)
-  }
-
-  listeners = {}
-  queries = {}
-
-  subscribe = (id, component) => {
-    if (this.listeners[id] === void 0) {
-      // adds this endpoint to the cache's listeners
-      this.cache.subscribe(id, this)
-      // sets the query in state
-      this.listeners[id] = new Set()
-      this.queries = Object.assign({}, this.queries)
-      this.queries[id] = this.cache.get(id)
-      // used for calculating changed bits for context
-      this.keyObserver.setBucket(id)
-    }
-
-    this.listeners[id].add(component)
-  }
-
-  unsubscribe = (id, component) => {
-    const listeners = this.listeners[id]
-
-    if (listeners !== void 0) {
-      listeners.delete(component)
-
-      if (listeners.size === 0) {
-        this.cache.unsubscribe(id, this)
-        this.listeners[id] = void 0
-        let
-          nextQueries = {},
-          keys = Object.keys(this.queries),
-          i = 0,
-          qid
-
-        for (; i < keys.length; i++) {
-          qid = keys[i]
-          if (qid === id) continue
-          nextQueries[qid] = this.queries[qid]
+          queries.current = nextQueries
         }
-
-        this.queries = nextQueries
       }
-    }
-  }
+    },
+    emptyArr
+  )
+  // commits a query payload to the network
+  const commitPayload = useCallbackOne(
+    async (payload, context = emptyObj) => {
+      // posts the JSON request
+      const response = await network.post(payload, context)
+      return {response, nextState: response.json}
+    },
+    emptyArr
+  )
+  // commits local updates to the store
+  const commitLocal = useCallbackOne(
+    opt /*{type, queries}*/=> {
+      // TODO: pass record state than the application state to optimistic and rollback
+      //       when performing record updates. getting the state of the record will
+      //       require knowing its key, which would be an api change
+      opt.queries.length > 0 && dispatch(
+        state => {
+          let updates = [], i = 0
 
-  notify = (id, query) => {
-    this.queries = Object.assign({}, this.queries)
-    this.queries[id] = Object.assign({}, query)
-    this.forceUpdate()
-  }
+          for (; i < opt.queries.length; i++) {
+            const query = opt.queries[i]
+            if (typeof query.optimistic === 'function')
+              updates.push(query.optimistic(query.input, state, query))
+            else
+              updates.push(emptyObj)
+            cache.current.set(getQueryId(query), {status: DONE})
+          }
 
-  commit = async (opt, context = emptyObj) => {
-    if (isNode === false) {
-      let optimisticQueries = [],  i = 0
+          return {
+            nextState: updates,
+            queries: opt.queries,
+            type: `OPTIMISTIC_${(opt.type || 'update').toUpperCase()}`
+          }
+        }
+      )
+    },
+    emptyArr
+  )
+  // processes incoming queries
+  const processQueries = useCallbackOne(
+    async (type, queries, context) => {
+      let payload = [], i = 0
 
-      for (; i < opt.queries.length; i++) {
-        const query = opt.queries[i]
-        if (typeof query.optimistic === 'function' || query.local !== false)
-          optimisticQueries.push(query)
+      for (i = 0; i < queries.length; i++) {
+        const query = queries[i]
+
+        if (query.local !== true) {
+          // attaches payload object for network queries
+          const requires = {}
+          for (let key in query.requires)
+            requires[key] = query.requires[key].requiresFields
+          payload.push({name: query.name, props: query.params, requires})
+        }
       }
 
-      // commits an optimistic updates first but not on the server
-      this.commitLocal({...opt, queries: optimisticQueries})
-    }
-    // creates query payloads for the network
-    let {type = 'update', queries} = opt
-
-    // commits the payloads to the network
-    if (context.async === true) {
-      let promises = [], i = 0
-
-      for (; i < queries.length; i++)
-        promises.push(this.processQueries(type, queries.slice(i, i + 1), context))
-
-      return Promise.all(promises)
-    }
-
-    return this.processQueries(type, queries, context)
-  }
-
-  async processQueries (type, queries, context) {
-    let payload = [], i = 0
-
-    for (i = 0; i < queries.length; i++) {
-      const query = queries[i]
-
-      if (query.local !== true) {
-        // attaches payload object for network queries
-        const requires = {}
-
-        for (let key in query.requires)
-          requires[key] = query.requires[key].requiresFields
-
-        payload.push({name: query.name, props: query.params, requires})
-      }
-    }
-
-    if (payload.length > 0) {
-      const commit = this.commitPayload(payload, context)
-      // sets the commit promise in the cache
-      for (i = 0; i < queries.length; i++)
-        this.cache.setCommit(getQueryID(queries[i]), commit)
-      // resolves the commit promise
-      let {response, nextState} = await commit
-      // We only want to perform state updates with setState in the browser.
-      // On the server side we use the query cache and multiple iterations to populate the
-      // data in the tree.
-      if (isNode === false) {
-        this.props.store.updateState(
-          state => {
+      if (payload.length > 0) {
+        const commit = commitPayload(payload, context)
+        // sets the commit promise in the cache
+        for (i = 0; i < queries.length; i++)
+          cache.current.set(getQueryId(queries[i]), {commit})
+        // resolves the commit promise
+        let {response, nextState} = await commit
+        // We only want to perform state updates with setState in the browser.
+        // On the server side we use the query cache and multiple iterations to populate the
+        // data in the tree.
+        if (isNode === false) {
+          dispatch(state => {
             // function which executes rollbacks on queries that need them
             let rollbacks = []
 
@@ -197,9 +192,9 @@ class Endpoint extends React.Component {
               case   0:
               case 200:
                 for (i = 0; i < queries.length; i++)
-                  if (response.json && response.json[i] && response.json[i].isRadarError)
+                  if (response?.json?.[i]?.isRadarError === true)
                     rollbacks.push(queries[i])
-                break;
+                break
               default:
                 // executes rollbacks on the failed mutations
                 rollbacks = queries.slice(0)
@@ -220,96 +215,106 @@ class Endpoint extends React.Component {
             }
 
             return {nextState, queries, response, type}
-          }
-        )
+          })
+        }
+        // if the response was not a 200 response it is considered an error status
+        const status = response.ok === true ? DONE : ERROR
+        // updates the cache for each query
+        for (i = 0; i < queries.length; i++) {
+          const oneResponse = Object.assign({}, response)
+          oneResponse.json = response?.json?.[i]
+          cache.current.set(getQueryId(queries[i]), {status, response: oneResponse})
+        }
+
+        return response
       }
-      // if the response was not a 200 response it is considered an error status
-      const status = response.ok === true ? DONE : ERROR
-      // updates the cache for each query
-      for (i = 0; i < queries.length; i++)
-        this.cache.set(
-          getQueryID(queries[i]),
-          {status, response: {...response, json: response.json && response.json[i]}}
-        )
+    },
+    emptyArr
+  )
+  // commits queries from the query cache to the store
+  const commitFromCache = useCallbackOne(
+    opt => {
+      opt.queries.length > 0 && dispatch(() => {
+        let updates = [], updateQueries = [], i = 0
 
-      return response
-    }
-  }
-
-  async commitPayload (payload, context = emptyObj) {
-    // posts the JSON request
-    const response = await this.props.network.post(payload, context)
-    return {response, nextState: response.json}
-  }
-
-  commitFromCache = opt => {
-    if (opt.queries.length > 0) {
-      this.props.store.updateState(
-        state => {
-          const updates = [], updateQueries = []
-
-          for (let i = 0; i < opt.queries.length; i++) {
-            const
-              query = opt.queries[i],
-              cached = this.cache.get(getQueryID(query))
-
-            if (cached?.response !== void 0 && cached?.response?.json) {
-              updateQueries.push(query)
-              updates.push(cached.response.json)
-            }
-          }
-
-          return {
-            nextState: updates,
-            queries: updateQueries,
-            type: (opt.type || 'update').toUpperCase()
+        for (; i < opt.queries.length; i++) {
+          const query = opt.queries[i], cached = cache.current.get(getQueryId(query))
+          if (cached?.response?.json) {
+            updateQueries.push(query)
+            updates.push(cached.response.json)
           }
         }
-      )
-    }
-  }
 
-  commitLocal = opt /*{type, queries}*/=> {
-    // TODO: pass record state than the application state to optimistic and rollback
-    //       when performing record updates. getting the state of the record will
-    //       require knowing its key, which would be an api change
-    if (opt.queries.length > 0) {
-      this.props.store.updateState(
-        state => {
-          let updates = [], i = 0
-
-          for (; i < opt.queries.length; i++) {
-            const query = opt.queries[i]
-
-            if (typeof query.optimistic === 'function')
-              updates.push(query.optimistic(query.input, state, query))
-            else
-              updates.push(emptyObj)
-          }
-
-          return {
-            nextState: updates,
-            queries: opt.queries,
-            type: `OPTIMISTIC_${(opt.type || 'update').toUpperCase()}`
-          }
+        return {
+          nextState: updates,
+          queries: updateQueries,
+          type: (opt.type || 'update').toUpperCase()
         }
-      )
-    }
-  }
+      })
+    },
+    emptyArr
+  )
+  // routes the various query types to their proper committer
+  const commit = useCallbackOne(
+    async (opt, context = emptyObj) => {
+      if (isNode === false) {
+        let optimisticQueries = [],  i = 0
+        for (; i < opt.queries.length; i++) {
+          const query = opt.queries[i]
+          if (typeof query.optimistic === 'function' || query.local !== false)
+            optimisticQueries.push(query)
+        }
+        // commits an optimistic updates first but not on the server
+        commitLocal({...opt, queries: optimisticQueries})
+      }
+      // creates query payloads for the network
+      let {type = 'update', queries} = opt
+      // commits the payloads to the network
+      if (context.async === true) {
+        let promises = [], i = 0
+        for (; i < queries.length; i++)
+          promises.push(processQueries(type, queries.slice(i, i + 1), context))
+        return Promise.all(promises)
+      }
 
-  render () {
-    return (
-      <EndpointInternalContext.Provider value={this.childContext.getBits}>
-        <EndpointContext.Provider
-          value={getContext(this.childContext, this.queries)}
-          children={this.props.children}
-        />
-      </EndpointInternalContext.Provider>
-    )
-  }
+      return processQueries(type, queries, context)
+    },
+    emptyArr
+  )
+  // creates a child context for queries to consume
+  const childContext = useMemoOne(
+    () => ({
+      // internals
+      setCached: cache.current.set.bind(cache.current.set),
+      getCached: cache.current.get.bind(cache.current.get),
+      subscribe,
+      unsubscribe,
+      getBits: keyObserver.current.getBits,
+      commitLocal,
+      commit,
+      commitFromCache,
+      queries: queries.current
+    }),
+    [queries.current]
+  )
+  // garbage collects the cache each update
+  // TODO: this should not be needed due to ref counting.... but we'll see
+  // useEffect(() => { cache.current.collect() } , [queries.current])
+  // useEffect(() => { console.log('Current listeners:', listeners.current) })
+  return <EndpointInternalContext.Provider
+    value={keyObserver.current.getBits}
+    children={<EndpointContext.Provider value={childContext} children={children}/>}
+  />
 }
 
-export default ({children, network, ...props}) => network(
-  context => <Endpoint network={context} store={props} children={children}/>
-)
+if (__DEV__)
+  Endpoint.propTypes = {
+    cache: PropTypes.object,
+    dispatch: PropTypes.func.isRequired,
+    network: PropTypes.shape({
+      post: PropTypes.func.isRequired,
+      abort: PropTypes.func.isRequired,
+    }).isRequired
+  }
 
+export default Endpoint

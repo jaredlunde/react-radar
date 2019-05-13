@@ -53,9 +53,8 @@ export const createQueryComponents = (isQuery = true) => {
     name = isQuery === true ? 'Query' : 'Updater',
     type = isQuery ? 'QUERY' : 'UPDATE'
 
-  const useQuery = (queries, options = emptyObj) => {
+  const useQuery = (queries, {parallel = false, async = false, forceReload = false}) => {
     const
-      {parallel = false, async = false, forceReload = false} = options,
       run = useRef(null),
       id = useRef(null),
       prevId = useRef(emptyArr),
@@ -65,9 +64,6 @@ export const createQueryComponents = (isQuery = true) => {
     id.current = getId(queries)
     run.current = Array.isArray(queries) === true ? queries : [queries]
     const [state, dispatch] = useReducer(reducer, {cxt, id: id.current}, init)
-    // subscribe/unsubscribe helpers
-    const subscribe = ids => { for (let i = 0; i < ids.length; i++)   cxt.subscribe(ids[i]) }
-    const unsubscribe = ids => { for (let i = 0; i < ids.length; i++) cxt.unsubscribe(ids[i]) }
     // commits a set of queries ot the network phase
     const commit = useCallbackOne(
       (queriesObject = emptyObj) => cxt.commit(
@@ -132,9 +128,9 @@ export const createQueryComponents = (isQuery = true) => {
     useEffect(
       () => {
         // adds new subscriptions
-        subscribe(getNewIds(prevId.current, id.current))
+        getNewIds(prevId.current, id.current).forEach(queryId => cxt.subscribe(queryId))
         // removes stale subscriptions
-        unsubscribe(getStaleIds(prevId.current, id.current))
+        getStaleIds(prevId.current, id.current).forEach(queryId => cxt.unsubscribe(queryId))
       }
     )
     // this effect is called any time the queries object changes in the state
@@ -210,7 +206,7 @@ export const createQueryComponents = (isQuery = true) => {
       dispatch(nextQueries)
     }
     // unsubscribes from the endpoint on unmount
-    useEffect(() => () => unsubscribe(id.current), emptyArr)
+    useEffect(() => () => id.current.forEach(queryId => cxt.unsubscribe(queryId)), emptyArr)
     // returns the query context object
     return useMemoOne(
       () => Object.assign({}, state, {[isQuery === true ? 'reload' : 'update']: load}),
