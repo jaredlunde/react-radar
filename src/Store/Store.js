@@ -38,6 +38,7 @@ const getNextState = (state = emptyObj, updates) => {
   // when a record is removed from the state tree, it should be
   // assumed that this record is 'cleared', as well
   collectStaleRecords(nextState)
+
   if (__DEV__) {
     console.log('[Radar] records', require('./utils/Records').default)
     console.log('[Radar] state profiler:', now() - start)

@@ -11,7 +11,6 @@ export default (
   )
 ) => {
   const map = new Map()
-
   const cache = {
     get: map.get.bind(map),
     set (id, v) {
@@ -34,8 +33,7 @@ export default (
         map.set(id, q)
       }
 
-      q.listeners = q.listeners || new Set()
-      q.listeners.add(notify)
+      (q.listeners = q.listeners || new Set()).add(notify)
     },
     unsubscribe (id, notify) {
       const query = map.get(id)
@@ -55,18 +53,7 @@ export default (
         if (query?.listeners?.size === 0 && query.status === 3)
           map.delete(id)
     },
-    setStatus: (id, v) => cache.set(id, {status: v}),
-    setCommit: (id, v) => cache.set(id, {commit: v}),
-    has: map.has.bind(map),
-    delete: (...ids) => ids.forEach(map.delete.bind(map)),
-    map (fn) {
-      const output = []
-      map.forEach((v, k) => output.push(fn(k, v)))
-      return output
-    },
     forEach: map.forEach.bind(map),
-    clear: map.clear.bind(map),
-    getIDs: map.keys.bind(map),
     toJSON (...a) {
       const output = {}
 
@@ -89,9 +76,7 @@ export default (
       for (; i < keys.length; i++) map.set(keys[i], obj[keys[i]])
     }
   }
-
   cache.toString = cache.toJSON
-  Object.defineProperty(cache, 'size', {get: () => map.size})
 
   if (initialQueries && typeof initialQueries === 'object') {
     const textContent = initialQueries?.firstChild?.data
@@ -102,9 +87,8 @@ export default (
         initialQueries.removeChild(initialQueries.firstChild)
     }
   }
-  else if (typeof initialQueries === 'string') {
+  else if (typeof initialQueries === 'string')
     cache.fromJSON(initialQueries)
-  }
 
   return cache
 }

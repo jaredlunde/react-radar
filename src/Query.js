@@ -1,4 +1,4 @@
-import React, {useReducer, useEffect, useContext, useCallback, useRef}  from 'react'
+import React, {useReducer, useEffect, useContext, useRef}  from 'react'
 import {useCallbackOne, useMemoOne} from 'use-memo-one'
 import emptyObj from 'empty/object'
 import emptyArr from 'empty/array'
@@ -72,7 +72,7 @@ export const createQueryComponents = (isQuery = true) => {
           .filter(queryId => cxt.getCached(queryId).status !== LOADING)
           .forEach(queryId => {
             queries[queryId] = run.current[id.current.indexOf(queryId)]
-            cxt.setCached(queryId, {query: queries[queryId], status: LOADING, response: null})
+            cxt.setCached(queryId, {query: queries[queryId], status: LOADING})
           })
         // parallel means that the queries are sent separately *over the network*, but they
         // will still be added to the store synchronously
@@ -124,6 +124,7 @@ export const createQueryComponents = (isQuery = true) => {
     // is pending its commit to the store. When it is done during this initial render phase,
     // it doesn't happen.
     useMemoOne(loadFromCache, emptyArr)
+    // this effect unsubscribes from stale queries each update and subscribes to new ones
     useEffect(
       () => {
         // adds new subscriptions
@@ -133,7 +134,7 @@ export const createQueryComponents = (isQuery = true) => {
         getStaleIds(prevId.current, id.current).forEach(queryId => cxt.unsubscribe(queryId))
       }
     )
-    // This effect is called any time the queries object changes in the state
+    // this effect is called any time the queries object changes in the state
     useEffect(
       () => {
         // commits new ids in waiting states
@@ -147,10 +148,11 @@ export const createQueryComponents = (isQuery = true) => {
         if (didMount.current === true)
           loadFromCache()
         didMount.current = true
-        prevId.current = id.current
       },
       [state.queries]
     )
+    // this effect updates the prevId each time state.queries changes
+    useEffect(() => { prevId.current = id.current }, [state.queries])
     // derives `queries` state from props, only dispatching when there is new material
     let nextQueries, unchanged = {}, i = 0
 

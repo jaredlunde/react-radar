@@ -44,7 +44,7 @@ const Endpoint = ({store, network, children}) => {
   const
     cache = useMemoOne(() => ({current: store.cache || createCache()})),
     keyObserver = useMemoOne(() => ({current: createKeyObserver()})),
-    listeners = useRef({}),
+    listeners = useRef(new Map()),
     queries = useRef(emptyObj),
     forceUpdate = useForceUpdate()
   // This notification callback is passed to the cache. It's fired each time the cache
@@ -62,11 +62,11 @@ const Endpoint = ({store, network, children}) => {
   // unsubscribes notifiers on unmount or when notify callback changes
   useEffect(
     () => {
-      for (let id in listeners.current)
+      for (let id of listeners.current.keys())
         cache.current.subscribe(id, notify)
 
       return () => {
-        for (let id in listeners.current)
+        for (let id of listeners.current.keys())
           cache.current.unsubscribe(id, notify)
       }
     },
@@ -75,12 +75,13 @@ const Endpoint = ({store, network, children}) => {
   // manages subscriptions from queries/updates
   const subscribe = useCallbackOne(
     id => {
-      if (listeners.current[id] === void 0) {
+      let numListeners = listeners.current.get(id)
+      if (numListeners === void 0) {
         // adds this endpoint to the cache's listeners
         cache.current.subscribe(id, notify)
         // sets the query in state
         // listeners.current[id] = new Set()
-        listeners.current[id] = 0
+        numListeners = 1
         queries.current = Object.assign({}, queries.current)
         queries.current[id] = cache.current.get(id)
         // used for calculating changed bits for context
@@ -88,7 +89,7 @@ const Endpoint = ({store, network, children}) => {
       }
 
       // listeners.current[id].add(component)
-      listeners.current[id]++
+      listeners.current.set(id, numListeners++)
       return queries.current[id]
     },
     emptyArr
@@ -96,13 +97,14 @@ const Endpoint = ({store, network, children}) => {
   // manages unmounts of queries/updates
   const unsubscribe = useCallbackOne(
     id => {
-      if (listeners.current[id] !== void 0) {
+      let numListeners = listeners.current.get(id)
+      if (numListeners !== void 0) {
         // listeners.current[id].delete(component)
-        listeners.current[id]--
+        listeners.current.set(id, numListeners--)
         // if (idListeners.size === 0) {
-        if (listeners.current[id] === 0) {
+        if (numListeners === 0) {
           cache.current.unsubscribe(id, notify)
-          delete listeners.current[id]
+          listeners.current.delete(id)
           let nextQueries = {}, keys = Object.keys(queries.current), i = 0
 
           for (; i < keys.length; i++) {
@@ -176,7 +178,7 @@ const Endpoint = ({store, network, children}) => {
         const commit = commitPayload(payload, context)
         // sets the commit promise in the cache
         for (i = 0; i < queries.length; i++)
-          cache.current.setCommit(getQueryId(queries[i]), commit)
+          cache.current.set(getQueryId(queries[i]), {commit})
         // resolves the commit promise
         let {response, nextState} = await commit
         // We only want to perform state updates with setState in the browser.
