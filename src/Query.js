@@ -53,8 +53,9 @@ export const createQueryComponents = (isQuery = true) => {
     name = isQuery === true ? 'Query' : 'Updater',
     type = isQuery ? 'QUERY' : 'UPDATE'
 
-  const useQuery = (queries, {parallel = false, async = false, forceReload = false}) => {
+  const useQuery = (queries, options = emptyObj) => {
     const
+      {parallel = false, async = false, forceReload = false} = options,
       run = useRef(null),
       id = useRef(null),
       prevId = useRef(emptyArr),
