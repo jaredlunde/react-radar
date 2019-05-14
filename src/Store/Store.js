@@ -23,14 +23,11 @@ const getNextState = (state = emptyObj, updates) => {
   if (__DEV__) start = now()
   let nextState = toRecords(Object.assign({state: state._data}, updates))
 
-  // TODO: revisit adding this back.. realistically though the state is LIKELY to be changing
-  //       when this function runs
-  // do a shallow comparison of the previous state to this one to avoid
-  // unnecessary re-renders
-  // if (nextState === null || stateDidChange(state._data, nextState) === false) {
-  //   if (__DEV__) console.log('[Radar] state profiler:', now() - start)
-  //   return null
-  // }
+  if (nextState === null) {
+    if (__DEV__) console.log('[Radar] state profiler:', now() - start)
+    return null
+  }
+
   if (__DEV__) {
     console.log('[Radar] records', require('./utils/Records').default)
     console.log('[Radar] state profiler:', now() - start)

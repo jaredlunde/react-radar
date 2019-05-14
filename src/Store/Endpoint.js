@@ -75,34 +75,6 @@ const Endpoint = ({cache = getDefaultCache(), network, dispatchState, children})
   const listeners = useRef(new Map())
     // keyObserver = useMemoOne(() => ({current: createKeyObserver()}))
 
-  // manages subscriptions from queries/updates
-  const subscribe = useRef(
-    id => {
-      let numListeners = listeners.current.get(id)
-      if (numListeners === void 0) {
-        // adds this endpoint to the cache's listeners
-        cache.current.subscribe(id, dispatchQueryState)
-        // sets the query in state
-        numListeners = 0
-        dispatchQueryState({type: 'add', id, query: cache.current.get(id)})
-        // used for calculating changed bits for context
-        // keyObserver.current.setShard(id)
-      }
-      listeners.current.set(id, ++numListeners)
-    }
-  )
-  // manages unmounts of queries/updates
-  const unsubscribe = useRef(
-    id => {
-      let numListeners = listeners.current.get(id)
-      listeners.current.set(id, --numListeners)
-      if (numListeners === 0) {
-        cache.current.unsubscribe(id, dispatchQueryState)
-        listeners.current.delete(id)
-        dispatchQueryState({type: 'delete', id})
-      }
-    }
-  )
   // processes incoming queries
   const processQueries = useRef(
     async (queries, options) => {
@@ -245,17 +217,46 @@ const Endpoint = ({cache = getDefaultCache(), network, dispatchState, children})
   )
   // manages the subscriptions to queries in this endpoint
   const [queryState, dispatchQueryState] = useReducer(reducer, null, init)
+  // adds subscriptions between this endpoint and queries
+  const subscribe = useRef(
+    id => {
+      let numListeners = listeners.current.get(id)
+      if (numListeners === void 0) {
+        // adds this endpoint to the cache's listeners
+        cache.current.subscribe(id, dispatchQueryState)
+        // sets the query in state
+        numListeners = 0
+        dispatchQueryState({type: 'add', id, query: cache.current.get(id)})
+        // used for calculating changed bits for context
+        // keyObserver.current.setShard(id)
+      }
+
+      listeners.current.set(id, ++numListeners)
+    }
+  )
+  // removes subscriptions between this endpoint and queries
+  const unsubscribe = useRef(
+    id => {
+      let numListeners = listeners.current.get(id)
+      listeners.current.set(id, --numListeners)
+      if (numListeners === 0) {
+        cache.current.unsubscribe(id, dispatchQueryState)
+        listeners.current.delete(id)
+        dispatchQueryState({type: 'delete', id})
+      }
+    }
+  )
   // creates the child context
   const childContext = useMemoOne(
     () => ({
-      queries: queryState,
       cache: cache.current,
-      // getBits: keyObserver.current.getBits,
+      queries: queryState.value,
       subscribe: subscribe.current,
       unsubscribe: unsubscribe.current,
       commit: commit.current,
       commitLocal: commitLocal.current,
-      commitFromCache: commitFromCache.current
+      commitFromCache: commitFromCache.current,
+      // getBits: keyObserver.current.getBits,
     }),
     [queryState, cache.current]
   )
@@ -271,10 +272,6 @@ const Endpoint = ({cache = getDefaultCache(), network, dispatchState, children})
     emptyArr
   )
   return <EndpointContext.Provider value={childContext} children={children}/>
-  // garbage collects the cache each update
-  // TODO: this should not be needed due to ref counting.... but we'll see
-  // useEffect(() => { cache.current.collect() } , [queries.current])
-  // useEffect(() => { console.log('Current listeners:', listeners.current) })
   //return <EndpointInternalContext.Provider
   //  value={keyObserver.current.getBits}
   //  children={<EndpointContext.Provider value={childContext} children={children}/>}
