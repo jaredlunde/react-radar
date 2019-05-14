@@ -1,15 +1,16 @@
-import CancelablePromise from 'cancelable-promise'
+const workerify = require('../utils/workerify').default
+
 
 // POST w/ fetch or fetch polyfill
-const post = (url, opt) => {
-  if (typeof fetch === 'undefined') {
+const post = this_ => (url, opt) => {
+  if (typeof this_.fetch === 'undefined') {
     // Tiny fetch() polyfill
     // Credit: Unfetch (Jason Miller)
     // https://github.com/developit/unfetch/blob/master/src/index.mjs
-    fetch = (url, opt) => {
-      const request = new XMLHttpRequest()
+    this_.fetch = (url, opt) => {
+      const request = new this_.XMLHttpRequest()
 
-      return new CancelablePromise(
+      return new this_.Promise(
         (resolve, reject) => {
           const keys = [], headers = {}
           request.open('post', url, true)
@@ -28,7 +29,7 @@ const post = (url, opt) => {
               statusText: request.statusText,
               status: request.status,
               url: request.responseURL,
-              json: () => CancelablePromise.resolve(JSON.parse(request.responseText)),
+              json: () => this_.Promise.resolve(this_.JSON.parse(request.responseText)),
               headers: {
                 keys: () => keys,
                 forEach: fn => {
@@ -48,7 +49,7 @@ const post = (url, opt) => {
     }
   }
 
-  return fetch(url, opt).then(
+  return this_.fetch(url, opt).then(
     r => {
       let headers = {}
       r.headers.forEach((value, name) => headers[name] = value)
@@ -74,7 +75,7 @@ const post = (url, opt) => {
       )
     },
   ).catch(
-    errorMsg => CancelablePromise.resolve({
+    errorMsg => this_.Promise.resolve({
       ok: false,
       url,
       headers: {},
@@ -86,4 +87,4 @@ const post = (url, opt) => {
   )
 }
 
-export default post
+export default workerify(post)

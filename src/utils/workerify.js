@@ -1,4 +1,4 @@
-const Promise = require('cancelable-promise').default
+const CancelablePromise = require('cancelable-promise').default
 
 
 const workerTemplate = `this.onmessage=function(e){(<code>)(self).apply(null,e.data.args).then(function(r){postMessage({type:'RPC',id:e.data.id,result:r});}).catch(function(e){postMessage({type:'RPC',id:e.data.id,error:e});});};`
@@ -6,7 +6,7 @@ const workerTemplate = `this.onmessage=function(e){(<code>)(self).apply(null,e.d
 export default fn => {
   if (typeof window !== 'undefined') {
     if (window.Promise === void 0)
-      window.Promise = Promise
+      window.Promise = CancelablePromise
 
     if (typeof Worker !== 'undefined') {
       const workerCode = workerTemplate.replace('<code>', Function.prototype.toString.call(fn))
@@ -31,7 +31,7 @@ export default fn => {
         ? callbacks[e.data.id][0](e.data.result)
         : callbacks[e.data.id][1](e.data.error)
 
-      return (...args) => new Promise((resolve, reject) => {
+      return (...args) => new CancelablePromise((resolve, reject) => {
         let id = `rpc${++counter}`
         callbacks[id] = [resolve, reject]
         worker.postMessage({type: 'RPC', id, args: args})

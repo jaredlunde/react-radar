@@ -1,4 +1,3 @@
-import Promise from 'cancelable-promise'
 import emptyObj from 'empty/object'
 import postFetch from './post'
 
@@ -49,7 +48,9 @@ export default props => {
 
   const post = (body, context) => new Promise(
     async resolve => {
-      let {url, timeout, headers, ...opt} = Object.assign({}, DEFAULT_FETCH, props)
+      let
+        {url, timeout, headers, ...opt} = Object.assign({}, DEFAULT_FETCH, props),
+        PENDING_UPDATE
       timeout = timeout || 30 * 1000
       // we only use JSON requests
       opt.body = JSON.stringify(body)
@@ -61,10 +62,8 @@ export default props => {
       // sets required headers
       for (let name in REQUIRED_HEADERS)
         headers[name] = REQUIRED_HEADERS[name]
-      // must be wrapped in CancelablePromise to make it cancelable
-      const query = new Promise(
-        resolve => postFetch(url, {...opt, headers}).then(resolve)
-      )
+      // must be wrapped in Promise to make it cancelable
+      const query = postFetch(url, {...opt, headers})
       // creates a timeout for the fetch request
       const queryTimeout = setTimeout(
         function () {
@@ -79,7 +78,8 @@ export default props => {
             json: false
           })
 
-          removePendingUpdate(pendingUpdates, PENDING_UPDATE)
+          if (PENDING_UPDATE !== void 0)
+            removePendingUpdate(pendingUpdates, PENDING_UPDATE)
         },
         timeout
       )
@@ -93,7 +93,7 @@ export default props => {
 
       if (context !== void 0 && context.async !== true) {
         // creates a pending, cancelable, synchronous update
-        const PENDING_UPDATE = [query, resolver, queryTimeout]
+        PENDING_UPDATE = [query, resolver, queryTimeout]
         pendingUpdates.push(PENDING_UPDATE)
         // if this is the only pending query, go ahead and resolve it
         if (pendingUpdates.length === 1)
