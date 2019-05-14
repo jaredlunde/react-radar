@@ -42,13 +42,7 @@ const getDefaultCache = () => {
   return defaultCache
 }
 export const normalizeQueries = queries => Array.isArray(queries) === true ? queries : [queries]
-const init = ({cache, keyObserver, ...other}) => ({
-  queries: new Map(),
-  setCached: cache.current.set.bind(cache.current.set),
-  getCached: cache.current.get.bind(cache.current.get),
-  getBits: keyObserver.current.getBits,
-  ...other
-})
+const init = () => ({value: new Map()})
 
 /**
  * The Endpoint component is the glue that binds together the networking layer, store,
@@ -206,59 +200,60 @@ const Endpoint = ({cache = getDefaultCache(), network, dispatch, children}) => {
   // This notification callback is passed to the cache. It's fired each time the cache
   // updates.
   const notify = useCallbackOne(
-    (id, query) => dispatchContext({type: 'updateQuery', id, query}),
+    (id, query) => dispatchQueryState({type: 'update', id, query}),
     emptyArr
   )
   // creates a child context for queries to consume
   const reducer = (state, {type, id, query}) => {
-    let
-      nextState = state,
-      numListeners = listeners.current.get(id)
+    let nextState = state, numListeners
 
     switch (type) {
       case 'subscribe':
+        numListeners = listeners.current.get(id)
         if (numListeners === void 0) {
           // adds this endpoint to the cache's listeners
           cache.current.subscribe(id, notify)
           // sets the query in state
           numListeners = 0
-          state.queries.set(id, cache.current.get(id))
+          state.value.set(id, cache.current.get(id))
           // used for calculating changed bits for context
           keyObserver.current.setShard(id)
         }
         listeners.current.set(id, ++numListeners)
         break
       case 'unsubscribe':
+        numListeners = listeners.current.get(id)
         listeners.current.set(id, --numListeners)
         if (numListeners === 0) {
           cache.current.unsubscribe(id, notify)
           listeners.current.delete(id)
-          state.queries.delete(id)
+          state.value.delete(id)
         }
         break
-      case 'updateQuery':
-        state.queries.set(id, Object.assign(state.queries.get(id), query))
-        nextState = Object.assign({}, state)
+      case 'update':
+        state.value.set(id, Object.assign(state.value.get(id), query))
+        nextState = {value: state.value}
         break
       default:
         throw new Error(`Unrecognized type: "${type}"`)
     }
-    console.log(`[${type}] is bailing out:`, state === nextState)
+
     return nextState
   }
 
-  const [childContext, dispatchContext] = useReducer(
-    reducer,
-    {
-      cache,
-      keyObserver,
+  const [queryState, dispatchQueryState] = useReducer(reducer, null, init)
+  const childContext = useMemoOne(
+    () => ({
+      queries: queryState,
+      getCached: cache.current.get.bind(cache.current),
+      setCached: cache.current.set.bind(cache.current),
+      getBits: keyObserver.current.getBits,
       commit,
       commitLocal,
       commitFromCache,
-      subscribe: id => dispatchContext({type: 'subscribe', id}),
-      unsubscribe: id => dispatchContext({type: 'unsubscribe', id})
-    },
-    init
+      dispatch: dispatchQueryState
+    }),
+    [queryState, cache.current]
   )
   // handles 'unmount'
   useEffect(
@@ -280,6 +275,7 @@ const Endpoint = ({cache = getDefaultCache(), network, dispatch, children}) => {
     children={<EndpointContext.Provider value={childContext} children={children}/>}
   />
 }
+
 
 if (__DEV__)
   Endpoint.propTypes = {

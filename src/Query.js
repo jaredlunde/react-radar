@@ -35,10 +35,10 @@ const
     else return [getQueryId(queries)]
   }
 
-const init = ({cxt, id}) => {
+const init = ({endpoint, id}) => {
   let queries = {}, i = 0
   for (; i < id.length; i++)
-    queries[id[i]] = Object.assign({status: WAITING}, cxt.getCached(id[i]))
+    queries[id[i]] = Object.assign({status: WAITING}, endpoint.getCached(id[i]))
   const status = getAggregateStatus(queries)
   return {status, is: is[status], queries}
 }
@@ -61,16 +61,23 @@ export const createQueryComponents = (isQuery = true) => {
       prevId = useRef(emptyArr),
       didMount = useRef(false),
       serverPromises = useContext(ServerPromisesContext),
-      cxt = useContext(EndpointContext)
+      endpoint = useContext(EndpointContext)
     id.current = getId(queries)
     run.current = normalizeQueries(queries)
-    const [state, dispatch] = useReducer(reducer, {cxt, id: id.current}, init)
+    const [state, dispatch] = useReducer(reducer, {endpoint, id: id.current}, init)
     // subscribe/unsubscribe helpers
-    const subscribe = ids => { for (let i = 0; i < ids.length; i++)   cxt.subscribe(ids[i]) }
-    const unsubscribe = ids => { for (let i = 0; i < ids.length; i++) cxt.unsubscribe(ids[i]) }
+    const
+      subscribe = ids => {
+        for (let i = 0; i < ids.length; i++)
+          endpoint.dispatch({type: 'subscribe', id: ids[i]})
+      },
+      unsubscribe = ids => {
+        for (let i = 0; i < ids.length; i++)
+          endpoint.dispatch({type: 'unsubscribe', id: ids[i]})
+      }
     // commits a set of queries ot the network phase
     const commit = useCallbackOne(
-      (queriesObject = emptyObj) => cxt.commit(
+      (queriesObject = emptyObj) => endpoint.commit(
         Object.values(queriesObject),
         {async, type}
       ),
@@ -78,7 +85,7 @@ export const createQueryComponents = (isQuery = true) => {
     )
     // commmits a set of queries from the query cache
     const commitFromCache = useCallbackOne(
-      (queriesObject = emptyObj) => cxt.commitFromCache(
+      (queriesObject = emptyObj) => endpoint.commitFromCache(
         Object.values(queriesObject),
         {async, type}
       ),
@@ -89,10 +96,10 @@ export const createQueryComponents = (isQuery = true) => {
       ids => {
         let queries = {};
         (ids?.length ? ids : id.current)
-          .filter(queryId => cxt.getCached(queryId).status !== LOADING)
+          .filter(queryId => endpoint.getCached(queryId).status !== LOADING)
           .forEach(queryId => {
             queries[queryId] = run.current[id.current.indexOf(queryId)]
-            cxt.setCached(queryId, {query: queries[queryId], status: LOADING})
+            endpoint.setCached(queryId, {query: queries[queryId], status: LOADING})
           })
         // parallel means that the queries are sent separately *over the network*, but they
         // will still be added to the store synchronously
@@ -179,13 +186,13 @@ export const createQueryComponents = (isQuery = true) => {
     for (; i < id.current.length; i++) {
       let
         queryId = id.current[i],
-        query = cxt.getCached(queryId),
+        query = endpoint.getCached(queryId),
         prev = state.queries?.[queryId]
 
       if (query === void 0)
         (nextQueries = nextQueries || {})[queryId] = Object.assign(
           {},
-          cxt.setCached(queryId, {status: WAITING})
+          endpoint.setCached(queryId, {status: WAITING})
         )
       else if (prev?.status !== query.status || prev?.response !== query.response)
         (nextQueries = nextQueries || {})[queryId] = Object.assign({}, query)
@@ -200,7 +207,7 @@ export const createQueryComponents = (isQuery = true) => {
         const waiting = id.current.filter(queryId => nextQueries[queryId]?.status === WAITING)
 
         if (waiting.length > 0) {
-          waiting.forEach(queryId => cxt.setCached(queryId, {status: WAITING}))
+          waiting.forEach(queryId => endpoint.setCached(queryId, {status: WAITING}))
           const promise = load(waiting)
           if (serverPromises)
             serverPromises.push(promise)
