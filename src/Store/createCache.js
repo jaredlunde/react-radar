@@ -2,7 +2,7 @@ import {objectWithoutProps} from '../utils'
 
 
 const
-  jsonExclusions = {commit: 0, listeners: 0, query: 0},
+  jsonExclusions = {listeners: 0, query: 0},
   urlExclusion = {url: 0}
 
 export default (

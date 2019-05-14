@@ -3,7 +3,7 @@ import {useCallbackOne, useMemoOne} from 'use-memo-one'
 import emptyObj from 'empty/object'
 import emptyArr from 'empty/array'
 import {ServerPromisesContext} from '@react-hook/server-promises'
-import {WAITING, LOADING, ERROR, DONE, getQueryId} from './Store/Endpoint'
+import {WAITING, LOADING, ERROR, DONE, getQueryId, normalizeQueries} from './Store/Endpoint'
 import {EndpointContext} from './Store'
 import {isNode} from './utils'
 import Connect from './Connect'
@@ -63,7 +63,7 @@ export const createQueryComponents = (isQuery = true) => {
       serverPromises = useContext(ServerPromisesContext),
       cxt = useContext(EndpointContext)
     id.current = getId(queries)
-    run.current = Array.isArray(queries) === true ? queries : [queries]
+    run.current = normalizeQueries(queries)
     const [state, dispatch] = useReducer(reducer, {cxt, id: id.current}, init)
     // subscribe/unsubscribe helpers
     const subscribe = ids => { for (let i = 0; i < ids.length; i++)   cxt.subscribe(ids[i]) }
@@ -71,16 +71,16 @@ export const createQueryComponents = (isQuery = true) => {
     // commits a set of queries ot the network phase
     const commit = useCallbackOne(
       (queriesObject = emptyObj) => cxt.commit(
-        {queries: Object.values(queriesObject), type},
-        {async}
+        Object.values(queriesObject),
+        {async, type}
       ),
       [async]
     )
     // commmits a set of queries from the query cache
     const commitFromCache = useCallbackOne(
       (queriesObject = emptyObj) => cxt.commitFromCache(
-        {queries: Object.values(queriesObject), type},
-        {async}
+        Object.values(queriesObject),
+        {async, type}
       ),
       [async]
     )
@@ -98,8 +98,8 @@ export const createQueryComponents = (isQuery = true) => {
         // will still be added to the store synchronously
         return parallel === true
           ? Promise.all(
-            Object.entries(queries).map(([queryId, query]) => commit({[queryId]: query}))
-          )
+              Object.entries(queries).map(([queryId, query]) => commit({[queryId]: query}))
+            )
           : commit(queries)
       },
       [parallel]
