@@ -1,7 +1,11 @@
 import CancelablePromise from 'cancelable-promise'
 
 // POST w/ fetch or fetch polyfill
+const
+  window_ = typeof window === 'undefined' ? global : window,
+  headersRe = /^(.*?):[^\S\n]*([\s\S]*?)$/gm
 const post = (url, opt) => {
+  let fetch = window_.fetch
   if (typeof fetch === 'undefined') {
     // Tiny fetch() polyfill
     // Credit: Unfetch (Jason Miller)
@@ -13,13 +17,12 @@ const post = (url, opt) => {
         (resolve, reject) => {
           const keys = [], headers = {}
           request.open('post', url, true)
-
           request.onload = () => {
             request.getAllResponseHeaders().replace(
-              /^(.*?):[^\S\n]*([\s\S]*?)$/gm,
+              headersRe,
               (m, key, value) => {
                 keys.push(key = key.toLowerCase())
-                headers[key] = headers[key] ? headers[key] + ',' + value : value
+                headers[key] = headers[key] ? `${headers[key]},${value}` : value
               },
             )
 
@@ -61,16 +64,14 @@ const post = (url, opt) => {
         statusText: r.statusText,
         json: null,
       }) : r.json().then(
-        json => (
-          {
-            ok: r.ok,
-            url,
-            headers,
-            status: r.status,
-            statusText: r.statusText,
-            json,
-          }
-        ),
+        json => ({
+          ok: r.ok,
+          url,
+          headers,
+          status: r.status,
+          statusText: r.statusText,
+          json,
+        }),
       )
     },
   ).catch(
@@ -82,7 +83,7 @@ const post = (url, opt) => {
       statusText: 'Unknown Error',
       errorMsg: String(errorMsg),
       json: false,
-    }),
+    })
   )
 }
 
