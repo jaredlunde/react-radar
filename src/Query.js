@@ -38,7 +38,7 @@ const
 const init = ({endpoint, id}) => {
   let queries = {}, i = 0
   for (; i < id.length; i++)
-    queries[id[i]] = Object.assign({status: WAITING}, endpoint.getCached(id[i]))
+    queries[id[i]] = Object.assign({status: WAITING}, endpoint.cache.get(id[i]))
   const status = getAggregateStatus(queries)
   return {status, is: is[status], queries}
 }
@@ -64,16 +64,16 @@ export const createQueryComponents = (isQuery = true) => {
       endpoint = useContext(EndpointContext)
     id.current = getId(queries)
     run.current = normalizeQueries(queries)
-    const [state, dispatch] = useReducer(reducer, {endpoint, id: id.current}, init)
-    // subscribe/unsubscribe helpers
+    const [state, dispatchState] = useReducer(reducer, {endpoint, id: id.current}, init)
+    // subscribe/unsubsacribe helpers
     const
       subscribe = ids => {
         for (let i = 0; i < ids.length; i++)
-          endpoint.dispatch({type: 'subscribe', id: ids[i]})
+          endpoint.subscribe(ids[i])
       },
       unsubscribe = ids => {
         for (let i = 0; i < ids.length; i++)
-          endpoint.dispatch({type: 'unsubscribe', id: ids[i]})
+          endpoint.unsubscribe(ids[i])
       }
     // commits a set of queries ot the network phase
     const commit = useCallbackOne(
@@ -96,10 +96,10 @@ export const createQueryComponents = (isQuery = true) => {
       ids => {
         let queries = {};
         (ids?.length ? ids : id.current)
-          .filter(queryId => endpoint.getCached(queryId).status !== LOADING)
+          .filter(queryId => endpoint.cache.get(queryId).status !== LOADING)
           .forEach(queryId => {
             queries[queryId] = run.current[id.current.indexOf(queryId)]
-            endpoint.setCached(queryId, {query: queries[queryId], status: LOADING})
+            endpoint.cache.set(queryId, {query: queries[queryId], status: LOADING})
           })
         // parallel means that the queries are sent separately *over the network*, but they
         // will still be added to the store synchronously
@@ -112,7 +112,7 @@ export const createQueryComponents = (isQuery = true) => {
       [parallel]
     )
     // reads any cached queries and commits them to the store
-    const loadFromCache = useCallbackOne(
+    const loadFromCache = useRef(
       () => {
         let
           newIds = getNewIds(prevId.current, id.current),
@@ -127,14 +127,13 @@ export const createQueryComponents = (isQuery = true) => {
               {}
             )
           )
-      },
-      emptyArr
+      }
     )
     // This is here to prevent a flash during SSR rehydration. When loadFromCache() is only
     // called in useEffect(), there is a very grotesque flash that happens while the data
     // is pending its commit to the store. When it is done during this initial render phase,
     // it doesn't happen.
-    useMemoOne(loadFromCache, emptyArr)
+    useMemoOne(loadFromCache.current, emptyArr)
     // this effect unsubscribes from stale queries each update and subscribes to new ones
     useEffect(
       () => {
@@ -156,7 +155,7 @@ export const createQueryComponents = (isQuery = true) => {
         }
         // loads data from the query cache into the store if this isn't the initial mount
         if (didMount.current === true)
-          loadFromCache()
+          loadFromCache.current()
 
         didMount.current = true
         // updates the prevId each time state.queries changes
@@ -186,13 +185,13 @@ export const createQueryComponents = (isQuery = true) => {
     for (; i < id.current.length; i++) {
       let
         queryId = id.current[i],
-        query = endpoint.getCached(queryId),
+        query = endpoint.cache.get(queryId),
         prev = state.queries?.[queryId]
 
       if (query === void 0)
         (nextQueries = nextQueries || {})[queryId] = Object.assign(
           {},
-          endpoint.setCached(queryId, {status: WAITING})
+          endpoint.cache.set(queryId, {status: WAITING})
         )
       else if (prev?.status !== query.status || prev?.response !== query.response)
         (nextQueries = nextQueries || {})[queryId] = Object.assign({}, query)
@@ -207,14 +206,14 @@ export const createQueryComponents = (isQuery = true) => {
         const waiting = id.current.filter(queryId => nextQueries[queryId]?.status === WAITING)
 
         if (waiting.length > 0) {
-          waiting.forEach(queryId => endpoint.setCached(queryId, {status: WAITING}))
+          waiting.forEach(queryId => endpoint.cache.set(queryId, {status: WAITING}))
           const promise = load(waiting)
           if (serverPromises)
             serverPromises.push(promise)
         }
       }
       // sets the new queries and status in local state
-      dispatch(nextQueries)
+      dispatchState(nextQueries)
     }
     // unsubscribes from the endpoint on unmount
     useEffect(() => () => unsubscribe(id.current), emptyArr)

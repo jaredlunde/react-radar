@@ -24,9 +24,11 @@ export default (
         }
 
         Object.assign(q, v)
-        if (q.listeners !== void 0)
+        if (q.listeners !== void 0) {
+          const action = {type: 'update', id, query: q}
           for (let i = 0; i < q.listeners.length; i++)
-            q.listeners[i](id, q)
+            q.listeners[i](action)
+        }
 
         return q
       },

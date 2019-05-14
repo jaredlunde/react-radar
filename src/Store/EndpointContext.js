@@ -1,10 +1,12 @@
 import React from 'react'
 import emptyObj from 'empty/object'
-import {calculateChangedBits} from './StoreContext'
+// import {calculateChangedBits} from './StoreContext'
 
 
-export const EndpointInternalContext = React.createContext(null)
-export const EndpointContext = React.createContext(emptyObj, calculateChangedBits('queries'))
+// export const EndpointInternalContext = React.createContext(null)
+export const EndpointContext = React.createContext(emptyObj/*, calculateChangedBits('queries')*/)
+export const EndpointConsumer = EndpointContext.Consumer
+/*
 export const EndpointConsumer = ({children, observedKeys}) =>
   <EndpointInternalContext.Consumer children={
     getBits => <EndpointContext.Consumer
@@ -18,6 +20,7 @@ export const EndpointConsumer = ({children, observedKeys}) =>
       children={children}
     />
   }/>
+*/
 export const RadarConsumer = props => <EndpointConsumer children={
   ({commit, commitLocal}) => props.children({commit, commitLocal})
 }/>
