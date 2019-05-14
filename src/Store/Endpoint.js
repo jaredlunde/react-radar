@@ -80,7 +80,7 @@ const Endpoint = ({cache = getDefaultCache(), network, dispatchState, children})
     async (queries, options) => {
       let payload = [], i = 0
 
-      for (i = 0; i < queries.length; i++) {
+      for (; i < queries.length; i++) {
         const query = queries[i]
 
         if (query.local !== true) {
@@ -237,13 +237,14 @@ const Endpoint = ({cache = getDefaultCache(), network, dispatchState, children})
   // removes subscriptions between this endpoint and queries
   const unsubscribe = useRef(
     id => {
-      let numListeners = listeners.current.get(id)
-      listeners.current.set(id, --numListeners)
+      let numListeners = listeners.current.get(id) - 1
       if (numListeners === 0) {
         cache.current.unsubscribe(id, dispatchQueryState)
         listeners.current.delete(id)
         dispatchQueryState({type: 'delete', id})
       }
+      else
+        listeners.current.set(id, numListeners)
     }
   )
   // creates the child context
