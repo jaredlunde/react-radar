@@ -36,7 +36,7 @@ export default (
         let q = map.get(id)
 
         if (q === void 0) {
-          q = {}
+          q = {status: 0}
           map.set(id, q)
         }
 
