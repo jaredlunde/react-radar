@@ -45,7 +45,7 @@ const init = ({endpoint, id}) => {
 
 const reducer = (state, queries) => {
   const status = getAggregateStatus(queries)
-  return {queries, status, id: is[status]}
+  return {queries, status, is: is[status]}
 }
 
 export const createQueryComponents = (isQuery = true) => {
