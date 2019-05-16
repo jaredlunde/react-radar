@@ -42,7 +42,8 @@ const getDefaultCache = () => {
     defaultCache = createCache()
   return defaultCache
 }
-export const normalizeQueries = queries => Array.isArray(queries) === true ? queries : [queries]
+export const normalizeQueries = queries =>
+  !queries ? emptyArr : Array.isArray(queries) === true ? queries : [queries]
 const init = () => ({value: new Map()})
 const reducer = (state, action) => {
   const {type, id, query} = action

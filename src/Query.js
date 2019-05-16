@@ -12,7 +12,10 @@ import PropTypes from 'prop-types'
 
 const
   is = ['waiting', 'error', 'loading', 'done'],
-  getAggregateStatus = queries => Math.min(...Object.values(queries).map(q => q.status)),
+  getAggregateStatus = queries => {
+    const status = Math.min(...Object.values(queries).map(q => q.status))
+    return status === Infinity || isNaN(status) ? WAITING : status
+  },
   getNewIds = (prevIds, nextIds) => {
     // yes, Array.filter exists, but due to the frequency of this call I thought it
     // a good idea to make this function as fast as possible
@@ -113,10 +116,10 @@ export const createQueryComponents = (isQuery = true) => {
     )
     // reads any cached queries and commits them to the store
     const loadFromCache = useRef(
-      () => {
+      queries => {
         let
           newIds = getNewIds(prevId.current, id.current),
-          cached = Object.entries(state.queries).filter(
+          cached = Object.entries(queries).filter(
             ([i, q]) => newIds.indexOf(i) > -1 && q.status === DONE
           )
 
@@ -133,7 +136,7 @@ export const createQueryComponents = (isQuery = true) => {
     // called in useEffect(), there is a very grotesque flash that happens while the data
     // is pending its commit to the store. When it is done during this initial render phase,
     // it doesn't happen.
-    useMemoOne(loadFromCache.current, emptyArr)
+    useMemoOne(() => {loadFromCache.current(state.queries)}, emptyArr)
     // this effect unsubscribes from stale queries each update and subscribes to new ones
     useEffect(
       () => {
@@ -152,10 +155,10 @@ export const createQueryComponents = (isQuery = true) => {
             queryId => state?.queries?.[queryId].status === WAITING
           )
           waiting.length > 0 && load(waiting)
+          // loads data from the query cache into the store if this isn't the initial mount
+          if (didMount.current === true)
+            loadFromCache.current(state.queries)
         }
-        // loads data from the query cache into the store if this isn't the initial mount
-        if (didMount.current === true)
-          loadFromCache.current()
 
         didMount.current = true
         // updates the prevId each time state.queries changes
