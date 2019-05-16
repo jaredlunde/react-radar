@@ -148,7 +148,7 @@ export const createQueryComponents = (isQuery = true) => {
       () => {
         // commits new ids in waiting states
         if (isQuery === true) {
-          const waiting = getNewIds(prevId.current, id.current).filter(
+          const waiting = id.current.filter(
             queryId => state?.queries?.[queryId].status === WAITING
           )
           waiting.length > 0 && load(waiting)
