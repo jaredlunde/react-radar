@@ -72,6 +72,7 @@ const Store = ({network = createNetwork(), cache, children}) => {
             }
           }
         })
+
       return state
     }
   )
