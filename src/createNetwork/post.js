@@ -1,26 +1,28 @@
-const workerify = require('../utils/workerify').default
-
+import CancelablePromise from 'cancelable-promise'
 
 // POST w/ fetch or fetch polyfill
-const post = self => (url, opt) => {
-  if (typeof self.fetch === 'undefined') {
+const
+  window_ = typeof window === 'undefined' ? global : window,
+  headersRe = /^(.*?):[^\S\n]*([\s\S]*?)$/gm
+const post = (url, opt) => {
+  let fetch = window_.fetch
+  if (typeof fetch === 'undefined') {
     // Tiny fetch() polyfill
     // Credit: Unfetch (Jason Miller)
     // https://github.com/developit/unfetch/blob/master/src/index.mjs
-    self.fetch = (url, opt) => {
-      const request = new self.XMLHttpRequest()
+    fetch = (url, opt) => {
+      const request = new XMLHttpRequest()
 
-      return new self.Promise(
+      return new CancelablePromise(
         (resolve, reject) => {
           const keys = [], headers = {}
           request.open('post', url, true)
-
           request.onload = () => {
             request.getAllResponseHeaders().replace(
-              /^(.*?):[^\S\n]*([\s\S]*?)$/gm,
+              headersRe,
               (m, key, value) => {
                 keys.push(key = key.toLowerCase())
-                headers[key] = headers[key] ? headers[key] + ',' + value : value
+                headers[key] = headers[key] ? `${headers[key]},${value}` : value
               },
             )
 
@@ -29,7 +31,7 @@ const post = self => (url, opt) => {
               statusText: request.statusText,
               status: request.status,
               url: request.responseURL,
-              json: () => self.Promise.resolve(self.JSON.parse(request.responseText)),
+              json: () => CancelablePromise.resolve(JSON.parse(request.responseText)),
               headers: {
                 keys: () => keys,
                 forEach: fn => {
@@ -49,7 +51,7 @@ const post = self => (url, opt) => {
     }
   }
 
-  return self.fetch(url, opt).then(
+  return fetch(url, opt).then(
     r => {
       let headers = {}
       r.headers.forEach((value, name) => headers[name] = value)
@@ -62,20 +64,18 @@ const post = self => (url, opt) => {
         statusText: r.statusText,
         json: null,
       }) : r.json().then(
-        json => (
-          {
-            ok: r.ok,
-            url,
-            headers,
-            status: r.status,
-            statusText: r.statusText,
-            json,
-          }
-        ),
+        json => ({
+          ok: r.ok,
+          url,
+          headers,
+          status: r.status,
+          statusText: r.statusText,
+          json,
+        }),
       )
     },
   ).catch(
-    errorMsg => self.Promise.resolve({
+    errorMsg => CancelablePromise.resolve({
       ok: false,
       url,
       headers: {},
@@ -83,8 +83,8 @@ const post = self => (url, opt) => {
       statusText: 'Unknown Error',
       errorMsg: String(errorMsg),
       json: false,
-    }),
+    })
   )
 }
 
-export default workerify(post)
+export default post

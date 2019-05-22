@@ -8,5 +8,5 @@ export {StoreConsumer, StoreContext} from './StoreContext'
 export {EndpointContext, RadarConsumer, EndpointConsumer} from './EndpointContext'
 export const useRadar = () => {
   const radar = useContext(EndpointContext)
-  return typeof radar !== null && {commit: radar.commit, commitLocal: radar.commitLocal}
+  return radar !== null && {commit: radar.commit, commitLocal: radar.commitLocal}
 }

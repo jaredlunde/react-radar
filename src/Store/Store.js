@@ -4,13 +4,7 @@ import PropTypes from 'prop-types'
 import emptyObj from 'empty/object'
 import {isNode} from '../utils'
 import createNetwork from '../createNetwork'
-import {
-  toRecords,
-  stateDidChange,
-  toImmutable,
-  collectStaleRecords,
-  createKeyObserver
-} from './utils'
+import {toRecords, toImmutable, collectStaleRecords, createKeyObserver} from './utils'
 import {StoreContext, StoreInternalContext} from './StoreContext'
 import Endpoint from './Endpoint'
 
@@ -28,9 +22,8 @@ const getNextState = (state = emptyObj, updates) => {
   let start
   if (__DEV__) start = now()
   let nextState = toRecords(Object.assign({state: state._data}, updates))
-  // do a shallow comparison of the previous state to this one to avoid
-  // unnecessary re-renders
-  if (nextState === null || stateDidChange(state._data, nextState) === false) {
+
+  if (nextState === null) {
     if (__DEV__) console.log('[Radar] state profiler:', now() - start)
     return null
   }
@@ -49,7 +42,7 @@ const getNextState = (state = emptyObj, updates) => {
 const Store = ({network = createNetwork(), cache, children}) => {
   const keyObserver = useMemoOne(() => ({current: createKeyObserver()}))
   // this dispatcher is supplied to the child endpoint
-  const [state, dispatch] = useReducer(
+  const [state, dispatchState] = useReducer(
     // reducer
     (state, updates) => {
       const nextState = getNextState(state, updates(state.data))
@@ -79,6 +72,7 @@ const Store = ({network = createNetwork(), cache, children}) => {
             }
           }
         })
+
       return state
     }
   )
@@ -93,7 +87,12 @@ const Store = ({network = createNetwork(), cache, children}) => {
   return (
     <StoreInternalContext.Provider value={state.getBits}>
       <StoreContext.Provider value={state}>
-        <Endpoint dispatch={dispatch} cache={cache} network={network} children={children}/>
+        <Endpoint
+          dispatchState={dispatchState}
+          cache={cache}
+          network={network}
+          children={children}
+        />
       </StoreContext.Provider>
     </StoreInternalContext.Provider>
   )

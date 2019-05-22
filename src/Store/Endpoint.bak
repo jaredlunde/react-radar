@@ -1,14 +1,14 @@
-import React, {useRef, useEffect, useReducer} from 'react'
+import React, {useRef, useEffect} from 'react'
 import {useMemoOne} from 'use-memo-one'
+import useForceUpdate from 'use-force-update'
 import PropTypes from 'prop-types'
 import memoize from 'trie-memoize'
 import emptyObj from 'empty/object'
 import emptyArr from 'empty/array'
 import {stringify} from '../createRecord'
 import {invariant, isNode} from '../utils'
-// import {createKeyObserver} from './utils'
-// import {EndpointContext, EndpointInternalContext} from './EndpointContext'
-import {EndpointContext} from './EndpointContext'
+import {createKeyObserver} from './utils'
+import {EndpointContext, EndpointInternalContext} from './EndpointContext'
 import createCache from './createCache'
 
 
@@ -42,30 +42,7 @@ const getDefaultCache = () => {
     defaultCache = createCache()
   return defaultCache
 }
-export const normalizeQueries = queries =>
-  !queries ? emptyArr : Array.isArray(queries) === true ? queries : [queries]
-const init = () => ({value: new Map()})
-const reducer = (state, action) => {
-  const {type, id, query} = action
-  let nextState = state
-
-  switch (type) {
-    case 'add':
-      state.value.set(id, query)
-      break
-    case 'delete':
-      state.value.delete(id)
-      break
-    case 'update':
-      state.value.set(id, query)
-      nextState = {value: state.value}
-      break
-    default:
-      throw new Error(`Unrecognized type: "${type}"`)
-  }
-
-  return nextState
-}
+export const normalizeQueries = queries => Array.isArray(queries) === true ? queries : [queries]
 
 /**
  * The Endpoint component is the glue that binds together the networking layer, store,
@@ -73,15 +50,57 @@ const reducer = (state, action) => {
  */
 const Endpoint = ({cache = getDefaultCache(), network, dispatchState, children}) => {
   cache = useRef(cache)
-  const listeners = useRef(new Map())
-    // keyObserver = useMemoOne(() => ({current: createKeyObserver()}))
+  const
+    keyObserver = useMemoOne(() => ({current: createKeyObserver()})),
+    listeners = useRef(new Map()),
+    queries = useRef({value: new Map()}),
+    forceUpdate = useForceUpdate()
+  // This notification callback is passed to the cache. It's fired each time the cache
+  // updates.
+  const notify = useRef(
+    (id, query) => {
+      queries.current = {value: queries.current.value}
+      queries.current.value.set(id, query)
+      forceUpdate()
+    }
+  )
+  // manages subscriptions from queries/updates
+  const subscribe = useRef(
+    id => {
+      let numListeners = listeners.current.get(id)
+      if (numListeners === void 0) {
+        // adds this endpoint to the cache's listeners
+        cache.current.subscribe(id, notify.current)
+        // sets the query in state
+        numListeners = 0
+        queries.current = {value: queries.current.value}
+        queries.current.value.set(id, cache.current.get(id))
+        // used for calculating changed bits for context
+        keyObserver.current.setShard(id)
+      }
 
+      listeners.current.set(id, ++numListeners)
+    }
+  )
+  // manages unmounts of queries/updates
+  const unsubscribe = useRef(
+    id => {
+      let numListeners = listeners.current.get(id)
+      listeners.current.set(id, --numListeners)
+      if (numListeners === 0) {
+        cache.current.unsubscribe(id, notify.current)
+        listeners.current.delete(id)
+        queries.current = {value: queries.current.value}
+        queries.current.value.delete(id)
+      }
+    }
+  )
   // processes incoming queries
   const processQueries = useRef(
     async (queries, options) => {
       let payload = [], i = 0
 
-      for (; i < queries.length; i++) {
+      for (i = 0; i < queries.length; i++) {
         const query = queries[i]
 
         if (query.local !== true) {
@@ -216,51 +235,19 @@ const Endpoint = ({cache = getDefaultCache(), network, dispatchState, children})
       return processQueries.current(queries, options)
     }
   )
-  // manages the subscriptions to queries in this endpoint
-  const [queryState, dispatchQueryState] = useReducer(reducer, null, init)
-  // adds subscriptions between this endpoint and queries
-  const subscribe = useRef(
-    id => {
-      let numListeners = listeners.current.get(id)
-      if (numListeners === void 0) {
-        // adds this endpoint to the cache's listeners
-        cache.current.subscribe(id, dispatchQueryState)
-        // sets the query in state
-        numListeners = 0
-        dispatchQueryState({type: 'add', id, query: cache.current.get(id)})
-        // used for calculating changed bits for context
-        // keyObserver.current.setShard(id)
-      }
-
-      listeners.current.set(id, ++numListeners)
-    }
-  )
-  // removes subscriptions between this endpoint and queries
-  const unsubscribe = useRef(
-    id => {
-      let numListeners = listeners.current.get(id) - 1
-      if (numListeners === 0) {
-        cache.current.unsubscribe(id, dispatchQueryState)
-        listeners.current.delete(id)
-        dispatchQueryState({type: 'delete', id})
-      }
-      else
-        listeners.current.set(id, numListeners)
-    }
-  )
   // creates the child context
   const childContext = useMemoOne(
     () => ({
+      queries: queries.current.value,
       cache: cache.current,
-      queries: queryState.value,
+      getBits: keyObserver.current.getBits,
       subscribe: subscribe.current,
       unsubscribe: unsubscribe.current,
       commit: commit.current,
       commitLocal: commitLocal.current,
-      commitFromCache: commitFromCache.current,
-      // getBits: keyObserver.current.getBits,
+      commitFromCache: commitFromCache.current
     }),
-    [queryState, cache.current]
+    [queries.current, cache.current]
   )
   // handles 'unmount'
   useEffect(
@@ -269,15 +256,18 @@ const Endpoint = ({cache = getDefaultCache(), network, dispatchState, children})
       network.abort()
       // unsubscribes notifiers from the query cache on unmount
       for (let id of listeners.current.keys())
-        cache.current.unsubscribe(id, dispatchQueryState)
+        cache.current.unsubscribe(id, notify)
     },
     emptyArr
   )
-  return <EndpointContext.Provider value={childContext} children={children}/>
-  //return <EndpointInternalContext.Provider
-  //  value={keyObserver.current.getBits}
-  //  children={<EndpointContext.Provider value={childContext} children={children}/>}
-  //>
+  // garbage collects the cache each update
+  // TODO: this should not be needed due to ref counting.... but we'll see
+  // useEffect(() => { cache.current.collect() } , [queries.current])
+  // useEffect(() => { console.log('Current listeners:', listeners.current) })
+  return <EndpointInternalContext.Provider
+    value={keyObserver.current.getBits}
+    children={<EndpointContext.Provider value={childContext} children={children}/>}
+  />
 }
 
 

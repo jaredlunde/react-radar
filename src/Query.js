@@ -3,7 +3,7 @@ import {useCallbackOne, useMemoOne} from 'use-memo-one'
 import emptyObj from 'empty/object'
 import emptyArr from 'empty/array'
 import {ServerPromisesContext} from '@react-hook/server-promises'
-import {WAITING, LOADING, ERROR, DONE, getQueryId} from './Store/Endpoint'
+import {WAITING, LOADING, ERROR, DONE, getQueryId, normalizeQueries} from './Store/Endpoint'
 import {EndpointContext} from './Store'
 import {isNode} from './utils'
 import Connect from './Connect'
@@ -12,7 +12,10 @@ import PropTypes from 'prop-types'
 
 const
   is = ['waiting', 'error', 'loading', 'done'],
-  getAggregateStatus = queries => Math.min(...Object.values(queries).map(q => q.status)),
+  getAggregateStatus = queries => {
+    const status = Math.min(...Object.values(queries).map(q => q.status))
+    return status === Infinity || isNaN(status) ? WAITING : status
+  },
   getNewIds = (prevIds, nextIds) => {
     // yes, Array.filter exists, but due to the frequency of this call I thought it
     // a good idea to make this function as fast as possible
@@ -35,17 +38,17 @@ const
     else return [getQueryId(queries)]
   }
 
-const init = ({cxt, id}) => {
+const init = ({endpoint, id}) => {
   let queries = {}, i = 0
   for (; i < id.length; i++)
-    queries[id[i]] = Object.assign({status: WAITING}, cxt.getCached(id[i]))
+    queries[id[i]] = Object.assign({status: WAITING}, endpoint.cache.get(id[i]))
   const status = getAggregateStatus(queries)
   return {status, is: is[status], queries}
 }
 
 const reducer = (state, queries) => {
   const status = getAggregateStatus(queries)
-  return {queries, status, id: is[status]}
+  return {queries, status, is: is[status]}
 }
 
 export const createQueryComponents = (isQuery = true) => {
@@ -61,26 +64,33 @@ export const createQueryComponents = (isQuery = true) => {
       prevId = useRef(emptyArr),
       didMount = useRef(false),
       serverPromises = useContext(ServerPromisesContext),
-      cxt = useContext(EndpointContext)
+      endpoint = useContext(EndpointContext)
     id.current = getId(queries)
-    run.current = Array.isArray(queries) === true ? queries : [queries]
-    const [state, dispatch] = useReducer(reducer, {cxt, id: id.current}, init)
-    // subscribe/unsubscribe helpers
-    const subscribe = ids => { for (let i = 0; i < ids.length; i++)   cxt.subscribe(ids[i]) }
-    const unsubscribe = ids => { for (let i = 0; i < ids.length; i++) cxt.unsubscribe(ids[i]) }
+    run.current = normalizeQueries(queries)
+    const [state, dispatchState] = useReducer(reducer, {endpoint, id: id.current}, init)
+    // subscribe/unsubsacribe helpers
+    const
+      subscribe = ids => {
+        for (let i = 0; i < ids.length; i++)
+          endpoint.subscribe(ids[i])
+      },
+      unsubscribe = ids => {
+        for (let i = 0; i < ids.length; i++)
+          endpoint.unsubscribe(ids[i])
+      }
     // commits a set of queries ot the network phase
     const commit = useCallbackOne(
-      (queriesObject = emptyObj) => cxt.commit(
-        {queries: Object.values(queriesObject), type},
-        {async}
+      (queriesObject = emptyObj) => endpoint.commit(
+        Object.values(queriesObject),
+        {async, type}
       ),
       [async]
     )
     // commmits a set of queries from the query cache
     const commitFromCache = useCallbackOne(
-      (queriesObject = emptyObj) => cxt.commitFromCache(
-        {queries: Object.values(queriesObject), type},
-        {async}
+      (queriesObject = emptyObj) => endpoint.commitFromCache(
+        Object.values(queriesObject),
+        {async, type}
       ),
       [async]
     )
@@ -89,27 +99,27 @@ export const createQueryComponents = (isQuery = true) => {
       ids => {
         let queries = {};
         (ids?.length ? ids : id.current)
-          .filter(queryId => cxt.getCached(queryId).status !== LOADING)
+          .filter(queryId => endpoint.cache.get(queryId).status !== LOADING)
           .forEach(queryId => {
             queries[queryId] = run.current[id.current.indexOf(queryId)]
-            cxt.setCached(queryId, {query: queries[queryId], status: LOADING})
+            endpoint.cache.set(queryId, {query: queries[queryId], status: LOADING})
           })
         // parallel means that the queries are sent separately *over the network*, but they
         // will still be added to the store synchronously
         return parallel === true
           ? Promise.all(
-            Object.entries(queries).map(([queryId, query]) => commit({[queryId]: query}))
-          )
+              Object.entries(queries).map(([queryId, query]) => commit({[queryId]: query}))
+            )
           : commit(queries)
       },
       [parallel]
     )
     // reads any cached queries and commits them to the store
-    const loadFromCache = useCallbackOne(
-      () => {
+    const loadFromCache = useRef(
+      queries => {
         let
           newIds = getNewIds(prevId.current, id.current),
-          cached = Object.entries(state.queries).filter(
+          cached = Object.entries(queries).filter(
             ([i, q]) => newIds.indexOf(i) > -1 && q.status === DONE
           )
 
@@ -120,14 +130,13 @@ export const createQueryComponents = (isQuery = true) => {
               {}
             )
           )
-      },
-      emptyArr
+      }
     )
     // This is here to prevent a flash during SSR rehydration. When loadFromCache() is only
     // called in useEffect(), there is a very grotesque flash that happens while the data
     // is pending its commit to the store. When it is done during this initial render phase,
     // it doesn't happen.
-    useMemoOne(loadFromCache, emptyArr)
+    useMemoOne(() => {loadFromCache.current(state.queries)}, emptyArr)
     // this effect unsubscribes from stale queries each update and subscribes to new ones
     useEffect(
       () => {
@@ -142,14 +151,14 @@ export const createQueryComponents = (isQuery = true) => {
       () => {
         // commits new ids in waiting states
         if (isQuery === true) {
-          const waiting = getNewIds(prevId.current, id.current).filter(
+          const waiting = id.current.filter(
             queryId => state?.queries?.[queryId].status === WAITING
           )
           waiting.length > 0 && load(waiting)
+          // loads data from the query cache into the store if this isn't the initial mount
+          if (didMount.current === true)
+            loadFromCache.current(state.queries)
         }
-        // loads data from the query cache into the store if this isn't the initial mount
-        if (didMount.current === true)
-          loadFromCache()
 
         didMount.current = true
         // updates the prevId each time state.queries changes
@@ -179,13 +188,13 @@ export const createQueryComponents = (isQuery = true) => {
     for (; i < id.current.length; i++) {
       let
         queryId = id.current[i],
-        query = cxt.getCached(queryId),
+        query = endpoint.cache.get(queryId),
         prev = state.queries?.[queryId]
 
       if (query === void 0)
         (nextQueries = nextQueries || {})[queryId] = Object.assign(
           {},
-          cxt.setCached(queryId, {status: WAITING})
+          endpoint.cache.set(queryId, {status: WAITING})
         )
       else if (prev?.status !== query.status || prev?.response !== query.response)
         (nextQueries = nextQueries || {})[queryId] = Object.assign({}, query)
@@ -200,14 +209,14 @@ export const createQueryComponents = (isQuery = true) => {
         const waiting = id.current.filter(queryId => nextQueries[queryId]?.status === WAITING)
 
         if (waiting.length > 0) {
-          waiting.forEach(queryId => cxt.setCached(queryId, {status: WAITING}))
+          waiting.forEach(queryId => endpoint.cache.set(queryId, {status: WAITING}))
           const promise = load(waiting)
           if (serverPromises)
             serverPromises.push(promise)
         }
       }
       // sets the new queries and status in local state
-      dispatch(nextQueries)
+      dispatchState(nextQueries)
     }
     // unsubscribes from the endpoint on unmount
     useEffect(() => () => unsubscribe(id.current), emptyArr)
