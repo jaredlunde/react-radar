@@ -47,8 +47,8 @@ export default nextState => {
     if (nextKeys[key] === void 0)
       del(key)
 
-  if (__DEV__)
-    console.log('[Radar] records:', Records.size, '->', Records)
+  // if (__DEV__)
+  //   console.log('[Radar] records:', Records.size, '->', Records)
 }
 /*
 const bench = require('@essentials/benchmark').default

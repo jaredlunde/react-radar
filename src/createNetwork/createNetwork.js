@@ -2,46 +2,44 @@ import emptyObj from 'empty/object'
 import postFetch from './post'
 
 
-const REQUIRED_HEADERS = {'Content-Type': 'application/json; charset=utf-8'}
-const DEFAULT_FETCH = {
-  url: '/radar',
-  method: 'POST',
-  headers: {},
-  timeout: 30 * 1000
-}
+const
+  REQUIRED_HEADERS = {'Content-Type': 'application/json; charset=utf-8'},
+  DEFAULT_FETCH = {
+    url: '/radar',
+    method: 'POST',
+    headers: {},
+    timeout: 30 * 1000
+  },
+  getRequestHeaders = (body, headers) => {
+    let realHeaders
 
-const getRequestHeaders = ({body, headers}) => {
-  let realHeaders
+    if (typeof headers === 'function') {
+      const promiseOrResult = headers(body)
 
-  if (typeof headers === 'function') {
-    const promiseOrResult = headers(body)
+      if (promiseOrResult && typeof promiseOrResult.then === 'function')
+        return promiseOrResult
+      else
+        realHeaders = promiseOrResult
+    } else {
+      realHeaders = headers
+    }
 
-    if (promiseOrResult && typeof promiseOrResult.then === 'function')
-      return promiseOrResult
-    else
-      realHeaders = promiseOrResult
-  } else {
-    realHeaders = headers
-  }
-
-  // realHeaders = new Headers(realHeaders)
-  return Promise.resolve(realHeaders || emptyObj)
-}
-
-const resolveSynchronously = promises => {
-  // Has side-effects on @promises
-  if (promises.length) {
-    const [next, resolve] = promises[0]
-    next.then(value => {
-      resolve(value)
-      promises.shift()
-      resolveSynchronously(promises)
-    })
-  }
-}
-
-const removePendingUpdate = (pendingUpdates, PENDING_UPDATE) =>
-  pendingUpdates.splice(pendingUpdates.indexOf(PENDING_UPDATE), 1)
+    // realHeaders = new Headers(realHeaders)
+    return Promise.resolve(realHeaders || emptyObj)
+  },
+  resolveSynchronously = promises => {
+    // Has side-effects on @promises
+    if (promises.length) {
+      const [next, resolve] = promises[0]
+      next.then(value => {
+        resolve(value)
+        promises.shift()
+        resolveSynchronously(promises)
+      })
+    }
+  },
+  removePendingUpdate = (pendingUpdates, PENDING_UPDATE) =>
+    pendingUpdates.splice(pendingUpdates.indexOf(PENDING_UPDATE), 1)
 
 export default props => {
   const pendingUpdates = []
@@ -55,7 +53,7 @@ export default props => {
       // we only use JSON requests
       opt.body = JSON.stringify(body)
       // sets user-defined headers
-      headers = Object.assign({}, await getRequestHeaders({body, headers}))
+      headers = Object.assign({}, await getRequestHeaders(body, headers))
       // sets headers from context
       if (typeof context === 'object' && context.headers !== void 0)
         headers = Object.assign(headers, context.headers)
