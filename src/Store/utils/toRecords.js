@@ -80,8 +80,9 @@ const routeToRecords = (props/*{state, query, recordType}*/) => {
   return typeof props.recordType === 'function' ? props.recordType(state) : state
 }
 
-const withoutError = ['isRadarError']
-const withoutContext = ['recordType', 'state']
+const
+  withoutError = {isRadarError: 0},
+  withoutContext = {state: 0}
 
 export default ({state, nextState, queries, ...context}) => {
   let hasRecordUpdates = false, i = 0, j = 0

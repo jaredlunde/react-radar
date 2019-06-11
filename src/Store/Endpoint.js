@@ -206,12 +206,12 @@ const Endpoint = ({cache = getDefaultCache(), network, dispatchState, children})
         commitLocal.current(optimisticQueries, options)
       }
       // commits the payloads to the network
-      if (options.async === true) {
-        let promises = [], i = 0
-        for (; i < queries.length; i++)
-          promises.push(processQueries.current(queries.slice(i, i + 1), options))
-        return Promise.all(promises)
-      }
+      // if (options.async === true) {
+      //   let promises = [], i = 0
+      //   for (; i < queries.length; i++)
+      //     promises.push(processQueries.current(queries.slice(i, i + 1), options))
+      //   return Promise.all(promises)
+      // }
 
       return processQueries.current(queries, options)
     }
